@@ -94,12 +94,12 @@ class AnisetteDataViewModel: ObservableObject {
         )
         await AnisetteConfigManager.shared.saveConfig(config)
         updateRawEditableJSON()
-        showToast(text: "Saved configuration successfully.")
+        showToast(text: NSLocalizedString("Saved configuration successfully.", comment: ""))
     }
     
     func saveRawJSON() async {
         guard let data = rawEditableJSON.data(using: .utf8) else {
-            showToast(text: "Encoding Failed", detailText: "Unable to encode JSON as UTF-8.")
+            showToast(text: NSLocalizedString("Encoding Failed", comment: ""), detailText: NSLocalizedString("Unable to encode JSON as UTF-8.", comment: ""))
             return
         }
         
@@ -117,9 +117,9 @@ class AnisetteDataViewModel: ObservableObject {
             customXcodeVersion = config.customXcodeVersion ?? ""
             
             await AnisetteConfigManager.shared.saveConfig(config)
-            showToast(text: "JSON configuration saved successfully!")
+            showToast(text: NSLocalizedString("JSON configuration saved successfully!", comment: ""))
         } catch {
-            showToast(text: "Invalid JSON Structure", error: error)
+            showToast(text: NSLocalizedString("Invalid JSON Structure", comment: ""), error: error)
         }
     }
     
@@ -136,7 +136,7 @@ class AnisetteDataViewModel: ObservableObject {
         customXcodeVersion = ""
         updateRawEditableJSON()
         await save()
-        showToast(text: "Reset to default configuration.")
+        showToast(text: NSLocalizedString("Reset to default configuration.", comment: ""))
     }
     
     func importJSON(url: URL) async {
@@ -162,9 +162,9 @@ class AnisetteDataViewModel: ObservableObject {
             customRoutingInfo = config.customRoutingInfo ?? ""
             customXcodeVersion = config.customXcodeVersion ?? ""
             updateRawEditableJSON()
-            showToast(text: "Imported successfully", detailText: url.lastPathComponent)
+            showToast(text: NSLocalizedString("Imported successfully", comment: ""), detailText: url.lastPathComponent)
         } catch {
-            showToast(text: "Import Failed", error: error)
+            showToast(text: NSLocalizedString("Import Failed", comment: ""), error: error)
         }
     }
     
@@ -175,7 +175,7 @@ class AnisetteDataViewModel: ObservableObject {
             try data.write(to: tempURL, options: .atomic)
             return tempURL
         } catch {
-            showToast(text: "Export Failed", error: error)
+            showToast(text: NSLocalizedString("Export Failed", comment: ""), error: error)
             return nil
         }
     }
@@ -207,16 +207,16 @@ class AnisetteDataViewModel: ObservableObject {
                 serverReturnedHeadersJSON = str
             }
             
-            showToast(text: "Fetched server config!", detailText: url.host)
+            showToast(text: NSLocalizedString("Fetched server config!", comment: ""), detailText: url.host)
         } catch {
-            showToast(text: "Fetch Failed", error: error)
+            showToast(text: NSLocalizedString("Fetch Failed", comment: ""), error: error)
         }
     }
     
     func loadServerHeadersIntoOverrides() async {
         let serverHeaders = await AnisetteConfigManager.shared.loadServerHeaders()
         guard !serverHeaders.isEmpty else {
-            showToast(text: "No fetched headers found", detailText: "Fetch from server first.")
+            showToast(text: NSLocalizedString("No fetched headers found", comment: ""), detailText: NSLocalizedString("Fetch from server first.", comment: ""))
             return
         }
         
@@ -258,7 +258,7 @@ class AnisetteDataViewModel: ObservableObject {
         }
         
         await save()
-        showToast(text: "Loaded fetched data into overrides!")
+        showToast(text: NSLocalizedString("Loaded fetched data into overrides!", comment: ""))
     }
     
     func showToast(text: String, detailText: String? = nil, error: Error? = nil) {
@@ -702,7 +702,7 @@ struct AnisetteDataView: View {
                     }
                 }
             case .failure(let error):
-                viewModel.showToast(text: "File Selection Failed", error: error)
+                viewModel.showToast(text: NSLocalizedString("File Selection Failed", comment: ""), error: error)
             }
         }
         #endif

@@ -301,7 +301,7 @@ struct UserCustomizationsView: View {
                                     .foregroundColor(.white)
                                     .multilineTextAlignment(.leading)
                                     .fixedSize(horizontal: false, vertical: true)
-                                Text("Exports SideStore.conf to import into WireGuard VPN app")
+                                Text("Exports oPenSSAI.conf to import into WireGuard VPN app")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color.white.opacity(0.6))
                                     .multilineTextAlignment(.leading)
@@ -1021,9 +1021,9 @@ struct UserCustomizationsView: View {
     }
 
     private func exportWireGuardConfig() {
-        guard let url = Bundle.main.url(forResource: "SideStore", withExtension: "conf") else {
+        guard let url = Bundle.main.url(forResource: "oPenSSAI", withExtension: "conf") else {
             if let top = UIApplication.shared.topViewController() {
-                let toastView = ToastView(text: NSLocalizedString("SideStore.conf missing!", comment: ""), detailText: "Unable to locate SideStore.conf in bundle resources.")
+                let toastView = ToastView(text: NSLocalizedString("oPenSSAI.conf missing!", comment: ""), detailText: NSLocalizedString("Unable to locate oPenSSAI.conf in bundle resources.", comment: ""))
                 toastView.show(in: top)
             }
             return

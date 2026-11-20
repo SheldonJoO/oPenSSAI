@@ -887,7 +887,7 @@ extension AppManager: PipelineProgress, PipelineExecutionContext, PipelineErrorL
             }
             catch let saveError
             {
-                debugLog("[SideStore] Failed to log error \(sanitizedError.domain) code \(sanitizedError.code) for \(app.bundleIdentifier): \(saveError)")
+                debugLog("[oPenSSAI] Failed to log error \(sanitizedError.domain) code \(sanitizedError.code) for \(app.bundleIdentifier): \(saveError)")
             }
         }
     }

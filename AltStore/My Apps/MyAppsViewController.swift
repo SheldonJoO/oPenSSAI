@@ -639,7 +639,7 @@ private extension MyAppsViewController
         }
         catch
         {
-            debugLog("[SideStore] Failed to fetch updates: \(error)")
+            debugLog("[oPenSSAI] Failed to fetch updates: \(error)")
         }
     }
 }
@@ -1559,8 +1559,8 @@ private extension MyAppsViewController
                 toast = ToastView(error: error, opensLog: false)
                 break
             case .success:
-                toast = ToastView(text: "Import Backup successful for \(installedApp.name)",
-                                  detailText: "Use 'Restore Backup' option to restore data from this imported backup")
+                toast = ToastView(text: String(format: NSLocalizedString("Import Backup successful for %@", comment: ""), installedApp.name),
+                                  detailText: NSLocalizedString("Use 'Restore Backup' option to restore data from this imported backup", comment: ""))
             }
             DispatchQueue.main.async {
                 toast.show(in: self)
@@ -1871,7 +1871,7 @@ private extension MyAppsViewController
                         }
                         catch
                         {
-                            debugLog("[SideStore] Failed to assign error \(sanitizedError.localizedErrorCode) to source \(sourceID). \(error)")
+                            debugLog("[oPenSSAI] Failed to assign error \(sanitizedError.localizedErrorCode) to source \(sourceID). \(error)")
                         }
                     }
                     

@@ -177,7 +177,7 @@ COMMON_BUILD_SETTINGS = \
 	AD_HOC_CODE_SIGNING_ALLOWED=YES \
 	CODE_SIGNING_ALLOWED=NO \
 	DEVELOPMENT_TEAM=XYZ0123456 \
-	ORG_IDENTIFIER=com.SideStore
+	ORG_IDENTIFIER=com.openssai
 
 # Append MARKETING_VERSION if it’s not empty (coz otherwise the blank entry becomes override)
 ifneq ($(strip $(MARKETING_VERSION)),)
@@ -192,7 +192,7 @@ endif
 build:
 	@echo ">>>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building for $(BUILD_CONFIG) mode! <<<<<<<<<<"
 	@echo ""
-	@xcodebuild archive -archivePath ./SideStore \
+	@xcodebuild archive -archivePath ./oPenSSAI \
 		$(COMMON_BUILD_SETTINGS)
 
 build-and-test:
@@ -250,30 +250,30 @@ clean-build:
 	@xcodebuild clean -project AltStore.xcodeproj -scheme SideStore
 
 fakesign-apps:
-	ldid -SAltStore/Resources/ReleaseEntitlements.plist SideStore.xcarchive/Products/Applications/SideStore.app/SideStore
-	ldid -SAltWidget/Resources/ReleaseEntitlements.plist SideStore.xcarchive/Products/Applications/SideStore.app/PlugIns/AltWidgetExtension.appex/AltWidgetExtension
+	ldid -SAltStore/Resources/ReleaseEntitlements.plist oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/oPenSSAI
+	ldid -SAltWidget/Resources/ReleaseEntitlements.plist oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/PlugIns/AltWidgetExtension.appex/AltWidgetExtension
 
 fakesign-sidebackup:	
 	@echo ''
 	@echo "fake-signing sidebackup even though it will get resigned, only to retain its entitlements (appGroups)"
-	unzip -q -o SideStore.xcarchive/Products/Applications/SideStore.app/SideBackup.ipa -d SideStore.xcarchive/Products/Applications/SideStore.app/
-	ldid -SSideBackup/SideBackup.entitlements SideStore.xcarchive/Products/Applications/SideStore.app/Payload/SideBackup.app/SideBackup
-	pushd "SideStore.xcarchive/Products/Applications/SideStore.app/"  > /dev/null; \
+	unzip -q -o oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/SideBackup.ipa -d oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/
+	ldid -SSideBackup/SideBackup.entitlements oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/Payload/SideBackup.app/SideBackup
+	pushd "oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/"  > /dev/null; \
 	rm -f     SideBackup.ipa; \
 	zip -r SideBackup.ipa Payload; \
 	popd  > /dev/null
-	@rm -rf SideStore.xcarchive/Products/Applications/SideStore.app/Payload
+	@rm -rf oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/Payload
 
 fakesign: fakesign-apps fakesign-sidebackup				
 
 
 ipa:
 	@echo ''
-	@echo "fake-signing sidestore"
-	mkdir -p Payload/SideStore.app
-	cp -R SideStore.xcarchive/Products/Applications/SideStore.app/ Payload/SideStore.app/
-	rm -f     SideStore.ipa
-	zip -r SideStore.ipa Payload
+	@echo "fake-signing oPenSSAI"
+	mkdir -p Payload/oPenSSAI.app
+	cp -R oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/ Payload/oPenSSAI.app/
+	rm -f     oPenSSAI.ipa
+	zip -r oPenSSAI.ipa Payload
 	rm -rf Payload*/
 
 # Global Variables
@@ -383,5 +383,5 @@ clean-sidebackup:
     #@rm -f AltStore/Resources/SideBackup.ipa
 
 clean: clean-sidebackup
-	@rm -rf SideStore.ipa
+	@rm -rf oPenSSAI.ipa
 	@rm -rf build/

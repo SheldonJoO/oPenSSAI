@@ -95,8 +95,8 @@ final class LaunchViewController: UIViewController {
 
     @MainActor
     func displayError(_ msg: String) {
-        debugLog("[SideStore] \(msg)")
-        let alert = UIAlertController(title: "Error launching SideStore", message: msg, preferredStyle: .alert)
+        debugLog("[oPenSSAI] \(msg)")
+        let alert = UIAlertController(title: NSLocalizedString("Error launching oPenSSAI", comment: ""), message: msg, preferredStyle: .alert)
         self.present(alert, animated: true)
     }
     
@@ -239,7 +239,7 @@ final class LaunchViewController: UIViewController {
     func updateKnownSources() {
         AppManager.shared.updateKnownSources { result in
             switch result {
-            case .failure(let error): debugLog("[SideStore] Failed to update known sources: \(error)")
+            case .failure(let error): debugLog("[oPenSSAI] Failed to update known sources: \(error)")
             case .success((_, let blockedSources)):
                 DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
                     let blockedSourceIDs = Set(blockedSources.lazy.map { $0.identifier })

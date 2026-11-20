@@ -1,18 +1,17 @@
-# Contributing to SideStore
+# Contributing to oPenSSAI
 
-Thank you for your interest in contributing to SideStore! SideStore is a community driven project, and it's made possible by people like you.
+Thank you for your interest in contributing to oPenSSAI! oPenSSAI is a community driven project, and it's made possible by people like you.
 
-By contributing to this Project (SideStore), you agree to the Developer's Certificate of Origin found in [CERTIFICATE-OF-ORIGIN.md](CERTIFICATE-OF-ORIGIN.md). Any contributions to this project after the addition of the Developer's Certificate of Origin are subject to its policy.
+By contributing to this Project (oPenSSAI), you agree to the Developer's Certificate of Origin found in [CERTIFICATE-OF-ORIGIN.md](CERTIFICATE-OF-ORIGIN.md). Any contributions to this project after the addition of the Developer's Certificate of Origin are subject to its policy.
 
-There are many ways to contribute to SideStore, so if you aren't a developer, there are still many other ways you can help out:
+There are many ways to contribute to oPenSSAI, so if you aren't a developer, there are still many other ways you can help out:
 
--   [Writing documentation](https://github.com/SideStore/SideStore-Docs)
--   [Submitting detailed bug reports and suggesting new features](https://github.com/SideStore/SideStore/issues/new/choose)
+-   [Writing documentation](https://github.com/SheldonJoO/oPenSSAI/tree/main/docs)
+-   [Submitting detailed bug reports and suggesting new features](https://github.com/SheldonJoO/oPenSSAI/issues/new/choose)
 -   Helping out with support
-    -   [Discord](https://discord.gg/sidestore-949183273383395328)
-    -   [GitHub Discussions](https://github.com/SideStore/SideStore/discussions)
+    -   [GitHub Discussions](https://github.com/SheldonJoO/oPenSSAI/discussions)
 
-However, this guide will focus on the development side of things. For now, we will only have setup information here, but you can [join our Discord](https://discord.gg/RgpFBX3Q3k) if you need help
+However, this guide will focus on the development side of things. For now, we will only have setup information here, but you can ask in [GitHub Discussions](https://github.com/SheldonJoO/oPenSSAI/discussions) if you need help
 after setup.
 
 ## Requirements
@@ -27,23 +26,20 @@ This guide assumes you:
 
 ## Setup
 
-1. Fork the SideStore repo on GitHub.
-2. Clone the fork: `git clone https://github.com/<your github username>/SideStore.git --recurse-submodules`
+1. Fork the oPenSSAI repo on GitHub.
+2. Clone the fork: `git clone https://github.com/<your github username>/oPenSSAI.git --recurse-submodules`
 
     If you are using GitHub Desktop, refer to
     [this guide](https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop).
 
 3. Copy `CodeSigning.xcconfig.sample` to `CodeSigning.xcconfig` and fill in the values.
-4. **(Development only)** Change the value for `ALTDeviceID` in the Info.plist to your device's UDID. Normally, SideServer embeds the device's UDID in SideStore's Info.plist during installation. When
-   running through Xcode you'll need to set the value yourself or else SideStore won't resign (or even install) apps for the proper device. You can achieve this by changing a few things to be able to
-   build and use SideStore.
-5. Finally, open `AltStore.xcodeproj` in Xcode.
+4. Finally, open `AltStore.xcodeproj` in Xcode.
 
 Next, make and test your changes. Then, commit and push your changes using git and make a pull request.
 
 ## Prebuilt binary information
 
-minimuxer and em_proxy use prebuilt static library binaries built by GitHub Actions to speed up builds and remove the need for Rust to be installed when working on SideStore.
+minimuxer and em_proxy use prebuilt static library binaries built by GitHub Actions to speed up builds and remove the need for Rust to be installed when working on oPenSSAI.
 [`SideStore/fetch-prebuilt.sh`](./SideStore/fetch-prebuilt.sh) will be run before each build by Xcode, and it will check if the downloaded binaries are up-to-date once every 6 hours. If you want
 to force it to check for new binaries, run `bash ./SideStore/fetch-prebuilt.sh force`.
 
@@ -62,7 +58,7 @@ You can then use the Makefile command: `make build fakesign ipa` in the root dir
 By default the config for build is: `Release`  
 For debug builds: `export BUILD_CONFIG=Debug;make build fakesign ipa` in the root directory.  
 For alpha/beta builds: `export IS_ALPHA=1;` or `export IS_BETA=1;` before invoking the build command.  
-This will create SideStore.ipa.
+This will create oPenSSAI.ipa.
 
 ```sh
 Examples: 
@@ -87,7 +83,7 @@ Examples:
     # stable debug build
     export BUILD_CONFIG=Debug;make build fakesign ipa
 ```
-By default sidestore will build for its default bundleIdentifier `com.SideStore.SideStore` but if you need to set a custom bundleID for commandline builds, once can do so by exporting `BUNDLE_ID_SUFFIX` env var  
+By default oPenSSAI will build for its default bundleIdentifier `com.openssai.app` but if you need to set a custom bundleID for commandline builds, once can do so by exporting `BUNDLE_ID_SUFFIX` env var  
 ```sh
     # stable release build
     export BUNDLE_ID_SUFFIX=XYZ0123456;make build fakesign ipa
@@ -106,6 +102,6 @@ This can be customized by setting/removing the BUNDLE_ID_SUFFIX in overriding Co
 > username private, you might want to get GitHub Actions to build the IPA instead.
 > 
 
-## Developing minimuxer alongside SideStore
+## Developing minimuxer alongside oPenSSAI
 
 Please see [minimuxer's README](https://github.com/SideStore/minimuxer) for development instructions.

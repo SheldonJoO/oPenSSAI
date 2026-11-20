@@ -96,12 +96,12 @@ class SideSignConfigurationViewModel: ObservableObject {
         let headers = buildHeadersFromState()
         await SideSignConfigManager.shared.saveConfig(headers)
         updateRawEditableJSON()
-        showToast(text: "Saved SideSign headers successfully.")
+        showToast(text: NSLocalizedString("Saved SideSign headers successfully.", comment: ""))
     }
 
     func saveRawJSON() async {
         guard let data = rawEditableJSON.data(using: .utf8) else {
-            showToast(text: "Encoding Failed", detailText: "Unable to encode JSON as UTF-8.")
+            showToast(text: NSLocalizedString("Encoding Failed", comment: ""), detailText: NSLocalizedString("Unable to encode JSON as UTF-8.", comment: ""))
             return
         }
 
@@ -109,9 +109,9 @@ class SideSignConfigurationViewModel: ObservableObject {
             let headers = try JSONDecoder().decode(SideSignHeaders.self, from: data)
             applyHeadersToState(headers)
             await SideSignConfigManager.shared.saveConfig(headers)
-            showToast(text: "SideSign JSON configuration saved successfully!")
+            showToast(text: NSLocalizedString("SideSign JSON configuration saved successfully!", comment: ""))
         } catch {
-            showToast(text: "Invalid JSON Structure", error: error)
+            showToast(text: NSLocalizedString("Invalid JSON Structure", comment: ""), error: error)
         }
     }
 
@@ -119,7 +119,7 @@ class SideSignConfigurationViewModel: ObservableObject {
         let headers = SideSignConfigManager.shared.resetToDefaults()
         applyHeadersToState(headers)
         updateRawEditableJSON()
-        showToast(text: "Reset to default SideSign configuration.")
+        showToast(text: NSLocalizedString("Reset to default SideSign configuration.", comment: ""))
     }
 
     func importJSON(url: URL) async {
@@ -137,9 +137,9 @@ class SideSignConfigurationViewModel: ObservableObject {
             let headers = try await SideSignConfigManager.shared.importFromFile(url: url)
             applyHeadersToState(headers)
             updateRawEditableJSON()
-            showToast(text: "Imported successfully", detailText: url.lastPathComponent)
+            showToast(text: NSLocalizedString("Imported successfully", comment: ""), detailText: url.lastPathComponent)
         } catch {
-            showToast(text: "Import Failed", error: error)
+            showToast(text: NSLocalizedString("Import Failed", comment: ""), error: error)
         }
     }
 
@@ -150,7 +150,7 @@ class SideSignConfigurationViewModel: ObservableObject {
             try data.write(to: tempURL, options: .atomic)
             return tempURL
         } catch {
-            showToast(text: "Export Failed", error: error)
+            showToast(text: NSLocalizedString("Export Failed", comment: ""), error: error)
             return nil
         }
     }
@@ -478,7 +478,7 @@ struct SideSignConfigurationView: View {
                     }
                 }
             case .failure(let error):
-                viewModel.showToast(text: "File Selection Failed", error: error)
+                viewModel.showToast(text: NSLocalizedString("File Selection Failed", comment: ""), error: error)
             }
         }
         #endif

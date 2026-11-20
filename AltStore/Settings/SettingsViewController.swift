@@ -9,7 +9,6 @@
 @preconcurrency import UIKit
 import SwiftUI
 #if !os(tvOS)
-import MessageUI
 #endif
 import Intents
 #if !os(tvOS)
@@ -148,9 +147,6 @@ final class SettingsViewController: UITableViewController
 //    @IBOutlet private var refreshSideJITServer: UILabel!
     @IBOutlet private var disableResponseCachingSwitch: UISwitch!
     
-    @IBOutlet private var mastodonButton: UIButton!
-    @IBOutlet private var threadsButton: UIButton!
-    @IBOutlet private var twitterButton: UIButton!
     @IBOutlet private var githubButton: UIButton!
     
     @IBOutlet private var versionLabel: UILabel!
@@ -273,7 +269,7 @@ final class SettingsViewController: UITableViewController
         // We can only configure the contentMode for a button's background image from Interface Builder.
         // This works, but it means buttons don't visually highlight because there's no foreground image.
         // As a workaround, we manually set the foreground image + contentMode here.
-        for button in [self.mastodonButton!, self.threadsButton!, self.twitterButton!, self.githubButton!]
+        for button in [self.githubButton!]
         {
             // Get the assigned image from Interface Builder.
             let image = button.configuration?.background.image
@@ -738,7 +734,7 @@ private extension SettingsViewController
                     guard UserDefaults.standard.recreateDatabaseOnNextStart else {
                         return
                     }
-                    let toast = ToastView(text: "Database Delete Scheduled on Next Launch", detailText: "App is closing in \(time) seconds...")
+                    let toast = ToastView(text: NSLocalizedString("Database Delete Scheduled on Next Launch", comment: ""), detailText: String(format: NSLocalizedString("App is closing in %lld seconds...", comment: ""), time))
                     toast.tintColor = .altPrimary
                     toast.preferredDuration = 1
                     toast.show(in: self)
@@ -870,45 +866,6 @@ private extension SettingsViewController
                 self.openWebURL(safariURL, preferredTintColor: .altPrimary)
             }
         }
-    }
-    
-    func openMastodon(username: String)
-    {
-        // Rely on universal links to open app.
-        
-        let components = username.split(separator: "@")
-        guard components.count == 2 else { return }
-        
-        let server = String(components[1])
-        let username = "@" + String(components[0])
-        
-        guard let serverURL = URL(string: "https://" + server) else { return }
-        
-        let mastodonURL = serverURL.appendingPathComponent(username)
-        UIApplication.shared.open(mastodonURL, options: [:])
-    }
-    
-    func openThreads(username: String)
-    {
-        // Rely on universal links to open app.
-        
-        let safariURL = URL(string: "https://www.threads.net/@" + username)!
-        UIApplication.shared.open(safariURL, options: [:])
-    }
-    
-    @IBAction func followAltStoreMastodon()
-    {
-        self.openMastodon(username: "@sidestoreio@fosstodon.org")
-    }
-    
-    @IBAction func followAltStoreThreads()
-    {
-        self.openThreads(username: "sidestore.io")
-    }
-    
-    @IBAction func followAltStoreTwitter()
-    {
-        self.openTwitter(username: "sidestoreio")
     }
     
     @IBAction func followAltStoreGitHub()
@@ -1205,8 +1162,8 @@ extension SettingsViewController
             let row = CreditsRow.allCases[indexPath.row]
             switch row
             {
-            case .developer: self.openTwitter(username: "sidestoreio")
-            case .operations: self.openTwitter(username: "sidestoreio")
+            case .developer: self.openWebURL(AppConstants.URLs.sideStoreGitHub, preferredTintColor: .altPrimary)
+            case .operations: self.openWebURL(AppConstants.URLs.sideStoreGitHub, preferredTintColor: .altPrimary)
             case .designer: self.openTwitter(username: "lit_ritt")
             case .softwareLicenses: break
             }
@@ -1221,52 +1178,8 @@ extension SettingsViewController
             switch row
             {
             case .sendFeedback:
-                let alertController = UIAlertController(title: "Send Feedback", message: "Choose a method to send feedback:", preferredStyle: .actionSheet)
-                
-                // Option 1: GitHub
-                alertController.addAction(UIAlertAction(title: "GitHub", style: .default) { _ in
-                    self.openWebURL(AppConstants.URLs.sideStoreIssues, preferredTintColor: .altPrimary)
-                })
-                
-                // Option 2: Discord
-                alertController.addAction(UIAlertAction(title: "Discord", style: .default) { _ in
-                    self.openWebURL(AppConstants.URLs.sideStoreDiscord, preferredTintColor: .altPrimary)
-                })
-                
-                #if !os(tvOS)
-                // Option 3: Mail
-                alertController.addAction(UIAlertAction(title: "Send Email", style: .default) { _ in
-                    if MFMailComposeViewController.canSendMail() {
-                        let mailViewController = MFMailComposeViewController()
-                        mailViewController.mailComposeDelegate = self
-                        mailViewController.setToRecipients(["support@sidestore.io"])
-
-                        // TODO: MARKETING_VERSION is going to be set anyways so this needs to be fixed for beta
-                        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-                            mailViewController.setSubject("SideStore Beta \(version) Feedback")
-                        } else {
-                            mailViewController.setSubject("SideStore Beta Feedback")
-                        }
-
-                       self.present(mailViewController, animated: true, completion: nil)
-                    } else {
-                      let toastView = ToastView(text: NSLocalizedString("Cannot Send Mail", comment: ""), detailText: nil)
-                      toastView.show(in: self)
-                    }
-                })
-                #endif
-                
-                // Cancel action
-                alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-                
-                // For iPad: Set the source view if presenting on iPad to avoid crashes
-                if let popoverController = alertController.popoverPresentationController {
-                    popoverController.sourceView = self.view
-                    popoverController.sourceRect = self.view.bounds
-                }
-                
-                // Present the action sheet
-                self.present(alertController, animated: true, completion: nil)
+                // oPenSSAI: feedback goes straight to GitHub Issues (no Discord, no mail).
+                self.openWebURL(AppConstants.URLs.sideStoreIssues, preferredTintColor: .altPrimary)
                 
             case .refreshSideJITServer:
                 let jitConfigView = SideJITServerConfigView()
@@ -1297,7 +1210,7 @@ extension SettingsViewController
                     selected: UserDefaults.standard.menuAnisetteURL,
                     onResetAdiPb: { [weak self] in
                         guard let self = self else { return }
-                        ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in SideStore.")
+                        ToastView(text: NSLocalizedString("Cleared adi.pb!", comment: ""), detailText: NSLocalizedString("You will need to log back into Apple ID in oPenSSAI.", comment: ""))
                             .show(in: self)
                     }
                 )
@@ -1385,21 +1298,6 @@ extension SettingsViewController
     }
 }
 
-#if !os(tvOS)
-extension SettingsViewController: MFMailComposeViewControllerDelegate
-{
-    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?)
-    {
-        if let error = error
-        {
-            let toastView = ToastView(error: error)
-            toastView.show(in: self)
-        }
-        
-        controller.dismiss(animated: true, completion: nil)
-    }
-}
-#endif
 
 extension SettingsViewController: UIGestureRecognizerDelegate
 {

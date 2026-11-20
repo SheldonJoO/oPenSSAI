@@ -61,7 +61,7 @@ struct ThemePickerView: View {
             VStack(spacing: 16) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("SideStore")
+                        Text("oPenSSAI")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                         Text("v0.6.0 • Installed")

@@ -16,8 +16,8 @@ public extension String {
 
 public func systemLocalizedString(_ string: String) -> String {
     let bundle = Bundle(for: UIApplication.self)
-    let localizedString = bundle.localizedString(forKey: string, value: "com.sidestore.SystemLocalizedStringNotFound", table: nil)
-    if localizedString == "com.sidestore.SystemLocalizedStringNotFound" {
+    let localizedString = bundle.localizedString(forKey: string, value: "com.openssai.SystemLocalizedStringNotFound", table: nil)
+    if localizedString == "com.openssai.SystemLocalizedStringNotFound" {
         return NSLocalizedString(string, comment: "")
     }
     return localizedString

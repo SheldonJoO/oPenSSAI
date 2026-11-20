@@ -5,8 +5,9 @@ MARKETING_VERSION = 0.7.0
 CURRENT_PROJECT_VERSION = 0700
 
 // Vars to be overwritten by `CodeSigning.xcconfig` if exists
-DEVELOPMENT_TEAM = S32Z3HMYVQ
-ORG_IDENTIFIER = com.SideStore
+// TODO(oPenSSAI): set DEVELOPMENT_TEAM to your own Apple Team ID (or in CodeSigning.xcconfig)
+DEVELOPMENT_TEAM = XYZ0123456
+ORG_IDENTIFIER = com.openssai
 
 // Default is free for CI builds, override it using CodeSigning.xcconfig if required
 CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
@@ -14,13 +15,16 @@ CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
 // Codesigning settings defined optionally, see `CodeSigning.xcconfig.example`
 #include? "CodeSigning.xcconfig"
 
-PRODUCT_NAME = SideStore
+PRODUCT_NAME = oPenSSAI
 
-BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).SideStore
+// oPenSSAI is Chinese-first: the development region is Simplified Chinese.
+DEVELOPMENT_LANGUAGE = zh-Hans
+
+BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).app
 MAIN_BUNDLE_IDENTIFIER[config=Debug]            = $(BASE_BUNDLE_ID).$(DEVELOPMENT_TEAM)
 MAIN_BUNDLE_IDENTIFIER[config=Release]          = $(BASE_BUNDLE_ID)
 APP_GROUP_IDENTIFIER                            = $(MAIN_BUNDLE_IDENTIFIER)
-ICLOUD_CONTAINER_IDENTIFIER                     = iCloud.$(ORG_IDENTIFIER).$(PROJECT_NAME)
+ICLOUD_CONTAINER_IDENTIFIER                     = iCloud.$(ORG_IDENTIFIER).app
 
 // Suppress noise from os activity in xcode console log for release builds
 DEBUG_ACTIVITY_MODE = disable

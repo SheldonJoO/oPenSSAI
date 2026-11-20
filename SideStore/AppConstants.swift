@@ -17,8 +17,8 @@ public enum AppConstants {
     ]
 
     public enum Database {
-        public static let name           = "SideStore"
-        public static let legacyName     = "AltStore"
+        public static let name           = "oPenSSAI"
+        public static let legacyName     = "SideStore"
         public static let fileName       = "\(name).sqlite"
         public static let legacyFileName = "\(legacyName).sqlite"
     }
@@ -40,7 +40,7 @@ public enum AppConstants {
         public static let defaultSourcesURL           = URL(string: "https://sidestore.io/default-sources")!
         public static let sideStoreCommunitySourceURL = URL(string: "https://sidestore.io/apps-v2.json/")!
         public static let sideStoreFallbackIconURL    = URL(string: "https://sidestore.io/apps-v2.json/apps/sidestore/icon.png")!
-        public static let sideStoreWebsite            = URL(string: "https://sidestore.io")!
+        public static let sideStoreWebsite            = URL(string: "https://github.com/SheldonJoO/oPenSSAI")!
     }
     
     public enum Bonjour {
@@ -63,7 +63,7 @@ public enum AppConstants {
 
     public enum Anisette {
         public static let hiddenBaseDirectoryName     = ".anisette"
-        public static let appSupportSubdirectory      = "SideStore"
+        public static let appSupportSubdirectory      = "oPenSSAI"
         public static let defaultDeviceSerialNumber   = "0"
         public static let defaultODAMetadataURL       = URL(string: "https://zzz.haus/oda.json")!
         public static var defaultODAMetadataURLString: String { defaultODAMetadataURL.absoluteString }
@@ -138,10 +138,9 @@ public enum AppConstants {
         // SideStore Documentation & Community URLs
         public static let pairingDocumentation      = URL(string: "https://docs.sidestore.io/docs/advanced/pairing-file")!
         public static let errorCodesDocumentation   = URL(string: "https://docs.sidestore.io/docs/troubleshooting/error-codes")!
-        public static let sideStoreWebsite          = URL(string: "https://sidestore.io")!
-        public static let sideStoreGitHub           = URL(string: "https://github.com/SideStore")!
-        public static let sideStoreIssues           = URL(string: "https://github.com/SideStore/SideStore/issues")!
-        public static let sideStoreDiscord          = URL(string: "https://discord.gg/sidestore-949183273383395328")!
+        public static let sideStoreWebsite          = URL(string: "https://github.com/SheldonJoO/oPenSSAI")!
+        public static let sideStoreGitHub           = URL(string: "https://github.com/SheldonJoO/oPenSSAI")!
+        public static let sideStoreIssues           = URL(string: "https://github.com/SheldonJoO/oPenSSAI/issues")!
     }
 
     public enum Minimuxer {
