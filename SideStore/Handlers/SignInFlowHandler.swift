@@ -9,19 +9,45 @@
 import UIKit
 import SideSign
 
+/// The credential-prompt contract shared by the shell login screen (iOS,
+/// `ShellAuthenticationViewController`) and the storyboard login screen
+/// (tvOS, `AuthenticationViewController`). SignInFlowHandler drives either
+/// one through this protocol.
+private protocol CredentialPrompting: UIViewController {
+    var authenticationHandler: ((String, String, @escaping (Result<(ALTAccount, ALTAppleAPISession), Error>) -> Void) -> Void)? { get set }
+    var completionHandler: (((ALTAccount, ALTAppleAPISession, String)?) -> Void)? { get set }
+}
+
+extension AuthenticationViewController: CredentialPrompting {}
+#if os(iOS)
+extension ShellAuthenticationViewController: CredentialPrompting {}
+#endif
+
 class SignInFlowHandler: AnyObject, SignInHandler, AnisetteServerHandler {
-    
+
     private weak var presentingViewController: UIViewController?
-    private weak var presentedAuthVC: AuthenticationViewController?
-    
+    private weak var presentedAuthVC: UIViewController?
+
     private var credentialsContinuation: CheckedContinuation<(String, String), Error>?
     private var activeAuthCompletionHandler: ((Result<(ALTAccount, ALTAppleAPISession), Error>) -> Void)?
     var showsDoItLater: Bool = false
-    
+
     private lazy var navigationController: UINavigationController = {
-        let storyboard = UIStoryboard(name: "Authentication", bundle: nil)
-        let navigationController = storyboard.instantiateViewController(withIdentifier: "navigationController") as! UINavigationController
+        let navigationController = UINavigationController(navigationBarClass: NavigationBar.self, toolbarClass: nil)
         navigationController.isModalInPresentation = true
+        navigationController.navigationBar.prefersLargeTitles = true
+        #if os(iOS)
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = ShellTheme.background
+        appearance.shadowColor = nil
+        appearance.titleTextAttributes = [.foregroundColor: ShellTheme.primaryText]
+        appearance.largeTitleTextAttributes = [.foregroundColor: ShellTheme.primaryText]
+        navigationController.navigationBar.standardAppearance = appearance
+        navigationController.navigationBar.scrollEdgeAppearance = appearance
+        navigationController.navigationBar.compactAppearance = appearance
+        navigationController.navigationBar.tintColor = ShellTheme.accentColor
+        #endif
         return navigationController
     }()
     
@@ -54,9 +80,13 @@ class SignInFlowHandler: AnyObject, SignInHandler, AnisetteServerHandler {
         
         return try await withCheckedThrowingContinuation { continuation in
             self.credentialsContinuation = continuation
-            
+
+            #if os(iOS)
+            let authVC: CredentialPrompting = ShellAuthenticationViewController()
+            #else
             let storyboard = UIStoryboard(name: "Authentication", bundle: nil)
-            let authVC = storyboard.instantiateViewController(withIdentifier: "authenticationViewController") as! AuthenticationViewController
+            let authVC: CredentialPrompting = storyboard.instantiateViewController(withIdentifier: "authenticationViewController") as! AuthenticationViewController
+            #endif
             self.presentedAuthVC = authVC
             
             authVC.authenticationHandler = { [weak self] (appleID, password, completionHandler) in
@@ -87,7 +117,11 @@ class SignInFlowHandler: AnyObject, SignInHandler, AnisetteServerHandler {
                 }
             }
             
+            #if os(iOS)
+            self.navigationController.view.tintColor = ShellTheme.accentColor
+            #else
             self.navigationController.view.tintColor = .altInvertedPrimary
+            #endif
             self.navigationController.setViewControllers([authVC], animated: false)
             presentingViewController.present(self.navigationController, animated: true)
         }

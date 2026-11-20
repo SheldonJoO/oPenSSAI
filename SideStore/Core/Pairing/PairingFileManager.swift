@@ -45,8 +45,63 @@ final class PairingFileManager: NSObject {
         return FileManager.default.documentsDirectory.appendingPathComponent(fileName)
     }
 
+    /// Pairing files written under a legacy (non-canonical) name.
+    ///
+    /// Wireless pairing writes the file under a device-derived name
+    /// (`<name>_<model>_rp.plist`, or `rp_pairing_file.plist` when the
+    /// device has no name), while everything else reads the fixed
+    /// `PairingFile_RemoteRP.plist` name — so a wirelessly-paired file was
+    /// invisible to the management view and to boot. The legacy Lockdown
+    /// name is `ALTPairingFile.mobiledevicepairing`. Needs proper testing
+    /// on device.
+    nonisolated func legacyPairingFileURLs(for mode: PairingProtocol) -> [URL] {
+        let fm = FileManager.default
+        let docs = fm.documentsDirectory
+        switch mode {
+        case .rppairing:
+            let canonical = pairingFileURL(for: mode).lastPathComponent
+            let names = (try? fm.contentsOfDirectory(atPath: docs.path)) ?? []
+            return names
+                .filter { $0 != canonical && ($0.hasSuffix(MinimuxerConstants.rpPairingFileSuffix) || $0 == MinimuxerConstants.defaultRPPairingFileName) }
+                .map { docs.appendingPathComponent($0) }
+        case .lockdown:
+            let legacy = docs.appendingPathComponent(AppConstants.Pairing.legacyPairingFileName)
+            return fm.fileExists(atPath: legacy.path) ? [legacy] : []
+        case .unknown:
+            return []
+        }
+    }
+
+    /// The most recently modified legacy pairing file for `mode`, if any.
+    nonisolated func legacyPairingFileURL(for mode: PairingProtocol) -> URL? {
+        let fm = FileManager.default
+        return legacyPairingFileURLs(for: mode).max { lhs, rhs in
+            let lhsDate = (try? fm.attributesOfItem(atPath: lhs.path)[.modificationDate] as? Date) ?? .distantPast
+            let rhsDate = (try? fm.attributesOfItem(atPath: rhs.path)[.modificationDate] as? Date) ?? .distantPast
+            return lhsDate < rhsDate
+        }
+    }
+
+    /// The canonical URL for `mode`, migrating a legacy-named file into
+    /// place first. If the copy fails, the legacy URL itself is returned so
+    /// the file stays usable.
+    nonisolated func effectivePairingFileURL(for mode: PairingProtocol) -> URL {
+        let canonical = pairingFileURL(for: mode)
+        let fm = FileManager.default
+        if fm.fileExists(atPath: canonical.path) { return canonical }
+        guard let legacy = legacyPairingFileURL(for: mode) else { return canonical }
+        do {
+            try fm.copyItem(at: legacy, to: canonical)
+            debugLog("[PairingFile] Migrated legacy \(mode.rawValue) pairing file to canonical name: \(legacy.lastPathComponent)")
+        } catch {
+            debugLog("[PairingFile] Failed to migrate legacy pairing file \(legacy.path): \(error)")
+            return legacy
+        }
+        return canonical
+    }
+
     nonisolated func hasPairingFile(for mode: PairingProtocol) -> Bool {
-        return FileManager.default.fileExists(atPath: pairingFileURL(for: mode).path)
+        return FileManager.default.fileExists(atPath: effectivePairingFileURL(for: mode).path)
     }
 
     nonisolated func hasPairingFile() -> Bool {
@@ -57,11 +112,14 @@ final class PairingFileManager: NSObject {
         if let mode = persistedActiveProtocol, hasPairingFile(for: mode) {
             return true
         }
-        return false
+        // Fallback: a pairing file exists on disk but no protocol preference
+        // was ever recorded (e.g. written by wireless pairing before the
+        // import step existed). Report it instead of "not paired".
+        return hasPairingFile(for: .rppairing) || hasPairingFile(for: .lockdown)
     }
 
     nonisolated func metadata(for mode: PairingProtocol) -> PairingFileMetadata {
-        let fileURL = pairingFileURL(for: mode)
+        let fileURL = effectivePairingFileURL(for: mode)
         let path = fileURL.path
         let fm = FileManager.default
         guard fm.fileExists(atPath: path) else {
@@ -75,7 +133,7 @@ final class PairingFileManager: NSObject {
     }
 
     nonisolated func fetchPairingFile(for mode: PairingProtocol) -> String? {
-        let fileURL = pairingFileURL(for: mode)
+        let fileURL = effectivePairingFileURL(for: mode)
         let fm = FileManager.default
         if fm.fileExists(atPath: fileURL.path),
            let contents = try? String(contentsOf: fileURL), !contents.isEmpty 
@@ -91,10 +149,12 @@ final class PairingFileManager: NSObject {
         if let targetPreferred, let contents = fetchPairingFile(for: targetPreferred) {
             return contents
         }
-        if let persisted = persistedActiveProtocol {
-            return fetchPairingFile(for: persisted)
+        if let persisted = persistedActiveProtocol, let contents = fetchPairingFile(for: persisted) {
+            return contents
         }
-        return nil
+        // Fallback: return any on-disk pairing file so boot can start
+        // minimuxer even when no protocol preference was recorded.
+        return fetchPairingFile(for: .rppairing) ?? fetchPairingFile(for: .lockdown)
     }
     
     @discardableResult
@@ -144,6 +204,11 @@ final class PairingFileManager: NSObject {
             try? fm.removeItem(at: fileURL)
             debugLog("[PairingFile] Deleted \(mode.rawValue) pairing file: \(fileURL.path)")
         }
+        // Remove legacy-named files too, or the next existence check would
+        // migrate one back into place and resurrect the deleted state.
+        for legacy in legacyPairingFileURLs(for: mode) {
+            try? fm.removeItem(at: legacy)
+        }
         if mode == persistedActiveProtocol {
             persistedActiveProtocol = nil
         }
@@ -161,6 +226,9 @@ final class PairingFileManager: NSObject {
             if fm.fileExists(atPath: path.path) {
                 try? fm.removeItem(at: path)
             }
+        }
+        for legacy in legacyPairingFileURLs(for: .rppairing) + legacyPairingFileURLs(for: .lockdown) {
+            try? fm.removeItem(at: legacy)
         }
         UserDefaults.standard.isPairingReset = true
         persistedActiveProtocol = nil

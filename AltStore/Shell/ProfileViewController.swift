@@ -42,7 +42,7 @@ final class ProfileViewController: UIViewController
         }
     }
 
-    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate }
+    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
     private enum HelpRow: Int, CaseIterable { case guide, community, support }
@@ -398,6 +398,10 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 cell.configure(
                     iconSystemName: "person.badge.key", iconTint: accent,
                     title: NSLocalizedString("Signing Certificate", comment: ""))
+            case .anisette:
+                cell.configure(
+                    iconSystemName: "server.rack", iconTint: accent,
+                    title: NSLocalizedString("Anisette Settings", comment: ""))
             case .none:
                 break
             }
@@ -495,6 +499,8 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 pushSwiftUIView(
                     CertificatesView(presentingViewController: self),
                     title: NSLocalizedString("Signing Certificate", comment: ""))
+            case .anisette:
+                navigationController?.pushViewController(AnisetteSettingsViewController(), animated: true)
             case .none:
                 break
             }

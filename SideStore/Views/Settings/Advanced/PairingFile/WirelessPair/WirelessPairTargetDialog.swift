@@ -30,10 +30,10 @@ struct WirelessPairTargetDialog: View {
             }
             #if !os(tvOS)
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationBarTitle(viewModel.dialogMode == .client ? "Select Device To Pair" : "Select Server Interface", displayMode: .inline)
+            .navigationBarTitle(viewModel.dialogMode == .client ? NSLocalizedString("Select Device To Pair", comment: "") : NSLocalizedString("Select Server Interface", comment: ""), displayMode: .inline)
             #else
             .background(Color.black.ignoresSafeArea())
-            .navigationTitle(viewModel.dialogMode == .client ? "Select Device To Pair" : "Select Server Interface")
+            .navigationTitle(viewModel.dialogMode == .client ? NSLocalizedString("Select Device To Pair", comment: "") : NSLocalizedString("Select Server Interface", comment: ""))
             #endif
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -335,7 +335,7 @@ struct WirelessPairTargetDialog: View {
                         .foregroundColor(isSelected ? .accentColor : .secondary)
                         .frame(width: 20)
                     
-                    interfaceTypeTag(name: "Manual", color: .secondary)
+                    interfaceTypeTag(name: NSLocalizedString("Manual", comment: ""), color: .secondary)
                     
                     Spacer()
                     

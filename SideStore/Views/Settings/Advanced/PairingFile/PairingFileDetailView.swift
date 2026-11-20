@@ -33,7 +33,7 @@ struct PairingFileDetailView: View {
     }
 
     private var fileURL: URL {
-        PairingFileManager.shared.pairingFileURL(for: mode)
+        PairingFileManager.shared.effectivePairingFileURL(for: mode)
     }
 
     private var fileName: String {
@@ -68,11 +68,11 @@ struct PairingFileDetailView: View {
     private var titleText: String {
         switch mode {
         case .rppairing:
-            return "Remote Pairing File"
+            return NSLocalizedString("Remote Pairing File", comment: "")
         case .lockdown:
-            return "Lockdown Pairing File"
+            return NSLocalizedString("Lockdown Pairing File", comment: "")
         case .unknown:
-            return "Pairing File"
+            return NSLocalizedString("Pairing File", comment: "")
         }
     }
 
@@ -137,21 +137,21 @@ struct PairingFileDetailView: View {
                 .padding(.horizontal, 4)
 
             VStack(spacing: 0) {
-                metadataRow(label: "File Name", value: fileName)
+                metadataRow(label: NSLocalizedString("File Name", comment: ""), value: fileName)
                 divider
-                metadataRow(label: "Protocol Type", value: mode == .rppairing ? "RPPairing (Tunnel)" : "Lockdown")
+                metadataRow(label: NSLocalizedString("Protocol Type", comment: ""), value: mode == .rppairing ? NSLocalizedString("RPPairing (Tunnel)", comment: "") : NSLocalizedString("Lockdown", comment: ""))
                 divider
-                metadataRow(label: "Status", value: isInstalled ? "Installed" : "Not Found", valueColor: isInstalled ? .green : .red)
+                metadataRow(label: NSLocalizedString("Status", comment: ""), value: isInstalled ? NSLocalizedString("Installed", comment: "") : NSLocalizedString("Not Found", comment: ""), valueColor: isInstalled ? .green : .red)
                 if isInstalled {
                     divider
-                    metadataRow(label: "File Size", value: ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file))
+                    metadataRow(label: NSLocalizedString("File Size", comment: ""), value: ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file))
                     if let created = creationDate {
                         divider
-                        metadataRow(label: "Date Created", value: formatDate(created))
+                        metadataRow(label: NSLocalizedString("Date Created", comment: ""), value: formatDate(created))
                     }
                     if let modified = modificationDate {
                         divider
-                        metadataRow(label: "Date Modified", value: formatDate(modified))
+                        metadataRow(label: NSLocalizedString("Date Modified", comment: ""), value: formatDate(modified))
                     }
                 }
             }
@@ -163,13 +163,13 @@ struct PairingFileDetailView: View {
     private var xmlContentSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(isEditing ? "EDIT RAW XML" : "RAW XML CONTENT")
+                Text(isEditing ? NSLocalizedString("EDIT RAW XML", comment: "") : NSLocalizedString("RAW XML CONTENT", comment: ""))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Color.white.opacity(0.6))
                 Spacer()
                 let displayed = isEditing ? editedContent : rawContent
                 if !displayed.isEmpty {
-                    Text("\(displayed.count) bytes")
+                    Text(String(format: NSLocalizedString("%d bytes", comment: ""), displayed.count))
                         .font(.system(size: 12))
                         .foregroundColor(Color.white.opacity(0.4))
                 }
@@ -273,7 +273,7 @@ struct PairingFileDetailView: View {
 
     private func saveEditedContent() {
         guard let data = editedContent.data(using: .utf8) else {
-            invalidPlistMessage = "Could not encode text as UTF-8."
+            invalidPlistMessage = NSLocalizedString("Could not encode text as UTF-8.", comment: "")
             showingInvalidPlistAlert = true
             return
         }
@@ -281,7 +281,7 @@ struct PairingFileDetailView: View {
         do {
             _ = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
         } catch {
-            invalidPlistMessage = "The property list contains syntax errors: \(error.localizedDescription)"
+            invalidPlistMessage = String(format: NSLocalizedString("The property list contains syntax errors: %@", comment: ""), error.localizedDescription)
             showingInvalidPlistAlert = true
             return
         }
@@ -292,7 +292,7 @@ struct PairingFileDetailView: View {
             UserDefaults.standard.setPairingFileEditSuppressed(true, forHash: currentSHA256)
             isEditing = false
         } catch {
-            invalidPlistMessage = "Failed to save pairing file: \(error.localizedDescription)"
+            invalidPlistMessage = String(format: NSLocalizedString("Failed to save pairing file: %@", comment: ""), error.localizedDescription)
             showingInvalidPlistAlert = true
         }
     }

@@ -70,7 +70,7 @@ struct PairingFileManagementView: View {
             case .resetConfirmation:
                 return Alert(
                     title: Text("Reset Pairing Files?"),
-                    message: Text(LocalizedStringKey("This will delete all stored pairing files (both **Lockdown** and **Remote Pairing**). You will need to re-pair or re-import a pairing file and restart SideStore.")),
+                    message: Text(LocalizedStringKey("This will delete all stored pairing files (both **Lockdown** and **Remote Pairing**). You will need to re-pair or re-import a pairing file and restart oPenSSAI.")),
                     primaryButton: .destructive(Text("Delete and Reset")) {
                         viewModel.resetAllPairingFiles()
                     },
@@ -79,7 +79,7 @@ struct PairingFileManagementView: View {
             case .resetCompleted:
                 return Alert(
                     title: Text("Pairing Files Reset"),
-                    message: Text("All pairing files have been reset. Please restart SideStore."),
+                    message: Text("All pairing files have been reset. Please restart oPenSSAI."),
                     dismissButton: .default(Text("OK"))
                 )
             case .importError(let msg):
@@ -141,7 +141,7 @@ struct PairingFileManagementView: View {
                             .frame(width: 7, height: 7)
                             .shadow(color: (viewModel.preferredProtocol != nil ? ledColor(for: viewModel.preferredProtocol!) : Color.gray).opacity(0.8), radius: 3)
 
-                        Text(viewModel.preferredProtocol != nil ? activeProtocolTagText(for: viewModel.preferredProtocol!) : "None")
+                        Text(viewModel.preferredProtocol != nil ? activeProtocolTagText(for: viewModel.preferredProtocol!) : NSLocalizedString("None", comment: ""))
                             .font(.system(size: 13, weight: .semibold, design: .monospaced))
                             .foregroundColor(.white)
                     }
@@ -182,7 +182,7 @@ struct PairingFileManagementView: View {
     }
 
     private func pairingFileCard(for proto: PairingProtocol) -> some View {
-        let fileURL = PairingFileManager.shared.pairingFileURL(for: proto)
+        let fileURL = PairingFileManager.shared.effectivePairingFileURL(for: proto)
         let metadata = PairingFileManager.shared.metadata(for: proto)
         let isInstalled = metadata.exists
         let content = isInstalled ? PairingFileManager.shared.fetchPairingFile(for: proto) : nil
@@ -251,7 +251,7 @@ struct PairingFileManagementView: View {
                 divider
 
                 VStack(spacing: 0) {
-                    infoRow(label: "File Name", value: fileURL.lastPathComponent, isMonospaced: true)
+                    infoRow(label: NSLocalizedString("File Name", comment: ""), value: fileURL.lastPathComponent, isMonospaced: true)
                     divider
                     if proto == viewModel.activeProtocol || proto == viewModel.preferredProtocol {
                         protocolStatusRow(for: proto)
@@ -259,38 +259,38 @@ struct PairingFileManagementView: View {
                     }
                     if proto == .rppairing {
                         if let id = remoteRP?.identifier, !id.isEmpty {
-                            identifierRow(label: "Identifier", value: id, fieldKey: "rp_identifier")
+                            identifierRow(label: NSLocalizedString("Identifier", comment: ""), value: id, fieldKey: "rp_identifier")
                             divider
                         }
-                        infoRow(label: "Key Material", value: (remoteRP?.publicKey != nil && remoteRP?.privateKey != nil) ? "Public & Private Keys OK" : "Incomplete Keys")
+                        infoRow(label: NSLocalizedString("Key Material", comment: ""), value: (remoteRP?.publicKey != nil && remoteRP?.privateKey != nil) ? NSLocalizedString("Public & Private Keys OK", comment: "") : NSLocalizedString("Incomplete Keys", comment: ""))
                         divider
                     } else {
                         if let sysBUID = lockdown?.systemBUID, !sysBUID.isEmpty {
-                            identifierRow(label: "SystemBUID", value: sysBUID, fieldKey: "lockdown_sysbuid")
+                            identifierRow(label: NSLocalizedString("SystemBUID", comment: ""), value: sysBUID, fieldKey: "lockdown_sysbuid")
                             divider
                         }
                         if let hostID = lockdown?.hostID, !hostID.isEmpty {
-                            identifierRow(label: "HostID", value: hostID, fieldKey: "lockdown_hostid")
+                            identifierRow(label: NSLocalizedString("HostID", comment: ""), value: hostID, fieldKey: "lockdown_hostid")
                             divider
                         }
                         if let udid = lockdown?.udid, !udid.isEmpty {
-                            identifierRow(label: "Hardware UDID", value: udid, fieldKey: "lockdown_udid")
+                            identifierRow(label: NSLocalizedString("Hardware UDID", comment: ""), value: udid, fieldKey: "lockdown_udid")
                             divider
                         }
                         if let wifi = lockdown?.wifiMACAddress, !wifi.isEmpty {
-                            identifierRow(label: "WiFi MAC", value: wifi, fieldKey: "lockdown_wifi")
+                            identifierRow(label: NSLocalizedString("WiFi MAC", comment: ""), value: wifi, fieldKey: "lockdown_wifi")
                             divider
                         }
                     }
 
-                    infoRow(label: "File Size", value: ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file))
+                    infoRow(label: NSLocalizedString("File Size", comment: ""), value: ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file))
                     if let created = creationDate {
                         divider
-                        infoRow(label: "Date Created", value: formatDate(created))
+                        infoRow(label: NSLocalizedString("Date Created", comment: ""), value: formatDate(created))
                     }
                     if let mod = modDate {
                         divider
-                        infoRow(label: "Date Modified", value: formatDate(mod))
+                        infoRow(label: NSLocalizedString("Date Modified", comment: ""), value: formatDate(mod))
                     }
                 }
             } else {
@@ -300,7 +300,7 @@ struct PairingFileManagementView: View {
                     VStack(spacing: 0) {
                         missingCardHeader(for: proto)
                         divider
-                        infoRow(label: "File Name", value: fileURL.lastPathComponent, isMonospaced: true)
+                        infoRow(label: NSLocalizedString("File Name", comment: ""), value: fileURL.lastPathComponent, isMonospaced: true)
                     }
                 }
                 .buttonStyle(.plain)
@@ -323,7 +323,7 @@ struct PairingFileManagementView: View {
                 .font(.system(size: 22))
                 .foregroundColor(proto == .rppairing ? .cyan : .green)
 
-            Text(proto == .rppairing ? "Remote Pairing File" : "Lockdown Pairing File")
+            Text(proto == .rppairing ? NSLocalizedString("Remote Pairing File", comment: "") : NSLocalizedString("Lockdown Pairing File", comment: ""))
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.white)
 
@@ -361,7 +361,7 @@ struct PairingFileManagementView: View {
                 .font(.system(size: 22))
                 .foregroundColor(Color.white.opacity(0.3))
 
-            Text(proto == .rppairing ? "Remote Pairing File" : "Lockdown Pairing File")
+            Text(proto == .rppairing ? NSLocalizedString("Remote Pairing File", comment: "") : NSLocalizedString("Lockdown Pairing File", comment: ""))
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(Color.white.opacity(0.8))
 
@@ -525,7 +525,7 @@ struct PairingFileManagementView: View {
             .background(Color.settingsRowBackground)
             .cornerRadius(14)
 
-            Text("Resetting pairing files removes stored Lockdown and Remote Pairing credentials. You will need to re-pair or re-import a pairing file and restart SideStore.")
+            Text("Resetting pairing files removes stored Lockdown and Remote Pairing credentials. You will need to re-pair or re-import a pairing file and restart oPenSSAI.")
                 .font(.system(size: 12))
                 .foregroundColor(Color.white.opacity(0.5))
                 .padding(.horizontal, 4)
@@ -554,11 +554,11 @@ struct PairingFileManagementView: View {
     private func activeProtocolTagText(for proto: PairingProtocol) -> String {
         switch proto {
         case .lockdown:
-            return "lockdown"
+            return NSLocalizedString("Lockdown", comment: "")
         case .rppairing:
-            return "rppairing"
+            return NSLocalizedString("Remote Pairing", comment: "")
         case .unknown:
-            return "unknown"
+            return NSLocalizedString("Unknown", comment: "")
         }
     }
 

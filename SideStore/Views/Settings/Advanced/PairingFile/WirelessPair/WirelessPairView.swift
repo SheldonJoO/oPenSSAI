@@ -281,8 +281,8 @@ struct ConnectionDetailsCard: View {
     let port: Int
     
     var rows: [(label: String, value: String)] {[
-        ("Device ID", serviceID),
-        ("Port", String(port))
+        (NSLocalizedString("Device ID", comment: ""), serviceID),
+        (NSLocalizedString("Port", comment: ""), String(port))
     ]}
     
     var body: some View {
@@ -343,7 +343,7 @@ struct ConnectionDetailsCard: View {
                             UIPasteboard.general.string = value
                             #endif
                         } label: {
-                            Label("Copy \(label)", systemImage: "doc.on.doc")
+                            Label(String(format: NSLocalizedString("Copy %@", comment: ""), label), systemImage: "doc.on.doc")
                         }
                     }
                 }

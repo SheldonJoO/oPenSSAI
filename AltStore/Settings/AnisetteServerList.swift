@@ -409,7 +409,7 @@ struct AnisetteServersView: View {
                         Text("Catalog File")
                             .foregroundColor(.primary)
                         Spacer()
-                        Text(viewModel.importedFileName ?? "Imported File")
+                        Text(viewModel.importedFileName ?? NSLocalizedString("Imported File", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
