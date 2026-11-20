@@ -94,8 +94,8 @@ final class AnisetteSettingsViewController: UIViewController
 
     private var selectedServerText: String?
     {
-        guard let urlString = UserDefaults.standard.menuAnisetteURL,
-              let host = URL(string: urlString)?.host, !host.isEmpty else
+        let urlString = UserDefaults.standard.menuAnisetteURL
+        guard let host = URL(string: urlString)?.host, !host.isEmpty else
         {
             return NSLocalizedString("Default", comment: "")
         }
