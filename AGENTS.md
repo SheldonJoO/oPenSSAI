@@ -58,6 +58,11 @@ device UDIDs.
   `PRODUCT_NAME = oPenSSAI` (the xcconfig value alone is overridden by the
   target setting) plus `CFBundleDisplayName` in `Info.plist`. Do not set
   `PRODUCT_NAME` back to `$(TARGET_NAME)` — v1 shipped showing "SideStore".
+  The Swift module deliberately stays `SideStore`
+  (`PRODUCT_MODULE_NAME = SideStore` in `xcconfigs/AltStore.xcconfig`):
+  engine code qualifies helpers as `SideStore.debugLog` and storyboards
+  reference `customModule="SideStore"`, so renaming the module breaks the
+  build and the storyboard screens.
 - **Nuke is pinned to exact 12.9.0** (project + `Package.resolved`): 13.2.0
   uses `isolated deinit`, which Xcode 16.4 / Swift 6.1's production compiler
   rejects. Do not bump Nuke without also requiring Xcode 26.

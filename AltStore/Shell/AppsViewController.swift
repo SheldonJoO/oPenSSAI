@@ -497,7 +497,9 @@ final class AppsViewController: UIViewController
         }
 
         contentVC.onToggle = { [weak confirmAction] isChecked in
-            confirmAction?.title = actionTitleForState(isChecked)
+            // UIAlertAction.title is get-only; update it via KVC like the
+            // original MyAppsViewController does.
+            confirmAction?.setValue(actionTitleForState(isChecked), forKey: "title")
         }
 
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
