@@ -40,3 +40,12 @@ DEBUG_ACTIVITY_MODE = disable
 
 // Mute warnings about duplicate classes in AuthKit and AuthUIKit
 DEBUG_DUPLICATE_CLASSES = NO
+
+// Simulator builds are arm64-only: the prebuilt binary dependencies
+// (EMProxy.xcframework, idevice-ios-sim.a) ship no x86_64 simulator slice,
+// so a Release simulator build otherwise fails at link time with ~73
+// undefined symbols (verified 2026-11-21: the x86_64 link of the SideStore
+// target fails, the arm64 link is clean). Device builds (iphoneos SDK)
+// are unaffected. Apple Silicon Macs run the simulator natively on arm64;
+// this does mean simulator builds won't work on Intel Macs.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64

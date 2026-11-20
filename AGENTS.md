@@ -70,6 +70,13 @@ device UDIDs.
   `CODE_SIGNING_REQUIRED=NO`, `AD_HOC_CODE_SIGNING_ALLOWED=YES` (the Makefile
   passes the same flags). Plain Xcode GUI builds work with no signing identity;
   developers who want a signed build can override in `local.xcconfig`.
+- **Simulator builds are arm64-only:** `Build.xcconfig` sets
+  `EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64`. The prebuilt binary
+  dependencies (`EMProxy.xcframework`, `idevice-ios-sim.a`) ship no x86_64
+  simulator slice, so a Release simulator build otherwise fails at link time
+  with ~73 undefined symbols (verified 2026-11-21). Do not remove this
+  without a simulator slice for those binaries. Simulator builds won't work
+  on Intel Macs.
 
 ### Project Structure
 
