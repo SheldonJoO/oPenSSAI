@@ -11,6 +11,9 @@ import CoreData
 public enum DatabaseError: LocalizedError, CustomNSError, Sendable, Equatable {
     case databaseDowngradeDetected(reason: String)
     case migrationFailed(reason: String)
+    /// Retained for compatibility; `loadPersistentStores()` no longer throws
+    /// this — when the App Group container is unavailable, oPenSSAI falls
+    /// back to a private sandbox database instead of refusing to launch.
     case missingAppGroup(reason: String)
     
     public var errorDescription: String? {
@@ -51,11 +54,6 @@ public enum DatabaseError: LocalizedError, CustomNSError, Sendable, Equatable {
 
 open class PersistentContainer: NSPersistentContainer, @unchecked Sendable {
     open var isMigrationRequired: Bool {
-        #if !os(tvOS)
-        guard FileManager.default.altstoreSharedDirectory != nil else {
-            return false
-        }
-        #endif
         for description in self.persistentStoreDescriptions {
             guard let url = description.url,
                   let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(ofType: description.type, at: url, options: description.options) else {
@@ -78,11 +76,18 @@ open class PersistentContainer: NSPersistentContainer, @unchecked Sendable {
         #if os(tvOS)
         return FileManager.default.cachesDirectory
         #else
-        guard let sharedDirectoryURL = FileManager.default.altstoreSharedDirectory else {
-            return FileManager.default.temporaryDirectory.appendingPathComponent("MissingAppGroupContainer")
-        }
-        
-        let databaseDirectoryURL = sharedDirectoryURL.appendingPathComponent("Database")
+        // oPenSSAI: prefer the shared App Group container, but fall back to
+        // the private sandbox when the group is unavailable — e.g. the app
+        // was re-signed by a team that never registered group.com.openssai.app
+        // (the common case for sideloaded installs). The widget cannot see a
+        // private-sandbox database, but the app itself launches and works
+        // normally instead of refusing to start. (Same fallback pattern as
+        // InstalledApp's file URL.)
+        let baseDirectoryURL = FileManager.default.altstoreSharedDirectory
+            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+
+        let databaseDirectoryURL = baseDirectoryURL.appendingPathComponent("Database")
         try? FileManager.default.createDirectory(at: databaseDirectoryURL, withIntermediateDirectories: true, attributes: nil)
 
         return databaseDirectoryURL
@@ -111,10 +116,15 @@ open class PersistentContainer: NSPersistentContainer, @unchecked Sendable {
     
     open func loadPersistentStores() async throws {
         #if !os(tvOS)
-        guard FileManager.default.altstoreSharedDirectory != nil else {
-            throw DatabaseError.missingAppGroup(
-                reason: NSLocalizedString("Unable to access the shared App Group container. Refusing to create or use a private sandbox fallback database.", comment: "")
-            )
+        // oPenSSAI: a missing App Group container is NOT fatal. The store
+        // URL already falls back to the private sandbox (see
+        // defaultDirectoryURL()), so just note it and continue launching.
+        // Needs proper testing: verify on a device signed by a team that
+        // never registered the group, and confirm the widget degrades
+        // gracefully (it cannot see a private-sandbox database).
+        if FileManager.default.altstoreSharedDirectory == nil
+        {
+            debugLog("[PersistentContainer] App Group container unavailable; using private sandbox database.")
         }
         #endif
 

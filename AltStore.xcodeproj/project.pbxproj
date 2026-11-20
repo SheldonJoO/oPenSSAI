@@ -846,7 +846,7 @@
 					"-w",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = oPenSSAI;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -895,7 +895,7 @@
 					"-w",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = oPenSSAI;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -982,8 +982,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 13.2.0;
+				kind = exactVersion;
+				version = 12.9.0;
 			};
 		};
 		A8C37033302DA84D0010213A /* XCRemoteSwiftPackageReference "Starscream" */ = {

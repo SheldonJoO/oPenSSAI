@@ -18,13 +18,18 @@ final class LaunchViewController: UIViewController {
     private var retries = 0
     private var maxRetries = 3
     private var splashViewModel = SplashViewModel()
-    private var destinationViewController: TabBarController?
+    private var destinationViewController: UIViewController?
     private var startTime: Date!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         debugLog("[LaunchViewController] viewDidLoad()")
+        #if !os(tvOS)
+        // oPenSSAI shell: the two-tab (Apps / Me) interface, built in code.
+        destinationViewController = ShellTabBarController()
+        #else
         destinationViewController = storyboard!.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
+        #endif
 
         #if !os(tvOS)
             if !UserDefaults.standard.hasCompletedOnboarding {
@@ -186,8 +191,19 @@ final class LaunchViewController: UIViewController {
             debugLog("Failed to update sources on launch. \(errorDesc)")
             
             let toastView = ToastView(text: NSLocalizedString("Some sources were unable to load", comment: ""), detailText: nil)
+            #if !os(tvOS)
+            if let shellRoot = self.destinationViewController as? ShellTabBarController
+            {
+                toastView.addTarget(shellRoot, action: #selector(ShellTabBarController.presentSources), for: .touchUpInside)
+                toastView.show(in: shellRoot.selectedViewController ?? shellRoot)
+            }
+            #else
             toastView.addTarget(self.destinationViewController, action: #selector(TabBarController.presentSources), for: .touchUpInside)
-            toastView.show(in: self.destinationViewController!.selectedViewController ?? self.destinationViewController!)
+            if let tabBarController = self.destinationViewController as? TabBarController
+            {
+                toastView.show(in: tabBarController.selectedViewController ?? tabBarController)
+            }
+            #endif
         }
         updateKnownSources()
         splashViewModel.updateStatus(NSLocalizedString("Almost there…", comment: ""))
@@ -215,7 +231,7 @@ final class LaunchViewController: UIViewController {
 
             destinationVC.view.alpha = 1
         } completion: { [self] _ in
-            debugLog("[LaunchViewController] Transition complete - exiting LaunchViewController, handing off to TabBarController")
+            debugLog("[LaunchViewController] Transition complete - exiting LaunchViewController, handing off to the main interface")
             for child in self.children where child !== destinationVC {
                 child.willMove(toParent: nil)
                 child.view.removeFromSuperview()

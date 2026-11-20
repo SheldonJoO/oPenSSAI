@@ -2,7 +2,16 @@
 // https://help.apple.com/xcode/#/dev745c5c974
 
 MARKETING_VERSION = 0.7.0
-CURRENT_PROJECT_VERSION = 0700
+CURRENT_PROJECT_VERSION = 0701
+
+// Unsigned by default: oPenSSAI is distributed as an unsigned IPA for
+// sideloading (the Makefile's `fakesign` step ad-hoc signs it afterwards,
+// and it passes these same flags to xcodebuild). Keeping them here makes
+// plain Xcode GUI builds work without a signing identity too. A developer
+// who wants a signed build can override them in local.xcconfig.
+CODE_SIGNING_ALLOWED = NO
+CODE_SIGNING_REQUIRED = NO
+AD_HOC_CODE_SIGNING_ALLOWED = YES
 
 // Vars to be overwritten by `CodeSigning.xcconfig` if exists
 // TODO(oPenSSAI): set DEVELOPMENT_TEAM to your own Apple Team ID (or in CodeSigning.xcconfig)

@@ -1656,7 +1656,7 @@ Settings by i cons from the Noun Project</string>
         <!--Error Log-->
         <scene sceneID="Htu-2V-dbE">
             <objects>
-                <tableViewController id="g8a-Rf-zWa" customClass="ErrorLogViewController" customModule="SideStore" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController storyboardIdentifier="ErrorLogViewController" id="g8a-Rf-zWa" customClass="ErrorLogViewController" customModule="SideStore" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="insetGrouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="107" sectionHeaderHeight="18" sectionFooterHeight="18" id="BBn-tI-e0e">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

@@ -48,11 +48,36 @@ device UDIDs.
   official keypair — the keys are coupled to the server side baked into the
   `em_proxy` XCFramework. Do not regenerate them without also forking em_proxy
   (see the comment at the top of `oPenSSAI.conf` and `docs/ARCHITECTURE.md`).
+- **App Group fallback:** the Core Data store must never refuse to launch when
+  the App Group container is unavailable (the common case for sideloaded
+  installs, where the signer never registered `group.com.openssai.app`).
+  `PersistentContainer.defaultDirectoryURL()` falls back to the private
+  Application Support directory and `loadPersistentStores()` only logs a
+  warning. Do not reintroduce a fatal error on the nil-container path.
+- **Display name:** the home-screen name comes from the target-level
+  `PRODUCT_NAME = oPenSSAI` (the xcconfig value alone is overridden by the
+  target setting) plus `CFBundleDisplayName` in `Info.plist`. Do not set
+  `PRODUCT_NAME` back to `$(TARGET_NAME)` — v1 shipped showing "SideStore".
+- **Nuke is pinned to exact 12.9.0** (project + `Package.resolved`): 13.2.0
+  uses `isolated deinit`, which Xcode 16.4 / Swift 6.1's production compiler
+  rejects. Do not bump Nuke without also requiring Xcode 26.
+- **Unsigned by default:** `Build.xcconfig` sets `CODE_SIGNING_ALLOWED=NO`,
+  `CODE_SIGNING_REQUIRED=NO`, `AD_HOC_CODE_SIGNING_ALLOWED=YES` (the Makefile
+  passes the same flags). Plain Xcode GUI builds work with no signing identity;
+  developers who want a signed build can override in `local.xcconfig`.
 
 ### Project Structure
 
 - `AltStore/` - Main iOS app target: UI, tab bar navigation (Browse, My Apps,
   Settings, News), App IDs, permissions, and app management.
+- `AltStore/Shell/` - oPenSSAI's own UI shell (programmatic UIKit, no
+  storyboards): the two-tab floating-pill interface — Apps (pending/installed
+  lists, per-app validity, Renew All) and Me (signing, expiry reminders,
+  appearance & theme, storage, guide, licenses, about). This is the main
+  interface on iOS; `LaunchViewController` instantiates `ShellTabBarController`
+  instead of the storyboard `TabBarController`. The old storyboard tabs
+  (Browse / Sources / News) are still in the repo but no longer reachable
+  from the shell; Sources is presented modally for deep links only.
 - `SideStore/` - SideStore-derived logic and UI overrides: boot flow
   (`AppBootManager.swift`), maintenance (`MaintenanceManager.swift`), deep links,
   and core utilities. (Directory and module names are unchanged from upstream.)
@@ -83,11 +108,17 @@ Xcode resolves dependencies automatically through local Swift Packages in `Depen
 
 ### Code Signing
 
+Builds are unsigned by default (see "Unsigned by default" above), so no
+signing identity is needed to build, run in the Simulator, or package an IPA
+for sideloading. If you want a signed build instead:
+
 1. Copy `CodeSigning.xcconfig.sample` to `CodeSigning.xcconfig`:
    ```sh
    cp CodeSigning.xcconfig.sample CodeSigning.xcconfig
    ```
-2. Set your `DEVELOPMENT_TEAM` and signing options. The default bundle ID is
+2. Set your `DEVELOPMENT_TEAM` and signing options, and override the unsigned
+   flags in `local.xcconfig` (`CODE_SIGNING_ALLOWED=YES`,
+   `CODE_SIGNING_REQUIRED=YES`). The default bundle ID is
    `com.openssai.app`; the placeholder team ID `XYZ0123456` in
    `Build.xcconfig` must be replaced with your own before building.
 3. For local debugging on a device from Xcode, register the device for
