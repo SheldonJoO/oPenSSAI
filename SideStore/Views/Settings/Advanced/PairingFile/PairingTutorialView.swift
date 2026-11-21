@@ -64,12 +64,18 @@ struct PairingTutorialView: View {
             isPresented: $showFileImporter,
             allowedContentTypes: PairingFileManager.supportedContentTypes,
             allowsMultipleSelection: false
-        ) { (result: Result<URL, Error>) in
-            // The Result type is annotated explicitly: fileImporter has
-            // two overloads (single URL vs [URL]) and an unannotated
-            // closure leaves the overload ambiguous, which the compiler
-            // misreports as an ambiguous ScrollView init above.
-            handleImportResult(result)
+        ) { result in
+            // The [URL] overload (same pattern as the other fileImporter
+            // call sites in this codebase): the single-URL overload does
+            // not take allowsMultipleSelection, so annotating Result<URL>
+            // here makes the compiler reject the closure outright.
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                handleImportResult(.success(url))
+            case .failure(let error):
+                handleImportResult(.failure(error))
+            }
         }
     }
 
