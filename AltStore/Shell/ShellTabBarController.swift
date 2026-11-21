@@ -39,7 +39,11 @@ final class ShellTabBarController: UITabBarController
     {
         super.viewDidLoad()
         view.backgroundColor = ShellTheme.background
-        ShellTheme.applyAppearance(to: view.window)
+        // No applyAppearance here: view.window is nil in viewDidLoad (this
+        // controller is created before its view joins a window), so the call
+        // was a silent no-op. The launch-time application lives in
+        // SceneDelegate.scene(willConnectTo:); viewWillAppear below is the
+        // safety net.
 
         appsNavigationController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("Apps", comment: ""),
@@ -80,7 +84,10 @@ final class ShellTabBarController: UITabBarController
     override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
-        ShellTheme.applyAppearance(to: view.window)
+        // Safety net: re-apply the stored appearance whenever the shell
+        // re-appears (e.g. after a modal dismiss). Resolves the window
+        // itself instead of trusting view.window.
+        ShellTheme.applyAppearance()
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle
@@ -149,7 +156,7 @@ final class ShellTabBarController: UITabBarController
 
     @objc private func applyAppearance()
     {
-        ShellTheme.applyAppearance(to: view.window)
+        ShellTheme.applyAppearance()
     }
 
     // MARK: - Deep links

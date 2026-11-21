@@ -126,6 +126,22 @@ enum ShellTheme
         }
     }
 
+    /// Applies the stored appearance to every window of the connected
+    /// scenes. Prefer this over `applyAppearance(to: view.window)`:
+    /// `view.window` is nil in `viewDidLoad`, which silently dropped the
+    /// launch-time application and left the window following the system
+    /// even though a dark theme was stored (0709). Call on the main thread.
+    static func applyAppearance()
+    {
+        let windows = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+        for window in windows
+        {
+            applyAppearance(to: window)
+        }
+    }
+
     /// One-line summary shown in the Profile screen, e.g. "Follow System·Violet".
     static var summary: String
     {

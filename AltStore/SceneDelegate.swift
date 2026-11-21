@@ -19,7 +19,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+
+        #if !os(tvOS)
+        // Apply the stored appearance before the launch screen hands off to
+        // the shell: the shell's viewDidLoad apply ran with a nil window, so
+        // a stored "dark" never reached the window on cold launch and the
+        // app rendered light while the Me screen still showed "Dark" (0709).
+        // Needs proper testing on device: confirm a stored dark theme
+        // renders dark from the first frame after relaunch.
+        ShellTheme.applyAppearance(to: window ?? windowScene.windows.first)
+        #endif
         
         if let context = connectionOptions.urlContexts.first
         {

@@ -111,7 +111,7 @@ extension ThemePickerViewController: UITableViewDataSource, UITableViewDelegate
         {
         case .appearance:
             ShellTheme.appearance = ShellAppearance.allCases[indexPath.row]
-            ShellTheme.applyAppearance(to: view.window)
+            ShellTheme.applyAppearance()
         case .accent:
             ShellTheme.accent = ShellAccent.allCases[indexPath.row]
         case .none:
