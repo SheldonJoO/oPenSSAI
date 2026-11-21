@@ -62,8 +62,13 @@ struct PairingTutorialView: View {
         }
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: PairingFileManager.supportedContentTypes
-        ) { result in
+            allowedContentTypes: PairingFileManager.supportedContentTypes,
+            allowsMultipleSelection: false
+        ) { (result: Result<URL, Error>) in
+            // The Result type is annotated explicitly: fileImporter has
+            // two overloads (single URL vs [URL]) and an unannotated
+            // closure leaves the overload ambiguous, which the compiler
+            // misreports as an ambiguous ScrollView init above.
             handleImportResult(result)
         }
     }
