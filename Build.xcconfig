@@ -1,8 +1,8 @@
 // Configuration settings file format documentation can be found at:
 // https://help.apple.com/xcode/#/dev745c5c974
 
-MARKETING_VERSION = 0.7.710
-CURRENT_PROJECT_VERSION = 0710
+MARKETING_VERSION = 0.7.712
+CURRENT_PROJECT_VERSION = 0712
 
 // Unsigned by default: oPenSSAI is distributed as an unsigned IPA for
 // sideloading (the Makefile's `fakesign` step ad-hoc signs it afterwards,
