@@ -113,7 +113,9 @@ final class PendingIPAStore
 
     /// Imports an .ipa into the queue, parsing its metadata. The source may
     /// be a local file URL (Files picker, "Open in") or a remote URL (which
-    /// is downloaded first).
+    /// is downloaded first). Importing an .ipa whose bundle identifier is
+    /// already pending replaces the existing entry in place instead of
+    /// adding a duplicate.
     func add(from sourceURL: URL) async throws -> PendingIPA
     {
         let id = UUID().uuidString
@@ -172,7 +174,20 @@ final class PendingIPAStore
             hasIcon: hasIcon
         )
 
-        items.insert(item, at: 0)
+        // Re-importing an .ipa for an app that is already pending replaces
+        // the existing entry in place (preserving list order) instead of
+        // adding a duplicate; the replaced entry's files are removed.
+        if let index = items.firstIndex(where: { $0.bundleIdentifier == item.bundleIdentifier })
+        {
+            let oldItem = items[index]
+            items[index] = item
+            try? FileManager.default.removeItem(at: ipaURL(for: oldItem))
+            try? FileManager.default.removeItem(at: directoryURL.appendingPathComponent(oldItem.iconFileName))
+        }
+        else
+        {
+            items.insert(item, at: 0)
+        }
         saveIndex()
         NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
         return item

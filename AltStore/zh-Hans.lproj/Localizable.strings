@@ -990,6 +990,7 @@
 "Saved SideSign headers successfully." = "SideSign 请求头已成功保存。";
 "Saved configuration successfully." = "配置已成功保存。";
 "Saved to WidgetLogs/%@" = "已保存到 WidgetLogs/%@";
+"Screenshot to save, then scan it in WeChat" = "截图保存，打开微信扫一扫";
 "Scroll to Bottom" = "滚动到底部";
 "Seal" = "封印";
 "Sealed Files (%lld)" = "已封印文件（%lld）";

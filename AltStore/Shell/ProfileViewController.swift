@@ -540,7 +540,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .community:
                 openWebURL(AppConstants.URLs.sideStoreGitHub, preferredTintColor: ShellTheme.accentColor)
             case .support:
-                openWebURL(AppConstants.URLs.sideStoreIssues, preferredTintColor: ShellTheme.accentColor)
+                navigationController?.pushViewController(DonationViewController(), animated: true)
             case .none:
                 break
             }
