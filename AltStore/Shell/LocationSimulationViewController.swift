@@ -4,10 +4,12 @@
 //  oPenSSAI
 //
 //  The Virtual Location screen, reachable from Me → Virtual Location.
-//  Coordinates are sent to the Mac helper (tools/location-helper), which
-//  drives the device's DVT location simulation service; the simulated
-//  position is system-wide (Maps and every app read it from locationd).
-//  Needs proper testing on a real device with the helper running.
+//  The simulated position is system-wide (Maps and every app read it from
+//  locationd). It is delivered by the on-device direct connection (the
+//  app drives the device's DVT location simulation service itself, no Mac
+//  involved) when its prerequisites are met, and falls back to the Mac
+//  helper (tools/location-helper) otherwise. Needs proper testing on a
+//  real device.
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
@@ -18,6 +20,7 @@ final class LocationSimulationViewController: UIViewController
 {
     private enum Section: Int, CaseIterable
     {
+        case prerequisites
         case status
         case coordinates
         case presets
@@ -28,6 +31,7 @@ final class LocationSimulationViewController: UIViewController
         {
             switch self
             {
+            case .prerequisites: return NSLocalizedString("Prerequisites", comment: "")
             case .status: return NSLocalizedString("Current Status", comment: "")
             case .coordinates: return NSLocalizedString("Coordinates", comment: "")
             case .presets: return NSLocalizedString("Preset Locations", comment: "")
@@ -40,21 +44,24 @@ final class LocationSimulationViewController: UIViewController
         {
             switch self
             {
+            case .prerequisites:
+                return NSLocalizedString("On-device simulation needs Developer Mode on, a wireless pairing file, and the idevice gateway backend. When any of these is missing, the Mac helper is used instead (set its address below).", comment: "")
             case .status:
-                return NSLocalizedString("The simulated location is delivered to this device by the location-helper on your Mac (Apple's DVT developer service) and applies system-wide. Stop and restore the real location when you are done.", comment: "")
+                return NSLocalizedString("The simulated location is delivered by the on-device direct connection (Apple's DVT developer service) or by the location-helper on your Mac, and applies system-wide. Stop and restore the real location when you are done.", comment: "")
             case .coordinates:
                 return NSLocalizedString("Coordinates are WGS-84. Places inside China may appear offset by a few hundred meters in Apple Maps (GCJ-02 coordinate difference); this is normal.", comment: "")
             case .presets:
                 return nil
             case .control:
-                return nil
+                return NSLocalizedString("Keep the app in the foreground while simulating; the simulation may stop after the app has been in the background for a while.", comment: "")
             case .helper:
-                return NSLocalizedString("Run tools/location-helper on your Mac (see the repository README), keep the phone and the Mac on the same local network, and enter the Mac's local IP address and port here.", comment: "")
+                return NSLocalizedString("Fallback route: run tools/location-helper on your Mac (see the repository README), keep the phone and the Mac on the same local network, and enter the Mac's local IP address and port here. On-device direct connection is preferred when available.", comment: "")
             }
         }
     }
 
-    private enum StatusRow: Int, CaseIterable { case simulation, helper }
+    private enum PrerequisiteRow: Int, CaseIterable { case developerMode, pairingFile, backend }
+    private enum StatusRow: Int, CaseIterable { case simulation, transport }
     private enum CoordinateRow: Int, CaseIterable { case latitude, longitude }
     private enum ControlRow: Int, CaseIterable { case start, stop }
     private enum HelperRow: Int, CaseIterable { case address, test }
@@ -62,7 +69,7 @@ final class LocationSimulationViewController: UIViewController
     private var latitudeText: String
     private var longitudeText: String
     private var status: LocationSimulationStatus?
-    private var helperReachable: Bool?
+    private var prerequisites: LocationPrerequisites?
     private var isWorking = false
 
     private lazy var tableView: UITableView = {
@@ -148,15 +155,49 @@ final class LocationSimulationViewController: UIViewController
         return NSLocalizedString("Not Started", comment: "")
     }
 
-    private var helperText: String
+    private var transportText: String
     {
-        guard let helperReachable else
+        let manager = LocationSimulationManager.shared
+        if status?.active == true
         {
-            return NSLocalizedString("Not Tested", comment: "")
+            return manager.activeTransport.displayName
         }
-        return helperReachable
-            ? NSLocalizedString("Connected", comment: "")
-            : NSLocalizedString("Connection Failed", comment: "")
+        if manager.onDeviceAvailable
+        {
+            return NSLocalizedString("On-Device", comment: "")
+        }
+        if manager.helperConfigured
+        {
+            return NSLocalizedString("Mac Helper", comment: "")
+        }
+        return NSLocalizedString("Unavailable", comment: "")
+    }
+
+    private var developerModeText: String
+    {
+        guard let prerequisites, let developerMode = prerequisites.developerMode else
+        {
+            return NSLocalizedString("Unknown", comment: "")
+        }
+        return developerMode
+            ? NSLocalizedString("Enabled", comment: "")
+            : NSLocalizedString("Disabled", comment: "")
+    }
+
+    private var pairingFileText: String
+    {
+        guard let prerequisites else
+        {
+            return NSLocalizedString("Unknown", comment: "")
+        }
+        return prerequisites.hasRPPairingFile
+            ? NSLocalizedString("Ready", comment: "")
+            : NSLocalizedString("Not Paired", comment: "")
+    }
+
+    private var backendText: String
+    {
+        selectedGatewayBackendCache.rawValue
     }
 
     private var enteredLocation: SimulatedLocation?
@@ -182,9 +223,12 @@ final class LocationSimulationViewController: UIViewController
     {
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let fetched = await LocationSimulationManager.shared.refreshStatus()
-            self.status = fetched ?? LocationSimulationManager.shared.lastStatus
-            self.helperReachable = fetched != nil
+            let manager = LocationSimulationManager.shared
+            async let fetchedStatus = manager.refreshStatus()
+            async let fetchedPrerequisites = manager.checkPrerequisites()
+            let (status, prerequisites) = await (fetchedStatus, fetchedPrerequisites)
+            self.status = status ?? manager.lastStatus
+            self.prerequisites = prerequisites
             self.tableView.reloadData()
         }
     }
@@ -204,11 +248,9 @@ final class LocationSimulationViewController: UIViewController
             defer { self.setWorking(false) }
             do
             {
-                let service = try LocationSimulationManager.shared.makeService()
-                try await service.setLocation(location)
-                LocationSimulationManager.shared.lastLocation = location
+                let transport = try await LocationSimulationManager.shared.setLocation(location)
                 ToastView(text: NSLocalizedString("Location simulation started", comment: ""),
-                          detailText: location.coordinateText).show(in: self)
+                          detailText: "\(location.coordinateText) · \(transport.displayName)").show(in: self)
             }
             catch
             {
@@ -228,8 +270,7 @@ final class LocationSimulationViewController: UIViewController
             defer { self.setWorking(false) }
             do
             {
-                let service = try LocationSimulationManager.shared.makeService()
-                try await service.clearLocation()
+                try await LocationSimulationManager.shared.clearLocation()
                 ToastView(text: NSLocalizedString("Location simulation stopped", comment: ""), detailText: nil).show(in: self)
             }
             catch
@@ -283,10 +324,9 @@ final class LocationSimulationViewController: UIViewController
             defer { self.setWorking(false) }
             do
             {
-                let service = try LocationSimulationManager.shared.makeService()
+                let service = try LocationSimulationManager.shared.makeHelperService()
                 let fetched = try await service.fetchStatus()
                 self.status = fetched
-                self.helperReachable = true
                 ToastView(text: NSLocalizedString("Connected", comment: ""),
                           detailText: fetched.active
                             ? "\(NSLocalizedString("Simulating", comment: "")) · \(fetched.location?.coordinateText ?? "")"
@@ -294,7 +334,6 @@ final class LocationSimulationViewController: UIViewController
             }
             catch
             {
-                self.helperReachable = false
                 ToastView(error: error).show(in: self.view)
             }
             self.tableView.reloadData()
@@ -315,6 +354,7 @@ extension LocationSimulationViewController: UITableViewDataSource, UITableViewDe
     {
         switch Section(rawValue: section)
         {
+        case .prerequisites: return PrerequisiteRow.allCases.count
         case .status: return StatusRow.allCases.count
         case .coordinates: return CoordinateRow.allCases.count
         case .presets: return LocationPresets.all.count
@@ -362,6 +402,28 @@ extension LocationSimulationViewController: UITableViewDataSource, UITableViewDe
 
         switch Section(rawValue: indexPath.section)
         {
+        case .prerequisites:
+            switch PrerequisiteRow(rawValue: indexPath.row)
+            {
+            case .developerMode:
+                cell.configureInfo(
+                    iconSystemName: "hammer.fill", iconTint: accent,
+                    title: NSLocalizedString("Developer Mode", comment: ""),
+                    value: developerModeText)
+            case .pairingFile:
+                cell.configureInfo(
+                    iconSystemName: "link", iconTint: accent,
+                    title: NSLocalizedString("Pairing File", comment: ""),
+                    value: pairingFileText)
+            case .backend:
+                cell.configureInfo(
+                    iconSystemName: "cpu", iconTint: accent,
+                    title: NSLocalizedString("Gateway Backend", comment: ""),
+                    value: backendText)
+            case .none:
+                break
+            }
+
         case .status:
             switch StatusRow(rawValue: indexPath.row)
             {
@@ -370,11 +432,11 @@ extension LocationSimulationViewController: UITableViewDataSource, UITableViewDe
                     iconSystemName: "location.fill", iconTint: accent,
                     title: NSLocalizedString("Current Status", comment: ""),
                     value: statusText)
-            case .helper:
+            case .transport:
                 cell.configureInfo(
-                    iconSystemName: "server.rack", iconTint: accent,
-                    title: NSLocalizedString("Location Helper", comment: ""),
-                    value: helperText)
+                    iconSystemName: "network", iconTint: accent,
+                    title: NSLocalizedString("Transport", comment: ""),
+                    value: transportText)
             case .none:
                 break
             }
@@ -447,7 +509,7 @@ extension LocationSimulationViewController: UITableViewDataSource, UITableViewDe
             case .test: testConnectionTapped()
             case .none: break
             }
-        case .status, .coordinates, .none:
+        case .prerequisites, .status, .coordinates, .none:
             break
         }
     }
