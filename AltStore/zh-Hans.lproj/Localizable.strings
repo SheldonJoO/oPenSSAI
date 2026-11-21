@@ -4,6 +4,7 @@
    oPenSSAI 适配与补译：基于 SideStore 0.7.0 (4f3d18d)，品牌名已改为 oPenSSAI。
 */
 
+
 "#%lld" = "#%lld";
 "%@" = "%@";
 "%@ %@" = "%@ %@";
@@ -66,6 +67,7 @@
 "6-digit PIN" = "6 位数字密码";
 "7 DAYS" = "7 天";
 "7+" = "7+";
+"A one-time pairing file connects SideStore to %@ device services." = "一次性配对文件用于将 openSSS 连接到 %@ 的设备服务。";
 "A one-time pairing file connects openSSS to %@ device services." = "一次性配对文件用于将 openSSS 连接到 %@ 的设备服务。";
 "A permission for %@ is missing a usage description." = "%@ 对应的权限缺少用途说明。";
 "A provisioning profile for the app could not be found: %@" = "找不到该应用的描述文件：%@";
@@ -228,6 +230,7 @@
 "Cancel All" = "全部取消";
 "Cannot Activate More than 3 Apps" = "无法激活超过 3 个应用";
 "Cannot Activate More than 3 Apps and App Extensions" = "无法激活超过 3 个应用及应用扩展";
+"Cannot connect to the device. Make sure it is paired and on the same network." = "无法连接设备，请确认已配对且在同一网络";
 "Capabilities & Features (%lld)" = "功能与能力（%lld）";
 "CarPlay" = "CarPlay";
 "Catalog File" = "目录文件";
@@ -403,7 +406,9 @@
 "Developer" = "开发者";
 "Developer Account" = "开发者账户";
 "Developer Certificates (%lld)" = "开发者证书（%lld）";
+"Developer Mode" = "开发者模式";
 "Developer Options" = "开发者选项";
+"Developer Mode is off. Turn it on in Settings > Privacy & Security > Developer Mode, then restart the device." = "开发者模式未开启。请在「设置 → 隐私与安全性 → 开发者模式」中开启并重启设备。";
 "Developer Portal Error" = "开发者门户错误";
 "Developer Portal Info" = "开发者门户信息";
 "Developer Portal Services" = "开发者门户服务";
@@ -417,6 +422,7 @@
 "Device Registration Skipped" = "已跳过设备注册";
 "Device Type" = "设备类型";
 "Device UDID" = "设备 UDID";
+"Device connection is not started. Pair the device or restart the app." = "设备连接未启动，请先完成配对或重启应用";
 "Device is not reachable at the specified IP or Endpoint." = "无法连接指定 IP 或端点上的设备。";
 "Device registration pending" = "设备注册待处理";
 "Devices (%lld/%lld)" = "设备（%lld/%lld）";
@@ -559,6 +565,7 @@
 "Failed to stop EMProxy!" = "停止 EMProxy 失败！";
 "Failure" = "失败";
 "Failure Reason" = "失败原因";
+"Fallback route: run tools/location-helper on your Mac (see the repository README), keep the phone and the Mac on the same local network, and enter the Mac's local IP address and port here. On-device direct connection is preferred when available." = "备用路线：Mac 上运行 tools/location-helper（见仓库 README），手机与 Mac 在同一局域网，在此填 Mac 的局域网 IP 与端口。本机直连可用时优先本机直连。";
 "Fault" = "故障";
 "Featured" = "精选";
 "Featured Apps" = "精选应用";
@@ -592,6 +599,7 @@
 "Full Spectrum Color Wheel" = "全色域色轮";
 "GENERAL" = "通用";
 "Games" = "游戏";
+"Gateway Backend" = "网关后端";
 "General Info" = "常规信息";
 "General Metadata" = "常规元数据";
 "Generate" = "生成";
@@ -686,6 +694,7 @@
 "Keep SideSign headers" = "保留 SideSign 请求头";
 "Keep header customizations" = "保留请求头自定义";
 "Keep signing certificate" = "保留签名证书";
+"Keep the app in the foreground while simulating; the simulation may stop after the app has been in the background for a while." = "模拟期间请保持应用在前台；切到后台一段时间后模拟可能中断。";
 "Key Added" = "密钥已添加";
 "Key Name" = "键名";
 "Key was added to certificate %@ (SN: %@)." = "密钥已添加到证书 %@（序列号：%@）。";
@@ -727,6 +736,7 @@
 "MINIMUXER" = "MINIMUXER";
 "MINIMUXER BACKEND" = "MINIMUXER 后端";
 "Mac" = "Mac";
+"Mac Helper" = "Mac Helper";
 "Machine Name" = "设备名称";
 "Make sure LocalDevVPN is connected and running!" = "请确保 LocalDevVPN 已连接并正在运行！";
 "Make sure to only add sources that you trust." = "请务必只添加你信任的来源。";
@@ -781,6 +791,7 @@
 "No fetched headers found" = "未找到拉取的请求头";
 "No files or subfolders found in this directory." = "此目录中没有文件或子文件夹。";
 "No local certificates found." = "未找到本地证书。";
+"No location transport is available" = "本机直连不可用，也未设置 Helper 地址";
 "No matching keys found" = "未找到匹配的键名";
 "No pairing file installed." = "未安装配对文件。";
 "No pairing targets found via Bonjour." = "未通过 Bonjour 找到配对目标。";
@@ -808,14 +819,18 @@
 "OK" = "好";
 "ONBOARDING" = "使用引导";
 "Omit" = "省略";
+"On-Device" = "本机直连";
 "On-Device Sideloading" = "设备端侧载";
+"On-device location failed: %@" = "本机定位失败：%@";
 "Onboarding reset for next launch" = "引导流程将在下次启动时重来";
+"On-device simulation needs Developer Mode on, a wireless pairing file, and the idevice gateway backend. When any of these is missing, the Mac helper is used instead (set its address below)." = "本机直连需要开发者模式已开启、无线配对已完成、网关后端为 idevice。任一条件不满足时自动使用 Mac Helper（需在下方设置地址）。";
 "One or more apps in source “%@” are missing a marketplaceID. This most likely means they are not notarized, which is not supported by this version of SideStore." = "来源 “%@” 中有一个或多个应用缺少 marketplaceID，这很可能意味着它们未经公证，而当前版本的 openSSS 不支持此类应用。";
 "Open" = "打开";
 "Open %@" = "打开 %@";
 "Open Apple Account" = "打开 Apple 账户";
 "Open Developer Account" = "打开开发者账户";
 "Open Documents In Place" = "就地打开“文档”目录";
+"Open SideStore" = "打开 openSSS";
 "Open openSSS" = "打开 openSSS";
 "Open in Safari (%@://)" = "在 Safari 中打开（%@://）";
 "Open this URL on your iPhone, iPad, or Mac on the same Wi-Fi network to download '%@':\n\n%@" = "请在你的 iPhone、iPad 或 Mac 上打开以下 URL 进行下载：“%@”：\n\n%@";
@@ -876,6 +891,7 @@
 "Portal" = "开发者门户";
 "Preferred" = "首选";
 "Preferred Protocol" = "首选协议";
+"Prerequisites" = "前置条件";
 "Privacy Permission" = "隐私权限";
 "Privacy Permissions (%lld)" = "隐私权限（%lld）";
 "Private Key Data" = "私钥数据";
@@ -1074,9 +1090,13 @@
 "SideStore News" = "openSSS 资讯";
 "SideStore can only install marketplace apps that have been notarized by Apple." = "openSSS 只能安装经过 Apple 公证的市场应用。";
 "SideStore cannot manage the existing certificate without owning its private key. The apps signed with the existing certificate will expire soon unless they are resigned and renewed explicitly by SideStore." = "openSSS 在没有私钥的情况下无法管理现有证书。除非由 openSSS 显式重签并续期，否则使用该证书签名的应用即将到期失效。";
+"SideStore communicates with on-device services over a local loopback VPN. Enable LocalDevVPN before verifying." = "openSSS 通过本地回环 VPN 与设备端服务通信。验证前请先启用 LocalDevVPN。";
 "SideStore does not have detailed information for these entitlements." = "openSSS 没有这些授权项的详细信息。";
+"SideStore requires an Apple ID to create development certificates and provisioning profiles for signing apps." = "openSSS 需要使用 Apple ID 来创建用于应用签名的开发证书与描述文件。";
 "SideStore was installed by a different signing tool (like Xcode or AltStore)." = "openSSS 由其他签名工具（如 Xcode 或 AltStore）安装。";
+"SideStore setup is complete. You can now install and refresh apps." = "openSSS 设置完成，你现在可以安装并刷新应用了。";
 "SideStore's database could not be saved." = "openSSS 的数据库无法保存。";
+"SideStore uses a pairing file (.mobiledevicepairing or .plist) generated by your computer to talk to %@ device services." = "openSSS 使用电脑生成的配对文件（.mobiledevicepairing 或 .plist）与 %@ 设备服务通信。";
 "Sideload and refresh apps directly on your device, untethered from a computer." = "直接在设备上侧载并刷新应用，无需连接电脑。";
 "Sideloaded" = "已侧载";
 "Sign In" = "登录";
@@ -1156,6 +1176,7 @@
 "The bundle identifier is invalid." = "该 bundle identifier 无效。";
 "The cached permissions for %@ do not match the source." = "%@ 的缓存权限信息与来源不一致。";
 "The cached versions for %@ do not match the source." = "%@ 的缓存版本信息与来源不一致。";
+"The current gateway backend does not support on-device location. Switch to the idevice backend in Settings." = "当前网关后端不支持本机定位，请在设置中切换到 idevice 后端";
 "The current pairing file is invalid. Reason: %@\n\nPlease make sure to input a valid pairing file! If the issue persists, replace your pairing with iloader or idevice_pair." = "当前配对文件无效。原因：%@\n\n请确认输入了有效的配对文件！如果问题仍然存在，请用 iloader 或 idevice_pair 重新配对。";
 "The database on disk was created with a newer version of SideStore. Downgrading the database schema is not supported. Please update SideStore or reset your database." = "磁盘上的数据库由更新版本的 openSSS 创建，不支持降级数据库结构。请更新 openSSS 或重置你的数据库。";
 "The default SideStore source cannot be removed." = "默认来源无法移除。";
@@ -1171,6 +1192,7 @@
 "The more you use SideStore, the more often iOS will allow it to refresh apps in the background." = "你使用 openSSS 越频繁，iOS 允许它在后台刷新应用的机会就越多。";
 "The operation returned an unknown result." = "操作返回了未知结果。";
 "The operation timed out." = "操作超时。";
+"The pairing file is invalid. Please pair again." = "配对文件无效，请重新配对";
 "The private key for the active signing certificate is missing from this device's keychain." = "此设备的钥匙串中缺少当前签名证书的私钥。";
 "The process" = "该进程";
 "The process '%@'" = "进程 “%@”";
@@ -1181,6 +1203,7 @@
 "The signing certificate used to install SideStore was revoked on the Apple Developer portal." = "用于安装 openSSS 的签名证书已在 Apple 开发者门户被吊销。";
 "The signing certificate used to install “%@” has expired. Please re-sign or reinstall the app." = "用于安装“%@”的签名证书已过期。请重新签名或重新安装该应用。";
 "The signing certificate used to install “%@” was revoked on the Apple Developer portal. Please re-sign or reinstall the app." = "用于安装“%@”的签名证书已在 Apple Developer 门户上被吊销。请重新签名或重新安装该应用。";
+"The simulated location is delivered by the on-device direct connection (Apple's DVT developer service) or by the location-helper on your Mac, and applies system-wide. Stop and restore the real location when you are done." = "模拟位置由本机直连（Apple DVT 开发者服务）或 Mac 上的 location-helper 提供，全系统生效。用完请点「停止并恢复」，恢复真实位置。";
 "The source “%@” contains %@ for %@." = "来源 “%@” 中的 %@ 包含 %@。";
 "The source “%@” contains multiple apps with %@." = "来源 “%@” 中有多个应用使用了相同的 %@。";
 "The source “%@” contains notarized apps, which are not supported by this version of SideStore." = "来源 “%@” 包含已公证的应用，当前版本的 openSSS 不支持此类应用。";
@@ -1217,6 +1240,7 @@
 "Toggle Sensitive Information" = "切换敏感信息";
 "Total" = "总计";
 "Total Space:" = "总空间：";
+"Transport" = "传输方式";
 "Triggered Top Shelf refresh." = "已触发 Top Shelf 刷新。";
 "Triggered timeline refresh for all widgets." = "已触发所有小组件的时间线刷新。";
 "Try Again" = "重试";
@@ -1247,6 +1271,7 @@
 "Unable to find a valid migration path for the database." = "找不到有效的数据库迁移路径。";
 "Unable to locate oPenSSAI.conf in bundle resources." = "无法在应用资源中找到 oPenSSAI.conf。";
 "Unable to read app group backup." = "无法读取 App Group 备份。";
+"Unavailable" = "不可用";
 "Undefined" = "未定义";
 "Underlying Error" = "底层错误";
 "Underlying Errors" = "底层错误";
@@ -1375,8 +1400,6 @@
 "“%@” will be automatically given these permissions once installed." = "“%@”安装后将自动获得这些权限。";
 "•" = "•";
 "••••••••••••••••••••••••••••" = "••••••••••••••••••••••••••••";
-
-// oPenSSAI shell (two-tab interface, 2026-11-21)
 "%d Components" = "%d 个组件";
 "%d Day" = "%d 天";
 "%d Days" = "%d 天";
@@ -1476,8 +1499,6 @@
 "WebSocket client." = "WebSocket 客户端。";
 "ZIP archive handling." = "ZIP 归档处理。";
 "oPenSSAI is free and open-source software (AGPLv3). It is a fork of SideStore, built on AltStore by Riley Testut and the SideStore contributors." = "openSSS 是免费开源软件（AGPLv3），复刻自 SideStore，基于 Riley Testut 的 AltStore 及 SideStore 贡献者的工作。";
-
-// oPenSSAI 0702 fixes (pairing files, anisette settings, shell login)
 "%d bytes" = "%d 字节";
 "APPLE ID" = "APPLE ID";
 "Advertising server..." = "正在广播服务器…";
@@ -1544,8 +1565,6 @@
 "Import Failures" = "导入失败";
 "Imported File" = "已导入的文件";
 "New Certificate" = "新证书";
-
-/* 虚拟定位 (feature/location-simulation) */
 "Beijing" = "北京";
 "Berlin" = "柏林";
 "Connected" = "已连接";
@@ -1585,8 +1604,6 @@
 "Tokyo" = "东京";
 "Virtual Location" = "虚拟定位";
 "Yantai" = "烟台";
-
-// oPenSSAI 0707 connection settings (Local VPN / remote direct)
 "Add a 10.7.0.1/32 route in Shadowrocket (via the WireGuard configuration) to sideload without turning on LocalDev." = "在 Shadowrocket 里添加一条 10.7.0.1/32 的路由（走 WireGuard 配置），即可不用开启 LocalDev 直接侧载。";
 "Connection Settings" = "连接设置";
 "Local VPN" = "本机 VPN";
@@ -1596,16 +1613,12 @@
 "Remote Server IP" = "远程服务器 IP";
 "Remote server IP is required in Remote Direct mode." = "远程直连模式下必须填写远程服务器 IP。";
 "Yes" = "是";
-
-// oPenSSAI 0708 virtual location map + address search
 "Map" = "地图";
 "No Results" = "无搜索结果";
 "Place lookup failed" = "地点查询失败";
 "Search Address" = "搜索地址";
 "Search for a place or address" = "搜索地点或地址";
 "Tap the map to drop a pin, then start the simulation." = "点按地图放置图钉，然后开始模拟。";
-
-// oPenSSAI 0708 Shadowrocket fix (immediate-apply connection mode + Chinese minimuxer error translations)
 "Changes apply immediately; the status updates automatically." = "更改会立即生效，状态会自动更新。";
 "Connection Mode Not Configured" = "连接模式未配置";
 "Connection Mode Not Configured Detail" = "没有选择连接模式。请到「我的 → 签名 → 连接设置」选择「本机 VPN」或「远程直连」。";
@@ -1626,7 +1639,6 @@
 "Switched to %@" = "已切换到 %@";
 "VPN Not Connected" = "VPN 未连接";
 "VPN Protocol Unsupported" = "VPN 协议不受支持";
-// oPenSSAI 0708 teams (multiple Apple IDs)
 "%d Accounts" = "%d 个账号";
 "%d Apps" = "%d 个应用";
 "Add Apple ID" = "添加 Apple ID";
@@ -1644,7 +1656,6 @@
 "Signing and refreshing use the active Apple ID. Switching to another Apple ID signs you in again with that account when needed." = "签名和续签使用当前选中的 Apple ID。切换到其他 Apple ID 时如需重新登录，会提示你输入该账号的密码。";
 "Switch to This Apple ID" = "切换到此 Apple ID";
 "This removes the Apple ID and its team records from this device. Installed apps are not affected, and the signing certificate is not revoked." = "这会从本设备移除该 Apple ID 及其团队记录。已安装的应用不受影响，签名证书不会被吊销。";
-// oPenSSAI 0708 pairing tutorial
 "Pairing Tutorial" = "配对教程";
 "What Is Pairing?" = "什么是配对？";
 "oPenSSAI signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer." = "openSSS 在本机上签名应用，而 iOS 只允许通过受信任的配对连接完成这一步。配对一次之后，安装与续签无需电脑即可直达本机。";
@@ -1663,7 +1674,6 @@
 "Pairing file imported. If installs still fail, restart oPenSSAI and try again." = "配对文件已导入。如果安装仍然失败，请重启 openSSS 后再试。";
 "Failed to import pairing file: %@" = "导入配对文件失败：%@";
 "View Pairing Tutorial" = "查看配对教程";
-// oPenSSAI 0708 install progress popup (pipeline stage labels + popup text)
 "Backing up app data…" = "正在备份应用数据…";
 "Caching app…" = "正在缓存应用…";
 "Cancelling…" = "正在取消…";
@@ -1698,14 +1708,15 @@
 "Updating signing certificate…" = "正在更新签名证书…";
 "Verifying app…" = "正在验证应用…";
 "Verifying certificate…" = "正在验证证书…";
-// oPenSSAI 0709 install progress steps (five-phase checklist)
 "Progress Step Done" = "完成";
 "Progress Step Download" = "下载";
 "Progress Step Install" = "安装";
 "Progress Step Sign" = "签名";
 "Progress Step Skipped" = "已跳过";
 "Progress Step Unpack" = "解包";
+"Welcome to SideStore" = "欢迎使用 openSSS";
 "Your active custom/third-party signing certificate (Team: %@) has expired.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate." = "你正在使用的自定义/第三方签名证书（团队：%@）已过期。\n\n如果你无意使用自定义证书，请在「我的 → 签名证书」里重置。";
+"You can enter SideStore, but a pairing file is required before you can install or refresh apps." = "你可以进入 openSSS，但在安装或刷新应用之前需要先提供配对文件。";
 "Your active custom/third-party signing certificate (Team: %@) was revoked on the Developer Portal.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate." = "你正在使用的自定义/第三方签名证书（团队：%@）已在开发者门户被吊销。\n\n如果你无意使用自定义证书，请在「我的 → 签名证书」里重置。";
 "Your pledge is no longer active. Please renew it to continue using %@ normally." = "你的赞助已不再有效。请续费以继续正常使用 %@。";
 "^[%lld app](inflect: true)" = "^[%lld 个应用](inflect: true)";

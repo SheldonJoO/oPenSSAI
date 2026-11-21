@@ -14,12 +14,30 @@ public struct PairedDeviceRecord: Sendable {
     public let model: String
     public let pairingFilePath: String
     public let pairingFile: any PairingFile
-    
+
     public init(name: String, model: String, pairingFilePath: String, pairingFile: any PairingFile) {
         self.name = name
         self.model = model
         self.pairingFilePath = pairingFilePath
         self.pairingFile = pairingFile
+    }
+}
+
+/// Snapshot of the on-device location simulation session, as held by the
+/// gateway. Mirrors the Mac helper's /status shape so the shell can treat
+/// both transports the same way.
+public struct LocationSimulationState: Sendable {
+    public let active: Bool
+    public let latitude: Double?
+    public let longitude: Double?
+    /// Whether the gateway currently holds a live DVT session to the device.
+    public let connected: Bool
+
+    public init(active: Bool, latitude: Double?, longitude: Double?, connected: Bool) {
+        self.active = active
+        self.latitude = latitude
+        self.longitude = longitude
+        self.connected = connected
     }
 }
 
@@ -58,6 +76,22 @@ public protocol DeviceGatewayAPI: AnyObject, Sendable {
     func debugProcess(pid: UInt32) async throws
 
     func performHeartbeat(interval: UInt64) async throws -> UInt64
+
+    /// Starts (or reuses) the persistent DVT location simulation session and
+    /// sets the simulated coordinate. The session stays alive across calls
+    /// until stopLocationSimulation() — the gateway re-sends the coordinate
+    /// periodically to keep the simulation active. Requires an initialized
+    /// gateway in remote-pairing mode (the DVT channel is only reachable
+    /// through the RP tunnel) and Developer Mode on the device.
+    func startLocationSimulation(latitude: Double, longitude: Double) async throws
+    /// Clears the simulated coordinate and tears the session down. Best
+    /// effort: succeeds even when no session is currently held.
+    func stopLocationSimulation() async throws
+    /// Snapshot of the current session state. Cheap — never touches the device.
+    func locationSimulationStatus() async throws -> LocationSimulationState
+    /// Whether Developer Mode is enabled on the device (lockdown
+    /// DeveloperModeStatus in the com.apple.security.mac.amfi domain).
+    func isDeveloperModeEnabled() async throws -> Bool
 
     func startWirelessPair(
         hostName: String,
