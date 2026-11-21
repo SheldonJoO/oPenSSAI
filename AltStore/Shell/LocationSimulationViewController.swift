@@ -194,7 +194,7 @@ final class LocationSimulationViewController: UIViewController
         guard !isWorking else { return }
         guard let location = enteredLocation else
         {
-            ToastView(text: NSLocalizedString("Invalid coordinates", comment: "")).show(in: self)
+            ToastView(text: NSLocalizedString("Invalid coordinates", comment: ""), detailText: nil).show(in: self)
             return
         }
         view.endEditing(true)
@@ -230,7 +230,7 @@ final class LocationSimulationViewController: UIViewController
             {
                 let service = try LocationSimulationManager.shared.makeService()
                 try await service.clearLocation()
-                ToastView(text: NSLocalizedString("Location simulation stopped", comment: "")).show(in: self)
+                ToastView(text: NSLocalizedString("Location simulation stopped", comment: ""), detailText: nil).show(in: self)
             }
             catch
             {
