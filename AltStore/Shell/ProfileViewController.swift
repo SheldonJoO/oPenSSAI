@@ -22,6 +22,7 @@ final class ProfileViewController: UIViewController
     private enum Section: Int, CaseIterable
     {
         case signing
+        case location
         case reminder
         case manage
         case help
@@ -33,6 +34,7 @@ final class ProfileViewController: UIViewController
             switch self
             {
             case .signing: return NSLocalizedString("Signing", comment: "")
+            case .location: return NSLocalizedString("Virtual Location", comment: "")
             case .reminder: return NSLocalizedString("Expiry Reminder", comment: "")
             case .manage: return NSLocalizedString("Manage", comment: "")
             case .help: return NSLocalizedString("Help & Support", comment: "")
@@ -43,6 +45,7 @@ final class ProfileViewController: UIViewController
     }
 
     private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette }
+    private enum LocationRow: Int, CaseIterable { case virtualLocation }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
     private enum HelpRow: Int, CaseIterable { case guide, community, support }
@@ -355,6 +358,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
         switch Section(rawValue: section)
         {
         case .signing: return SigningRow.allCases.count
+        case .location: return LocationRow.allCases.count
         case .reminder: return ReminderRow.allCases.count
         case .manage: return ManageRow.allCases.count
         case .help: return HelpRow.allCases.count
@@ -405,6 +409,12 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .none:
                 break
             }
+
+        case .location:
+            cell.configure(
+                iconSystemName: "mappin.and.ellipse", iconTint: accent,
+                title: NSLocalizedString("Virtual Location", comment: ""),
+                value: LocationSimulationManager.shared.statusSummary)
 
         case .reminder:
             switch ReminderRow(rawValue: indexPath.row)
@@ -504,6 +514,9 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .none:
                 break
             }
+
+        case .location:
+            navigationController?.pushViewController(LocationSimulationViewController(), animated: true)
 
         case .reminder:
             break // Toggle row handles itself; Next Reminder is info-only.
