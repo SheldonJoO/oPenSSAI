@@ -18,26 +18,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct PairingTutorialView: View {
-    /// When true the tutorial was presented modally (from an alert or a
-    /// toast) and shows a Done button; when pushed from the pairing
-    /// management screen the navigation back button is enough.
-    var isModal = false
-
-    @Environment(\.dismiss) private var dismiss
-
     @State private var isPaired = PairingFileManager.shared.hasPairingFile()
     @State private var showFileImporter = false
     @State private var importStatus: String? = nil
     @State private var isStartingConnection = false
 
-    // @MainActor on body: under Xcode 16.4 this file's bare ScrollView
-    // and .toolbar calls are ambiguous between SwiftUI's isolated and
-    // nonisolated overloads, because their closures touch only
-    // nonisolated members (isModal, dismiss, computed sections) — every
-    // other view in this module resolves only because its closures touch
-    // @State. Pinning body to the main actor pins the isolated overloads
-    // for the whole body at once instead of whack-a-mole per call site.
-    @MainActor
     var body: some View {
         // Explicit showsIndicators: a bare ScrollView { } is ambiguous
         // between SwiftUI's two inits here (isolated vs nonisolated
@@ -59,17 +44,6 @@ struct PairingTutorialView: View {
         .background(Color(uiColor: ShellTheme.background).ignoresSafeArea())
         .navigationTitle(Text("Pairing Tutorial"))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if isModal {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    SwiftUI.Button {
-                        dismiss()
-                    } label: {
-                        Text("Done")
-                    }
-                }
-            }
-        }
         .onAppear {
             isPaired = PairingFileManager.shared.hasPairingFile()
         }
@@ -297,11 +271,24 @@ struct PairingTutorialView: View {
 }
 
 /// Presents the pairing tutorial modally in its own navigation stack, for
-/// UIKit callers (pairing-required alerts, error toasts).
+/// UIKit callers (pairing-required alerts, error toasts). The Done button
+/// is a UIKit bar button item here, not a SwiftUI .toolbar: a bare
+/// .toolbar { } in this view is ambiguous between SwiftUI's isolated and
+/// nonisolated overloads under Xcode 16.4 (its closure touches only
+/// nonisolated members; @MainActor on body does NOT disambiguate in
+/// Swift 5 mode — proven by build 6). Modal chrome belongs to the UIKit
+/// presentation anyway.
 extension UIViewController {
     func presentPairingTutorial(animated: Bool = true) {
-        let tutorial = ShellHostingController(rootView: PairingTutorialView(isModal: true))
+        let tutorial = ShellHostingController(rootView: PairingTutorialView())
         let navigationController = UINavigationController(rootViewController: tutorial)
+        tutorial.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: NSLocalizedString("Done", comment: ""),
+            style: .done,
+            primaryAction: UIAction { [weak navigationController] _ in
+                navigationController?.dismiss(animated: true)
+            }
+        )
         let appearance = ShellTabBarController.makeNavigationBarAppearance()
         navigationController.navigationBar.standardAppearance = appearance
         navigationController.navigationBar.scrollEdgeAppearance = appearance
