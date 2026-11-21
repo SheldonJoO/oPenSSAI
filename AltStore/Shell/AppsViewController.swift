@@ -127,7 +127,7 @@ final class AppsViewController: UIViewController
         super.viewDidLoad()
         view.backgroundColor = ShellTheme.background
 
-        navigationItem.title = "oPenSSAI"
+        navigationItem.title = "openSSS"
         navigationItem.largeTitleDisplayMode = .always
         navigationItem.backButtonDisplayMode = .minimal
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)

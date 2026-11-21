@@ -693,10 +693,10 @@ public extension StoreApp
         let placeholderChannel = ReleaseTrackType.stable.description
         
         let app = StoreApp(context: context)
-        app.name = "oPenSSAI"
+        app.name = "openSSS"
         app.bundleIdentifier = placeholderBundleId
-        app.developerName = "oPenSSAI Team"
-        app.localizedDescription = "oPenSSAI 是第三方应用商店。"
+        app.developerName = "openSSS Team"
+        app.localizedDescription = "openSSS 是第三方应用商店。"
         app.iconURL = sideStoreAppIconURL        
         app.screenshotURLs = []
         app.sourceIdentifier = placeholderSourceID

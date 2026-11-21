@@ -76,7 +76,7 @@ final class AboutViewController: UIViewController
         nameLabel.font = ShellTheme.headingFont
         nameLabel.textColor = ShellTheme.primaryText
         nameLabel.textAlignment = .center
-        nameLabel.text = "oPenSSAI"
+        nameLabel.text = "openSSS"
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let versionLabel = UILabel()

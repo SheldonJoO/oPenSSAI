@@ -17,7 +17,7 @@ final class UITests: XCTestCase {
     
     private static let searchBar = spotlight_app.textFields["SpotlightSearchField"]
 
-    private static let APP_NAME = "oPenSSAI"
+    private static let APP_NAME = "openSSS"
     
     func printAllMethods(of className: String) {
         guard let cls: AnyClass = objc_getClass(className) as? AnyClass else {

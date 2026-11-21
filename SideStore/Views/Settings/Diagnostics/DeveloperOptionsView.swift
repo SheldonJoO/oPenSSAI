@@ -82,7 +82,7 @@ struct DeveloperOptionsView: View {
                         
                         divider
                         
-                        toggleRow(title: "oPenSSAI Verbose Logging", isOn: Binding(
+                        toggleRow(title: "openSSS Verbose Logging", isOn: Binding(
                             get: { isSideStoreVerboseLoggingEnabled },
                             set: { newValue in
                                 isSideStoreVerboseLoggingEnabled = newValue
