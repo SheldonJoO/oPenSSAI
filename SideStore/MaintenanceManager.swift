@@ -135,9 +135,15 @@ public final class MaintenanceManager {
         if !canPersistCounter {
             debugLog("[MaintenanceManager] Skipping destructive maintenance passes 1, 2, 6: maintenance counter is not writable.")
             skipDestructivePasses = true
-        } else if current == 0 && await hasLiveSignInState() {
-            debugLog("[MaintenanceManager] Skipping destructive maintenance passes 1, 2, 6: counter reads 0 but live sign-in state exists (upgraded install with a lost counter).")
-            skipDestructivePasses = true
+        } else if current == 0 {
+            // Note: `await` cannot appear to the right of `&&` (the RHS is
+            // an autoclosure), so the async check gets its own branch.
+            if await hasLiveSignInState() {
+                debugLog("[MaintenanceManager] Skipping destructive maintenance passes 1, 2, 6: counter reads 0 but live sign-in state exists (upgraded install with a lost counter).")
+                skipDestructivePasses = true
+            } else {
+                skipDestructivePasses = false
+            }
         } else {
             skipDestructivePasses = false
         }
