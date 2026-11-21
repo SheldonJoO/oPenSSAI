@@ -15,6 +15,7 @@
 
 import UIKit
 import SwiftUI
+import Combine
 import UserNotifications
 
 final class ProfileViewController: UIViewController
@@ -22,7 +23,6 @@ final class ProfileViewController: UIViewController
     private enum Section: Int, CaseIterable
     {
         case signing
-        case location
         case reminder
         case manage
         case help
@@ -34,7 +34,6 @@ final class ProfileViewController: UIViewController
             switch self
             {
             case .signing: return NSLocalizedString("Signing", comment: "")
-            case .location: return NSLocalizedString("Virtual Location", comment: "")
             case .reminder: return NSLocalizedString("Expiry Reminder", comment: "")
             case .manage: return NSLocalizedString("Manage", comment: "")
             case .help: return NSLocalizedString("Help & Support", comment: "")
@@ -44,8 +43,7 @@ final class ProfileViewController: UIViewController
         }
     }
 
-    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette }
-    private enum LocationRow: Int, CaseIterable { case virtualLocation }
+    private enum SigningRow: Int, CaseIterable { case device, appleIDs, certificate, anisette, connection }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
     private enum HelpRow: Int, CaseIterable { case guide, community, support }
@@ -53,6 +51,7 @@ final class ProfileViewController: UIViewController
     private enum AboutRow: Int, CaseIterable { case about }
 
     private var storageSizeText: String?
+    private var cancellables = Set<AnyCancellable>()
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -77,7 +76,9 @@ final class ProfileViewController: UIViewController
 
         view.addSubview(tableView)
 
-        let bottomInset = ShellTheme.pillHeight + ShellTheme.pillBottomMargin + 24
+        // The standard tab bar is accounted for by the safe area; only a
+        // small breathing room below the last row is needed.
+        let bottomInset: CGFloat = 24
         tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
         tableView.verticalScrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
 
@@ -91,6 +92,21 @@ final class ProfileViewController: UIViewController
         NotificationCenter.default.addObserver(
             self, selector: #selector(applyTheme),
             name: ShellTheme.accentDidChangeNotification, object: nil)
+
+        // Keep the Connection row value (mode + reachability) live while
+        // this screen is visible: minimuxer pushes reachability into
+        // ConnectionConfig.shared as the network changes.
+        ConnectionConfig.shared.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.tableView.reloadRows(
+                        at: [IndexPath(row: SigningRow.connection.rawValue, section: Section.signing.rawValue)],
+                        with: .none)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     override func viewWillAppear(_ animated: Bool)
@@ -123,15 +139,30 @@ final class ProfileViewController: UIViewController
         DatabaseManager.shared.activeAccount(in: DatabaseManager.shared.viewContext)
     }
 
-    private var activeTeam: Team?
-    {
-        DatabaseManager.shared.activeTeam(in: DatabaseManager.shared.viewContext)
-    }
-
     private var appVersionText: String
     {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
         return String(format: NSLocalizedString("Version %@", comment: ""), version)
+    }
+
+    /// Me → Signing connection row value: the current effective mode plus
+    /// endpoint reachability, e.g. "远程直连 · 可达". Reachability is
+    /// omitted while no endpoint is known yet (local mode before the
+    /// tunnel peer is discovered).
+    private var connectionRowValue: String
+    {
+        let config = ConnectionConfig.shared
+        let modeName = config.useLocalVPN
+            ? NSLocalizedString("Local VPN", comment: "")
+            : NSLocalizedString("Remote Direct", comment: "")
+        guard let reachable = config.effectiveEndpointReachable else
+        {
+            return modeName
+        }
+        let reachabilityText = reachable
+            ? NSLocalizedString("Connection Reachable", comment: "")
+            : NSLocalizedString("Connection Unreachable", comment: "")
+        return "\(modeName) · \(reachabilityText)"
     }
 
     /// The next expiry reminder fire date (earliest installed-app expiry
@@ -197,7 +228,7 @@ final class ProfileViewController: UIViewController
                 || settings.authorizationStatus == .provisional else { return }
 
             let content = UNMutableNotificationContent()
-            content.title = "oPenSSAI"
+            content.title = "openSSS"
             content.body = NSLocalizedString("An app expires in 24 hours. Open oPenSSAI to renew it.", comment: "")
             content.sound = .default
 
@@ -238,98 +269,11 @@ final class ProfileViewController: UIViewController
         tableView.reloadData()
     }
 
-    // MARK: - Apple ID sign in / out
-
-    private func appleIDRowTapped()
-    {
-        if let account = activeAccount
-        {
-            let team = activeTeam
-            let message: String?
-            if let team
-            {
-                message = "\(team.name) · \(team.identifier)"
-            }
-            else
-            {
-                message = nil
-            }
-
-            let alert = UIAlertController(title: account.appleID, message: message, preferredStyle: .actionSheet)
-            alert.addAction(UIAlertAction(title: NSLocalizedString("Sign Out", comment: ""), style: .destructive) { [weak self] _ in
-                self?.signOut()
-            })
-            alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
-            present(alert, animated: true)
-        }
-        else
-        {
-            signIn()
-        }
-    }
-
-    private func signIn()
-    {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do
-            {
-                let result = try await AuthManager.shared.signIn(presentingViewController: self)
-                debugLog("[ProfileVC] Signed in for team: \(result.team.name) (\(result.team.identifier))")
-            }
-            catch is CancellationError
-            {
-                debugLog("[ProfileVC] Sign-in cancelled by user")
-            }
-            catch
-            {
-                debugLog("[ProfileVC] Sign-in failed: \(error)")
-                ToastView(error: error).show(in: self.view)
-            }
-            self.tableView.reloadData()
-        }
-    }
-
-    private func signOut()
-    {
-        let contentVC = SignOutAlertViewController()
-
-        let alertController = UIAlertController(
-            title: NSLocalizedString("Sign Out", comment: ""),
-            message: NSLocalizedString("Are you sure you want to sign out? You will no longer be able to install or refresh apps once you sign out.", comment: ""),
-            preferredStyle: .alert
-        )
-        alertController.setValue(contentVC, forKey: "contentViewController")
-
-        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel, handler: nil)
-        let signOutAction = UIAlertAction(title: NSLocalizedString("Sign Out", comment: ""), style: .destructive) { [weak self] _ in
-            let keepCert = contentVC.isChecked
-            let keepAnisette = contentVC.isKeepAnisetteChecked
-            let keepAnisetteHeaders = contentVC.isKeepAnisetteHeadersChecked
-            let keepSideSignHeaders = contentVC.isKeepSideSignHeadersChecked
-            Task.detached { [weak self] in
-                await AuthManager.shared.signOut(
-                    keepCertificate: keepCert,
-                    keepAnisetteData: keepAnisette,
-                    keepAnisetteHeaders: keepAnisetteHeaders,
-                    keepSideSignHeaders: keepSideSignHeaders
-                )
-                await MainActor.run {
-                    self?.tableView.reloadData()
-                }
-            }
-        }
-
-        alertController.addAction(cancelAction)
-        alertController.addAction(signOutAction)
-        present(alertController, animated: true)
-    }
-
     // MARK: - Navigation
 
     private func pushSwiftUIView<Content: View>(_ view: Content, title: String? = nil)
     {
-        let hostingController = UIHostingController(rootView: view)
+        let hostingController = ShellHostingController(rootView: view)
         hostingController.title = title
         navigationController?.pushViewController(hostingController, animated: true)
     }
@@ -358,7 +302,6 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
         switch Section(rawValue: section)
         {
         case .signing: return SigningRow.allCases.count
-        case .location: return LocationRow.allCases.count
         case .reminder: return ReminderRow.allCases.count
         case .manage: return ManageRow.allCases.count
         case .help: return HelpRow.allCases.count
@@ -393,9 +336,13 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                     value: isPaired
                         ? NSLocalizedString("Paired", comment: "")
                         : NSLocalizedString("Not Paired", comment: ""))
-            case .appleID:
+            case .appleIDs:
+                // Single Apple ID entry: the account list handles sign-in,
+                // switching, sign-out, and removal. The value shows the
+                // currently active account (nil while signed out) and
+                // refreshes on every appearance via viewWillAppear.
                 cell.configure(
-                    iconSystemName: "person.crop.circle", iconTint: accent,
+                    iconSystemName: "person.2.circle", iconTint: accent,
                     title: "Apple ID",
                     value: activeAccount?.appleID)
             case .certificate:
@@ -406,15 +353,14 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 cell.configure(
                     iconSystemName: "server.rack", iconTint: accent,
                     title: NSLocalizedString("Anisette Settings", comment: ""))
+            case .connection:
+                cell.configure(
+                    iconSystemName: "network", iconTint: accent,
+                    title: NSLocalizedString("Connection Settings", comment: ""),
+                    value: connectionRowValue)
             case .none:
                 break
             }
-
-        case .location:
-            cell.configure(
-                iconSystemName: "mappin.and.ellipse", iconTint: accent,
-                title: NSLocalizedString("Virtual Location", comment: ""),
-                value: LocationSimulationManager.shared.statusSummary)
 
         case .reminder:
             switch ReminderRow(rawValue: indexPath.row)
@@ -503,20 +449,19 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 pushSwiftUIView(
                     PairingFileManagementView(),
                     title: NSLocalizedString("Device", comment: ""))
-            case .appleID:
-                appleIDRowTapped()
+            case .appleIDs:
+                navigationController?.pushViewController(AppleIDsViewController(), animated: true)
             case .certificate:
                 pushSwiftUIView(
                     CertificatesView(presentingViewController: self),
                     title: NSLocalizedString("Signing Certificate", comment: ""))
             case .anisette:
                 navigationController?.pushViewController(AnisetteSettingsViewController(), animated: true)
+            case .connection:
+                navigationController?.pushViewController(ConnectionSettingsViewController(), animated: true)
             case .none:
                 break
             }
-
-        case .location:
-            navigationController?.pushViewController(LocationSimulationViewController(), animated: true)
 
         case .reminder:
             break // Toggle row handles itself; Next Reminder is info-only.
@@ -540,7 +485,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .community:
                 openWebURL(AppConstants.URLs.sideStoreGitHub, preferredTintColor: ShellTheme.accentColor)
             case .support:
-                openWebURL(AppConstants.URLs.sideStoreIssues, preferredTintColor: ShellTheme.accentColor)
+                navigationController?.pushViewController(DonationViewController(), animated: true)
             case .none:
                 break
             }

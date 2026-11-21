@@ -4,9 +4,7 @@
 //  oPenSSAI
 //
 //  Design system for the oPenSSAI shell: the two-tab (Apps / Me) interface
-//  rebuilt in the style of Seal's reference screenshots (pure black
-//  background, dark navy cards, magenta/violet accent). Fresh implementation;
-//  no Seal assets, strings, or branding are used anywhere.
+//  (near-black background, dark gray cards, magenta/violet accent).
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
@@ -64,8 +62,8 @@ enum ShellAppearance: String, CaseIterable, Sendable
     }
 }
 
-/// The shell's design tokens. Colors are dynamic: the dark values reproduce
-/// the reference palette (pure black, dark navy cards), the light values are
+/// The shell's design tokens. Colors are dynamic: the dark values use a
+/// near-black background with dark gray cards, the light values are
 /// adapted equivalents so "Follow System" is honest in light mode.
 enum ShellTheme
 {
@@ -128,6 +126,22 @@ enum ShellTheme
         }
     }
 
+    /// Applies the stored appearance to every window of the connected
+    /// scenes. Prefer this over `applyAppearance(to: view.window)`:
+    /// `view.window` is nil in `viewDidLoad`, which silently dropped the
+    /// launch-time application and left the window following the system
+    /// even though a dark theme was stored (0709). Call on the main thread.
+    static func applyAppearance()
+    {
+        let windows = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+        for window in windows
+        {
+            applyAppearance(to: window)
+        }
+    }
+
     /// One-line summary shown in the Profile screen, e.g. "Follow System·Violet".
     static var summary: String
     {
@@ -144,14 +158,14 @@ enum ShellTheme
     static var background: UIColor
     {
         UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .light ? UIColor(hex: 0xF2F2F7) : UIColor(hex: 0x000000)
+            traitCollection.userInterfaceStyle == .light ? UIColor(hex: 0xF2F2F7) : UIColor(hex: 0x0A0A0F)
         }
     }
 
     static var card: UIColor
     {
         UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .light ? .white : UIColor(hex: 0x1C1E2A)
+            traitCollection.userInterfaceStyle == .light ? .white : UIColor(hex: 0x1A1B21)
         }
     }
 
@@ -213,10 +227,10 @@ enum ShellTheme
     // MARK: - Fonts
 
     /// Navigation large title (the "oPenSSAI" / "Me" headings).
-    static let largeTitleFont = UIFont.systemFont(ofSize: 40, weight: .heavy)
+    static let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold)
 
     /// In-content section headings ("Installed Apps", "Pending Apps").
-    static let headingFont = UIFont.systemFont(ofSize: 28, weight: .bold)
+    static let headingFont = UIFont.systemFont(ofSize: 22, weight: .bold)
 
     /// Section titles above cards ("Signing", "Manage", ...).
     static let sectionTitleFont = UIFont.systemFont(ofSize: 15, weight: .bold)
@@ -233,13 +247,11 @@ enum ShellTheme
 
     // MARK: - Metrics
 
-    static let cardCornerRadius: CGFloat = 20
+    static let cardCornerRadius: CGFloat = 16
     static let horizontalMargin: CGFloat = 16
     static let appIconSize: CGFloat = 60
     static let appIconCornerRadius: CGFloat = 14
     static let rowIconSize: CGFloat = 28
-    static let pillHeight: CGFloat = 76
-    static let pillBottomMargin: CGFloat = 20
 }
 
 extension UIColor

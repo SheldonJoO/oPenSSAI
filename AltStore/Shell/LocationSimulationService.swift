@@ -16,6 +16,7 @@
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
 
+import DeviceGatewayAPI
 import Foundation
 import Minimuxer
 import UIKit
@@ -538,7 +539,17 @@ final class LocationSimulationManager
         var address = helperAddress.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !address.isEmpty else { throw LocationSimulationError.invalidHelperAddress }
         if !address.contains("://") { address = "http://" + address }
-        guard let url = URL(string: address), url.host != nil else
+        // A bare IP ("192.168.1.5") has no port, which would silently mean
+        // port 80; the helper listens on defaultHelperPort (17878).
+        guard var components = URLComponents(string: address), components.host != nil else
+        {
+            throw LocationSimulationError.invalidHelperAddress
+        }
+        if components.port == nil
+        {
+            components.port = Self.defaultHelperPort
+        }
+        guard let url = components.url else
         {
             throw LocationSimulationError.invalidHelperAddress
         }

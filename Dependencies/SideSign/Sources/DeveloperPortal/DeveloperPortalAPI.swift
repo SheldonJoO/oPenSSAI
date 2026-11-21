@@ -390,7 +390,10 @@ public final class DeveloperPortal: DeveloperPortalAPI, Sendable {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
             let rawStr = String(data: data, encoding: .utf8) ?? data.hexEncodedString()
-            debugLog("[SideSign] sendRequest failed to decode \(T.self): \(error). Raw payload: \(rawStr)")
+            debugLog("[SideSign] sendRequest failed to decode \(T.self) (HTTP \(statusCode)): \(error). Raw payload: \(rawStr)")
+            if statusCode != 0 && statusCode != HTTPStatusCodes.ok {
+                throw ServerError.badServerResponse(reason: "Apple service returned HTTP \(statusCode)", jsonPayload: rawStr)
+            }
             throw ServerError.invalidResponseFormat(rawPayload: rawStr)
         }
     }
@@ -504,7 +507,10 @@ public final class DeveloperPortal: DeveloperPortalAPI, Sendable {
                 return empty
             }
             let rawStr = String(data: data, encoding: .utf8) ?? data.hexEncodedString()
-            debugLog("[SideSign] sendServicesRequest failed to decode \(T.self): \(error). Raw payload: \(rawStr)")
+            debugLog("[SideSign] sendServicesRequest failed to decode \(T.self) (HTTP \(statusCode)): \(error). Raw payload: \(rawStr)")
+            if statusCode != 0 && statusCode != HTTPStatusCodes.ok {
+                throw ServerError.badServerResponse(reason: "Apple service returned HTTP \(statusCode)", jsonPayload: rawStr)
+            }
             throw ServerError.invalidResponseFormat(rawPayload: rawStr)
         }
     }

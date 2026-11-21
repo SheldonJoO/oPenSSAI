@@ -9,8 +9,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 private extension Color {
-    static let settingsRowBackground = Color.white.opacity(0.15)
-    static let settingsDivider = Color.white.opacity(0.15)
+    // Shell cards and dividers (Color.shellCard / .shellSeparator live in
+    // AltStore/Shell/ShellSwiftUI.swift); the old names stay so the view
+    // body below is untouched.
+    static let settingsRowBackground = Color.shellCard
+    static let settingsDivider = Color.shellSeparator
 }
 
 @MainActor
@@ -321,7 +324,7 @@ struct AnisetteDataView: View {
                             )
                         }
                         .background(Color.settingsRowBackground)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                     
                     // SECTION 2: DEVICE & IDENTITY
@@ -364,7 +367,7 @@ struct AnisetteDataView: View {
                             )
                         }
                         .background(Color.settingsRowBackground)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                     
                     // SECTION 3: ENVIRONMENT & LOCALIZATION
@@ -399,7 +402,7 @@ struct AnisetteDataView: View {
                             )
                         }
                         .background(Color.settingsRowBackground)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                     
                     // SECTION 4: DYNAMIC TOKENS (INFORMATIONAL)
@@ -430,7 +433,7 @@ struct AnisetteDataView: View {
                             )
                         }
                         .background(Color.settingsRowBackground)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                     
                     // SAVE OVERRIDES BUTTON
@@ -448,7 +451,7 @@ struct AnisetteDataView: View {
                         }
                         .frame(height: 50)
                         .background(Color.accentColor)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                     .disabled(viewModel.clientInfo.isEmpty || viewModel.userAgent.isEmpty)
                 } else {
@@ -462,7 +465,7 @@ struct AnisetteDataView: View {
                                 .foregroundColor(.primary)
                                 .frame(minHeight: 320)
                                 .padding(8)
-                                .background(Color.white.opacity(0.06))
+                                .background(Color.shellCardHighlighted)
                                 .cornerRadius(10)
                             
                             SwiftUI.Button {
@@ -485,7 +488,7 @@ struct AnisetteDataView: View {
                         }
                         .padding(16)
                         .background(Color.settingsRowBackground)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                 }
                 
@@ -500,7 +503,7 @@ struct AnisetteDataView: View {
                                     HStack {
                                         Text("Server: \(URL(string: UserDefaults.standard.menuAnisetteURL)?.host ?? "Active Server")")
                                             .font(.caption)
-                                            .foregroundColor(Color.white.opacity(0.6))
+                                            .foregroundColor(Color.shellSecondaryText)
                                         Spacer()
                                         SwiftUI.Button {
                                             #if !os(tvOS)
@@ -523,7 +526,7 @@ struct AnisetteDataView: View {
                                     ScrollView(.horizontal, showsIndicators: true) {
                                         Text(viewModel.serverReturnedHeadersJSON)
                                             .font(.system(size: 11, design: .monospaced))
-                                            .foregroundColor(.white)
+                                            .foregroundColor(Color.shellPrimaryText)
                                             .padding(10)
                                             .background(Color.black.opacity(0.3))
                                             .cornerRadius(8)
@@ -538,11 +541,11 @@ struct AnisetteDataView: View {
                                             Spacer()
                                             Label("Save as Overrides", systemImage: "square.and.arrow.down.on.square")
                                                 .font(.system(size: 15, weight: .bold))
-                                                .foregroundColor(.white)
+                                                .foregroundColor(Color.shellAccent)
                                             Spacer()
                                         }
                                         .frame(height: 44)
-                                        .background(Color.white.opacity(0.12))
+                                        .background(Color.shellAccentBackground)
                                         .cornerRadius(10)
                                     }
                                     .disabled(viewModel.serverReturnedHeadersJSON == "{}" || viewModel.serverReturnedHeadersJSON.isEmpty)
@@ -552,7 +555,7 @@ struct AnisetteDataView: View {
                                 HStack {
                                     Label("Remote Server Sync", systemImage: "network")
                                         .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.white)
+                                        .foregroundColor(Color.shellPrimaryText)
                                     Spacer()
                                     SwiftUI.Button {
                                         Task {
@@ -568,7 +571,7 @@ struct AnisetteDataView: View {
                                         .foregroundColor(.accentColor)
                                         .padding(.horizontal, 10)
                                         .padding(.vertical, 5)
-                                        .background(Color.white.opacity(0.1))
+                                        .background(Color.shellCardHighlighted)
                                         .cornerRadius(8)
                                     }
                                     .buttonStyle(.borderless)
@@ -578,7 +581,7 @@ struct AnisetteDataView: View {
                             .padding(.vertical, 12)
                         }
                         .background(Color.settingsRowBackground)
-                        .cornerRadius(14)
+                        .cornerRadius(ShellSwiftUI.cardCornerRadius)
                     }
                 }
                 
@@ -608,11 +611,11 @@ struct AnisetteDataView: View {
                             HStack {
                                 Label("Import Config JSON", systemImage: "square.and.arrow.down")
                                     .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(Color.shellPrimaryText)
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color.white.opacity(0.4))
+                                    .foregroundColor(Color.shellSecondaryText)
                             }
                             .padding(.horizontal, 16)
                             .frame(height: 50)
@@ -630,11 +633,11 @@ struct AnisetteDataView: View {
                             HStack {
                                 Label("Export Config JSON", systemImage: "square.and.arrow.up")
                                     .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(Color.shellPrimaryText)
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color.white.opacity(0.4))
+                                    .foregroundColor(Color.shellSecondaryText)
                             }
                             .padding(.horizontal, 16)
                             .frame(height: 50)
@@ -666,14 +669,14 @@ struct AnisetteDataView: View {
                         }
                     }
                     .background(Color.settingsRowBackground)
-                    .cornerRadius(14)
+                    .cornerRadius(ShellSwiftUI.cardCornerRadius)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(Color(uiColor: .settingsBackground).ignoresSafeArea())
+        .background(Color.shellBackground.ignoresSafeArea())
         .navigationTitle("Client Config")
         #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -718,8 +721,8 @@ struct AnisetteDataView: View {
     
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundColor(Color.white.opacity(0.6))
+            .font(.shellSectionTitle)
+            .foregroundColor(Color.shellSecondaryText)
             .padding(.horizontal, 16)
     }
     
@@ -735,11 +738,11 @@ struct AnisetteDataView: View {
             HStack {
                 Text(title)
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.shellPrimaryText)
                 Spacer()
                 Text(headerKey)
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(Color.white.opacity(0.45))
+                    .foregroundColor(Color.shellSecondaryText)
             }
             
             if isMultiline {
@@ -749,24 +752,24 @@ struct AnisetteDataView: View {
                     .foregroundColor(.primary)
                     .frame(minHeight: 64)
                     .padding(6)
-                    .background(Color.white.opacity(0.06))
+                    .background(Color.shellCardHighlighted)
                     .cornerRadius(8)
                 #else
                 TextField(placeholder, text: text)
                     .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.shellPrimaryText)
                     .padding(8)
-                    .background(Color.white.opacity(0.06))
+                    .background(Color.shellCardHighlighted)
                     .cornerRadius(8)
                 #endif
             } else {
                 TextField(placeholder, text: text)
                     .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.shellPrimaryText)
                     .autocapitalization(autocapitalization)
                     .disableAutocorrection(true)
                     .padding(8)
-                    .background(Color.white.opacity(0.06))
+                    .background(Color.shellCardHighlighted)
                     .cornerRadius(8)
             }
         }
@@ -780,15 +783,15 @@ struct AnisetteDataView: View {
                 HStack {
                     Text(title)
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.shellPrimaryText)
                     Spacer()
                     Text(headerKey)
                         .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(Color.white.opacity(0.45))
+                        .foregroundColor(Color.shellSecondaryText)
                 }
                 Text(subtitle)
                     .font(.system(size: 12))
-                    .foregroundColor(Color.white.opacity(0.55))
+                    .foregroundColor(Color.shellSecondaryText)
             }
         }
         .padding(.horizontal, 16)

@@ -65,6 +65,11 @@ final class PairingViewController: NSObject {
         )
         let warningMessage = NSLocalizedString("Without a valid pairing file, operations that require a pairing file (such as **installing**, **refreshing**, or **resigning** apps) will *not* function.", comment: "")
         warningAlert.setMarkdownMessage(warningMessage)
+        #if os(iOS)
+        warningAlert.addAction(UIAlertAction(title: NSLocalizedString("View Pairing Tutorial", comment: ""), style: .default) { _ in
+            vc.presentPairingTutorial()
+        })
+        #endif
         warningAlert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
         vc.present(warningAlert, animated: true)
     }

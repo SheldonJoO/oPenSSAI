@@ -65,7 +65,7 @@ final class GuideViewController: UIViewController
             titleLabel.numberOfLines = 0
 
             let bodyLabel = UILabel()
-            bodyLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+            bodyLabel.font = ShellTheme.rowValueFont
             bodyLabel.textColor = ShellTheme.secondaryText
             bodyLabel.text = section.body
             bodyLabel.numberOfLines = 0

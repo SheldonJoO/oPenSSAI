@@ -306,6 +306,8 @@ struct CertificateDetailView: View {
                 Text("Cryptographic Keys")
             }
         }
+        .listRowBackground(Color.shellCard)
+        .shellListBackground()
         .navigationTitle("Certificate Details")
         #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)

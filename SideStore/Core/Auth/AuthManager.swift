@@ -137,6 +137,21 @@ public final class AuthManager: @unchecked Sendable {
         }
     }
     
+    /// Makes the team with the given identifier the active team (and its
+    /// account the active account), clearing the cached authenticated
+    /// team/session so the next signing or refresh operation re-resolves
+    /// from the database.
+    ///
+    /// This only flips local Core Data flags; it does not touch the
+    /// Keychain. Callers must make sure the stored credentials belong to
+    /// the team's Apple ID — otherwise the next authenticated call fails
+    /// and the user has to sign in again with that Apple ID.
+    public func switchActiveTeam(to teamIdentifier: String) async throws {
+        try await DatabaseManager.shared.activateTeam(identifier: teamIdentifier)
+        self.team = nil
+        self.session = nil
+    }
+    
     @discardableResult
     func signIn(
         presentingViewController: UIViewController? = nil,
@@ -209,6 +224,46 @@ fileprivate extension DatabaseManager {
             } catch {
                 debugLog("[AuthManager] Failed to save CoreData context when deactivating active account and team: \(error)")
             }
+        }
+        
+        await self.viewContext.perform {
+            self.viewContext.processPendingChanges()
+            self.viewContext.refreshAllObjects()
+        }
+    }
+    
+    /// Activates the team with the given identifier (and its account),
+    /// deactivating all other teams/accounts, and refreshes the
+    /// active-apps limit for the new team's type (same rule
+    /// SignInOperation applies on sign-in).
+    func activateTeam(identifier: String) async throws {
+        guard self.isStarted else {
+            debugLog("[AuthManager] DatabaseManager is not started. Cannot switch active team.")
+            throw OperationError.notAuthenticated
+        }
+        let bgContext = self.persistentContainer.newBackgroundContext()
+        try await bgContext.perform {
+            let teams = try bgContext.fetch(Team.fetchRequest())
+            guard let team = teams.first(where: { $0.identifier == identifier }) else {
+                throw OperationError.invalidParameters("No stored team with identifier \(identifier).")
+            }
+            for otherTeam in teams {
+                otherTeam.isActiveTeam = (otherTeam == team)
+            }
+            let accounts = try bgContext.fetch(Account.fetchRequest())
+            for account in accounts {
+                account.isActiveAccount = (account == team.account)
+            }
+            UserDefaults.standard.activeAppsLimit = nil
+            if team.type == .free {
+                let isSparseRestorePatched = ProcessInfo().sparseRestorePatched
+                let isAppLimitDisabled = UserDefaults.standard.isAppLimitDisabled
+                if !isAppLimitDisabled && isSparseRestorePatched ||
+                    isAppLimitDisabled && !isSparseRestorePatched {
+                    UserDefaults.standard.activeAppsLimit = InstalledApp.freeAccountActiveAppsLimit
+                }
+            }
+            try bgContext.save()
         }
         
         await self.viewContext.perform {

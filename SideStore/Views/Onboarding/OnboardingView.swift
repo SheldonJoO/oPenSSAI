@@ -10,6 +10,9 @@ import Minimuxer
 import SwiftUI
 import UniformTypeIdentifiers
 
+// Shell-theme colors (Color.shellBackground / .shellCard / .shellAccent)
+// live in AltStore/Shell/ShellSwiftUI.swift, shared by every SwiftUI screen.
+
 struct OnboardingView: View {
     var onFinish: (() -> Void)? = nil
     @State private var currentStep = 0
@@ -17,11 +20,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            #if !os(tvOS)
-                Color(.systemBackground).ignoresSafeArea()
-            #else
-                Color.black.ignoresSafeArea()
-            #endif
+            Color.shellBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 topBar
@@ -66,13 +65,13 @@ struct OnboardingView: View {
             HStack(spacing: 6) {
                 ForEach(0 ..< totalSteps, id: \.self) { index in
                     Circle()
-                        .fill(index == currentStep ? Color.accentColor : Color.primary.opacity(0.18))
+                        .fill(index == currentStep ? Color.shellAccent : Color.primary.opacity(0.18))
                         .frame(width: 6, height: 6)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
+            .background(Color.shellCard)
             .clipShape(Capsule())
 
             if currentStep > 0 && currentStep < totalSteps - 1 {
@@ -80,7 +79,7 @@ struct OnboardingView: View {
                     SwiftUI.Button(action: { currentStep -= 1 }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.shellAccent)
                             .frame(width: 32, height: 32)
                     }
                     Spacer()
@@ -105,7 +104,10 @@ private struct WelcomeStep: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(uiImage: UIImage(named: "AppIcon") ?? UIImage(named: "AppIcon60x60") ?? UIImage(systemName: "app.fill")!)
+            // The app icon is not loadable by name (AppIcon.appiconset is
+            // not an image asset); "AppLogo" is the same artwork as an
+            // imageset, and "app.fill" is only a last resort.
+            Image(uiImage: UIImage(named: "AppLogo") ?? UIImage(systemName: "app.fill")!)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 96, height: 96)
@@ -116,7 +118,7 @@ private struct WelcomeStep: View {
                 .onAppear { isBreathing = true }
 
             VStack(spacing: 8) {
-                Text(NSLocalizedString("Welcome to SideStore", comment: ""))
+                Text(NSLocalizedString("Welcome to openSSS", comment: ""))
                     .font(.system(size: 28, weight: .bold))
                     .multilineTextAlignment(.center)
 
@@ -140,7 +142,7 @@ private struct WelcomeStep: View {
                     color: .orange,
                     title: NSLocalizedString("Device Pairing", comment: ""),
                     description: String(
-                        format: NSLocalizedString("A one-time pairing file connects SideStore to %@ device services.", comment: ""),
+                        format: NSLocalizedString("A one-time pairing file connects openSSS to %@ device services.", comment: ""),
                         ProcessInfo.processInfo.platformName
                     )
                 )
@@ -152,6 +154,9 @@ private struct WelcomeStep: View {
                     description: NSLocalizedString("Use your own Apple ID to sign apps with standard development certificates.", comment: "")
                 )
             }
+            .padding(20)
+            .background(Color.shellCard)
+            .cornerRadius(16)
             .frame(maxWidth: 420)
             .padding(.horizontal, 28)
             .padding(.top, 12)
@@ -164,7 +169,7 @@ private struct WelcomeStep: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.accentColor)
+                    .background(Color.shellAccent)
                     .cornerRadius(14)
             }
             .frame(maxWidth: 420)
@@ -207,7 +212,7 @@ private struct PairingFileStep: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 80, height: 80)
-                .foregroundColor(hasPairingFile ? .green : .accentColor)
+                .foregroundColor(hasPairingFile ? .green : .shellAccent)
                 .animation(.easeInOut, value: hasPairingFile)
 
             VStack(spacing: 8) {
@@ -215,7 +220,7 @@ private struct PairingFileStep: View {
                     .font(.system(size: 28, weight: .bold))
 
                 Text(String(
-                    format: NSLocalizedString("SideStore uses a pairing file (.mobiledevicepairing or .plist) generated by your computer to talk to %@ device services.", comment: ""),
+                    format: NSLocalizedString("openSSS uses a pairing file (.mobiledevicepairing or .plist) generated by your computer to talk to %@ device services.", comment: ""),
                     ProcessInfo.processInfo.platformName
                 ))
                 .font(.subheadline)
@@ -245,10 +250,10 @@ private struct PairingFileStep: View {
                                 : NSLocalizedString("Select Pairing File", comment: ""))
                         }
                         .font(.headline)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.shellAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(.ultraThinMaterial)
+                        .background(Color.shellCard)
                         .cornerRadius(12)
                     }
 
@@ -257,7 +262,7 @@ private struct PairingFileStep: View {
                     }) {
                         Text(NSLocalizedString("How do I get a pairing file?", comment: ""))
                             .font(.footnote)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.shellAccent)
                     }
                 #endif
 
@@ -281,7 +286,7 @@ private struct PairingFileStep: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(hasPairingFile ? Color.accentColor : Color.gray.opacity(0.4))
+                        .background(hasPairingFile ? Color.shellAccent : Color.gray.opacity(0.4))
                         .cornerRadius(14)
                 }
                 .disabled(!hasPairingFile)
@@ -353,18 +358,14 @@ private struct LocalDevVPNStep: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 80, height: 80)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.shellAccent)
                 }
 
                 if isConnected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 24))
                         .foregroundColor(.green)
-                    #if !os(tvOS)
-                        .background(Circle().fill(Color(.systemBackground)))
-                    #else
-                        .background(Circle().fill(Color.black))
-                    #endif
+                        .background(Circle().fill(Color.shellBackground))
                         .offset(x: 4, y: 4)
                         .transition(.scale.combined(with: .opacity))
                 }
@@ -375,7 +376,7 @@ private struct LocalDevVPNStep: View {
                 Text(NSLocalizedString("LocalDevVPN", comment: ""))
                     .font(.system(size: 28, weight: .bold))
 
-                Text(NSLocalizedString("SideStore communicates with on-device services over a local loopback VPN. Enable LocalDevVPN before verifying.", comment: ""))
+                Text(NSLocalizedString("openSSS communicates with on-device services over a local loopback VPN. Enable LocalDevVPN before verifying.", comment: ""))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -401,10 +402,10 @@ private struct LocalDevVPNStep: View {
                             Text(NSLocalizedString("Verify VPN", comment: ""))
                         }
                         .font(.headline)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.shellAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(.ultraThinMaterial)
+                        .background(Color.shellCard)
                         .cornerRadius(12)
                     }
                 }
@@ -429,7 +430,7 @@ private struct LocalDevVPNStep: View {
                                     Text(NSLocalizedString("Get LocalDevVPN on App Store", comment: ""))
                                 }
                                 .font(.subheadline.weight(.medium))
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(.shellAccent)
                             }
                         }
                     }
@@ -448,7 +449,7 @@ private struct LocalDevVPNStep: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(isConnected ? Color.accentColor : Color.gray.opacity(0.4))
+                        .background(isConnected ? Color.shellAccent : Color.gray.opacity(0.4))
                         .cornerRadius(14)
                 }
                 .disabled(!isConnected)
@@ -508,18 +509,13 @@ private struct LocalDevVPNStep: View {
             return
         }
 
-        if isInstalled {
-            errorMessage = nil
-            UIApplication.shared.open(vpnConnectURL, options: [:]) { success in
-                if !success {
-                    errorMessage = NSLocalizedString("LocalDevVPN is not installed on this device.", comment: "")
-                }
-            }
-        } else {
-            UIApplication.shared.open(vpnConnectURL, options: [:]) { success in
-                if !success {
-                    errorMessage = NSLocalizedString("LocalDevVPN is not installed on this device.", comment: "")
-                }
+        // Opening the enable URL both enables the VPN (when installed) and
+        // reports failure (when it is not); no separate installed/not
+        // installed branch is needed.
+        errorMessage = nil
+        UIApplication.shared.open(vpnConnectURL, options: [:]) { success in
+            if !success {
+                errorMessage = NSLocalizedString("LocalDevVPN is not installed on this device.", comment: "")
             }
         }
     }
@@ -539,14 +535,14 @@ private struct AppleIDStep: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 80, height: 80)
-                .foregroundColor(isAuthenticated ? .green : .accentColor)
+                .foregroundColor(isAuthenticated ? .green : .shellAccent)
                 .animation(.easeInOut, value: isAuthenticated)
 
             VStack(spacing: 8) {
                 Text(NSLocalizedString("Apple ID", comment: ""))
                     .font(.system(size: 28, weight: .bold))
 
-                Text(NSLocalizedString("SideStore requires an Apple ID to create development certificates and provisioning profiles for signing apps.", comment: ""))
+                Text(NSLocalizedString("openSSS requires an Apple ID to create development certificates and provisioning profiles for signing apps.", comment: ""))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -598,7 +594,7 @@ private struct AppleIDStep: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.accentColor)
+                    .background(Color.shellAccent)
                     .cornerRadius(12)
                 }
                 .disabled(isSigningIn)
@@ -623,7 +619,7 @@ private struct AppleIDStep: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(isAuthenticated ? Color.accentColor : Color.gray.opacity(0.4))
+                        .background(isAuthenticated ? Color.shellAccent : Color.gray.opacity(0.4))
                         .cornerRadius(14)
                 }
                 .disabled(!isAuthenticated && !isSigningIn)
@@ -670,8 +666,8 @@ private struct CompleteStep: View {
                     .font(.system(size: 28, weight: .bold))
 
                 Text(hasPairingFile
-                    ? NSLocalizedString("SideStore setup is complete. You can now install and refresh apps.", comment: "")
-                    : NSLocalizedString("You can enter SideStore, but a pairing file is required before you can install or refresh apps.", comment: ""))
+                    ? NSLocalizedString("openSSS setup is complete. You can now install and refresh apps.", comment: "")
+                    : NSLocalizedString("You can enter openSSS, but a pairing file is required before you can install or refresh apps.", comment: ""))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -694,7 +690,7 @@ private struct CompleteStep: View {
                 )
             }
             .padding(16)
-            .background(.ultraThinMaterial)
+            .background(Color.shellCard)
             .cornerRadius(16)
             .frame(maxWidth: 420)
             .padding(.horizontal, 24)
@@ -702,12 +698,12 @@ private struct CompleteStep: View {
             Spacer()
 
             SwiftUI.Button(action: onFinish) {
-                Text(NSLocalizedString("Open SideStore", comment: ""))
+                Text(NSLocalizedString("Open openSSS", comment: ""))
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.accentColor)
+                    .background(Color.shellAccent)
                     .cornerRadius(14)
             }
             .frame(maxWidth: 420)

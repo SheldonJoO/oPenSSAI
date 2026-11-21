@@ -17,6 +17,7 @@ extension TimeInterval
 extension ToastView
 {
     static let openErrorLogNotification = Notification.Name("ALTOpenErrorLogNotification")
+    static let openPairingTutorialNotification = Notification.Name("ALTOpenPairingTutorialNotification")
     static let willShowNotification = Notification.Name("ToastViewWillShowNotification")
     static let didShowNotification = Notification.Name("ToastViewDidShowNotification")
     static let willDismissNotification = Notification.Name("ToastViewWillDismissNotification")
@@ -52,6 +53,7 @@ class ToastView: UIControl
     private(set) var isShown = false
     var preferredDuration: TimeInterval
     var opensErrorLog: Bool = false
+    var opensPairingTutorial: Bool = false
 
     private let dimmingView = UIView()
     private let stackView = UIStackView()
@@ -87,10 +89,6 @@ class ToastView: UIControl
         self.textLabel.text = text
         self.detailTextLabel.text = detailedText
 
-        self.backgroundColor = .altPrimary
-        self.textLabel.textColor = .white
-        self.detailTextLabel.textColor = .white
-
         self.isAccessibilityElement = true
 
         self.layoutMargins = UIEdgeInsets(top: 8, left: 16, bottom: 10, right: 16)
@@ -124,6 +122,27 @@ class ToastView: UIControl
 
     convenience init(error: Error, mode: InfoMode)
     {
+        // Pairing errors get a tap target: the pairing tutorial. Detection
+        // is on the error type, not the rendered text, so it keeps working
+        // with translated error messages. Set the flag on every path out
+        // of this initializer (including any early return) or the tap
+        // target silently disappears for those errors. A pairing toast
+        // that also opens the error log opens the tutorial instead — it
+        // is the actionable next step.
+        let isPairingError = Self.isPairingError(error)
+
+        // Known minimuxer readiness errors get a Chinese translation
+        // (cause + next step) at display time; the operation's own title
+        // (e.g. "Failed to Install X") is kept when the error carries one.
+        if let translation = MinimuxerErrorTranslator.translation(for: error)
+        {
+            let error = error as NSError
+            let text = error.localizedTitle ?? translation.title
+            self.init(text: text, detailText: translation.detail)
+            self.opensPairingTutorial = isPairingError
+            return
+        }
+
         let error = error as NSError
         let mode = mode == .fullError ? ErrorProcessing.InfoMode.fullError : ErrorProcessing.InfoMode.localizedDescription
 
@@ -131,6 +150,17 @@ class ToastView: UIControl
         let detailText = ErrorProcessing(mode).getDescription(error: error)
 
         self.init(text: text, detailText: detailText)
+        self.opensPairingTutorial = isPairingError
+    }
+
+    /// Errors that mean "pairing is not up" and are therefore answered by
+    /// the pairing tutorial: no pairing file loaded, or minimuxer never
+    /// started (which, after boot, also means no usable pairing).
+    static func isPairingError(_ error: Error) -> Bool
+    {
+        if case OperationError.pairingNotComplete = error { return true }
+        if case OperationError.minimuxerNotStarted = error { return true }
+        return false
     }
 
     required init(coder aDecoder: NSCoder) {
@@ -156,12 +186,24 @@ class ToastView: UIControl
         let textLabelFontDescriptor = detailTextLabelFontDescriptor.withSymbolicTraits(.traitBold) ?? detailTextLabelFontDescriptor
 
         textLabel.font = UIFont(descriptor: textLabelFontDescriptor, size: 0)
+        detailTextLabel.font = UIFont(descriptor: detailTextLabelFontDescriptor, size: 0)
+
+        #if os(iOS)
+        // Shell styling: a dark card pill with the shell's primary text, in
+        // both appearances (the old blue pill + white text was AltStore's
+        // palette, and the two initializers disagreed about the background
+        // — .altPrimary here, a hardcoded blue in init(frame:)).
+        self.backgroundColor = ShellTheme.card
+        textLabel.textColor = ShellTheme.primaryText
+        detailTextLabel.textColor = ShellTheme.primaryText
+        #else
+        self.backgroundColor = UIColor(red: 61.0/255.0, green: 172.0/255.0, blue: 247.0/255.0, alpha: 1)
         textLabel.textColor = .white
+        detailTextLabel.textColor = .white
+        #endif
         textLabel.minimumScaleFactor = 0.75
         textLabel.numberOfLines = 0
 
-        detailTextLabel.font = UIFont(descriptor: detailTextLabelFontDescriptor, size: 0)
-        detailTextLabel.textColor = .white
         detailTextLabel.minimumScaleFactor = 0.75
         detailTextLabel.numberOfLines = 0
 
@@ -207,8 +249,6 @@ class ToastView: UIControl
         self.layoutMargins = UIEdgeInsets(top: 5, left: 10, bottom: 5, right: 10)
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
-
-        self.backgroundColor = UIColor(red: 61.0/255.0, green: 172.0/255.0, blue: 247.0/255.0, alpha: 1)
 
         NotificationCenter.default.addObserver(self, selector: #selector(toastViewWillShow(_:)), name: ToastView.willShowNotification, object: nil)
 
@@ -326,9 +366,14 @@ class ToastView: UIControl
 
         isShown = true
 
-        if opensErrorLog, case let configuration = UIImage.SymbolConfiguration(font: self.textLabel.font),
+        if opensErrorLog || opensPairingTutorial, case let configuration = UIImage.SymbolConfiguration(font: self.textLabel.font),
            let icon = UIImage(systemName: "chevron.right.circle", withConfiguration: configuration) {
-            let tintedIcon = icon.withTintColor(.white, renderingMode: .alwaysOriginal)
+            #if os(iOS)
+            let iconTint = ShellTheme.primaryText
+            #else
+            let iconTint = UIColor.white
+            #endif
+            let tintedIcon = icon.withTintColor(iconTint, renderingMode: .alwaysOriginal)
             let moreIconImageView = UIImageView(image: tintedIcon)
             moreIconImageView.translatesAutoresizingMaskIntoConstraints = false
             self.addSubview(moreIconImageView)
@@ -452,6 +497,11 @@ private extension ToastView
 {
     @objc func showErrorLog()
     {
+        if self.opensPairingTutorial {
+            NotificationCenter.default.post(name: ToastView.openPairingTutorialNotification, object: self)
+            return
+        }
+
         guard self.opensErrorLog else { return }
 
         NotificationCenter.default.post(name: ToastView.openErrorLogNotification, object: self)

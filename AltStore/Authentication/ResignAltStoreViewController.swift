@@ -19,10 +19,22 @@ final class ResignAltStoreViewController: UIViewController
     
     @IBOutlet private var placeholderView: PlaceholderView!
     @IBOutlet private var reinstallButton: PillButton!
+    // Optional: the "Resign Later" button has no outlet in older nibs.
+    @IBOutlet private var laterButton: UIButton?
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
+        
+        // This storyboard is not Base internationalized, so its .strings
+        // file is not applied at runtime: localize the screen chrome here.
+        self.title = NSLocalizedString("Resign openSSS", comment: "")
+        self.laterButton?.setTitle(NSLocalizedString("Resign Later", comment: ""), for: .normal)
+        #if os(iOS)
+        // The storyboard's hardcoded purple (SettingsHighlighted) is gone;
+        // the primary button follows the shell accent instead.
+        self.reinstallButton.tintColor = ShellTheme.accentColor
+        #endif
         
         self.placeholderView.textLabel.isHidden = true
         

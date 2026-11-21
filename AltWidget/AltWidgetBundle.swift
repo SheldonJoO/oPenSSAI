@@ -19,5 +19,9 @@ struct AltWidgetBundle: WidgetBundle
         TextLockScreenWidget()
         
         ActiveAppsWidget()
+        
+        if #available(iOS 16.1, *) {
+            PairingCodeLiveActivity()
+        }
     }
 }

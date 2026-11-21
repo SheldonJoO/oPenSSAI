@@ -11,8 +11,11 @@ import MinimuxerCommon
 import CryptoKit
 
 private extension Color {
-    static let settingsRowBackground = Color.white.opacity(0.15)
-    static let settingsDivider = Color.white.opacity(0.15)
+    // Shell cards and dividers (Color.shellCard / .shellSeparator live in
+    // AltStore/Shell/ShellSwiftUI.swift); the old names stay so the view
+    // body below is untouched.
+    static let settingsRowBackground = Color.shellCard
+    static let settingsDivider = Color.shellSeparator
 }
 
 struct PairingFileDetailView: View {
@@ -86,7 +89,7 @@ struct PairingFileDetailView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(Color(uiColor: .settingsBackground).ignoresSafeArea())
+        .background(Color.shellBackground.ignoresSafeArea())
         .navigationTitle(titleText)
         #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -132,8 +135,8 @@ struct PairingFileDetailView: View {
     private var fileInfoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("FILE INFORMATION")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color.white.opacity(0.6))
+                .font(.shellSectionTitle)
+                .foregroundColor(Color.shellSecondaryText)
                 .padding(.horizontal, 4)
 
             VStack(spacing: 0) {
@@ -156,7 +159,7 @@ struct PairingFileDetailView: View {
                 }
             }
             .background(Color.settingsRowBackground)
-            .cornerRadius(14)
+            .cornerRadius(ShellSwiftUI.cardCornerRadius)
         }
     }
 
@@ -164,14 +167,14 @@ struct PairingFileDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(isEditing ? NSLocalizedString("EDIT RAW XML", comment: "") : NSLocalizedString("RAW XML CONTENT", comment: ""))
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Color.white.opacity(0.6))
+                    .font(.shellSectionTitle)
+                    .foregroundColor(Color.shellSecondaryText)
                 Spacer()
                 let displayed = isEditing ? editedContent : rawContent
                 if !displayed.isEmpty {
                     Text(String(format: NSLocalizedString("%d bytes", comment: ""), displayed.count))
                         .font(.system(size: 12))
-                        .foregroundColor(Color.white.opacity(0.4))
+                        .foregroundColor(Color.shellSecondaryText)
                 }
             }
             .padding(.horizontal, 4)
@@ -179,7 +182,7 @@ struct PairingFileDetailView: View {
             if isEditing {
                 TextEditor(text: $editedContent)
                     .font(.system(size: 12, weight: .regular, design: .monospaced))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.shellPrimaryText)
                     .background(Color.black.opacity(0.3))
                     .cornerRadius(12)
                     .frame(minHeight: 380)
@@ -187,7 +190,7 @@ struct PairingFileDetailView: View {
                 ScrollView([.horizontal, .vertical]) {
                     Text(rawContent)
                         .font(.system(size: 12, weight: .regular, design: .monospaced))
-                        .foregroundColor(Color.white.opacity(0.9))
+                        .foregroundColor(Color.shellPrimaryText)
                         .padding(14)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -197,20 +200,20 @@ struct PairingFileDetailView: View {
             } else {
                 Text("No pairing file installed.")
                     .font(.system(size: 14))
-                    .foregroundColor(Color.white.opacity(0.5))
+                    .foregroundColor(Color.shellSecondaryText)
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .background(Color.settingsRowBackground)
-                    .cornerRadius(14)
+                    .cornerRadius(ShellSwiftUI.cardCornerRadius)
             }
         }
     }
 
-    private func metadataRow(label: String, value: String, valueColor: Color = .white) -> some View {
+    private func metadataRow(label: String, value: String, valueColor: Color = .shellPrimaryText) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: 15))
-                .foregroundColor(Color.white.opacity(0.7))
+                .foregroundColor(Color.shellSecondaryText)
             Spacer()
             Text(value)
                 .font(.system(size: 15, weight: .medium))

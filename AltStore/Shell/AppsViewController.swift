@@ -33,6 +33,12 @@ final class AppsViewController: UIViewController
     private var selectedTab: Tab = .installed
     private var isRefreshingAll = false
 
+    /// Bundle IDs with an in-flight install/refresh, in start order. Drives
+    /// the install-progress popup (the first entry is the one shown).
+    private var inFlightBundleIDs: [String] = []
+    private var progressPopup: InstallProgressPopupViewController?
+    private var progressPopupRetryPending = false
+
     private let iconCache = NSCache<NSString, UIImage>()
 
     private lazy var fetchedResultsController: NSFetchedResultsController<InstalledApp> = {
@@ -127,7 +133,7 @@ final class AppsViewController: UIViewController
         super.viewDidLoad()
         view.backgroundColor = ShellTheme.background
 
-        navigationItem.title = "oPenSSAI"
+        navigationItem.title = "openSSS"
         navigationItem.largeTitleDisplayMode = .always
         navigationItem.backButtonDisplayMode = .minimal
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
@@ -135,7 +141,9 @@ final class AppsViewController: UIViewController
         view.addSubview(segmentedTabsView)
         view.addSubview(tableView)
 
-        let bottomInset = ShellTheme.pillHeight + ShellTheme.pillBottomMargin + 24
+        // The standard tab bar is accounted for by the safe area; only a
+        // small breathing room below the last row is needed.
+        let bottomInset: CGFloat = 24
         tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
         tableView.verticalScrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
 
@@ -157,6 +165,9 @@ final class AppsViewController: UIViewController
             self, selector: #selector(pendingStoreDidChange),
             name: PendingIPAStore.didChangeNotification, object: nil)
         NotificationCenter.default.addObserver(
+            self, selector: #selector(appProgressDidChange(_:)),
+            name: AppManager.didChangeAppProgressNotification, object: nil)
+        NotificationCenter.default.addObserver(
             self, selector: #selector(importAppDeepLink(_:)),
             name: AppDelegate.importAppDeepLinkNotification, object: nil)
         NotificationCenter.default.addObserver(
@@ -174,6 +185,10 @@ final class AppsViewController: UIViewController
         try? fetchedResultsController.performFetch()
         tableView.reloadData()
         updateCounts()
+        // Pick up operations that started while this tab was not visible
+        // (e.g. a background refresh) so the popup shows them on return.
+        recomputeInFlight()
+        syncProgressPopup()
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle
@@ -208,6 +223,236 @@ final class AppsViewController: UIViewController
         if selectedTab == .pending
         {
             tableView.reloadData()
+        }
+    }
+
+    /// An install/refresh progress was registered or cleared. Progress is
+    /// set asynchronously (PipelineRunner runs detached, after a minimuxer
+    /// readiness check), so a reload right after starting an operation
+    /// would run too early — this notification is what makes the popup
+    /// (and the row's busy spinner) appear as soon as the operation
+    /// actually starts.
+    @objc private func appProgressDidChange(_ notification: Notification)
+    {
+        // Posted on a background thread; hop to main before touching UI.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if let bundleID = notification.userInfo?[AppManager.appProgressBundleIdentifierKey] as? String
+            {
+                self.updateInFlight(bundleID: bundleID)
+                // Reload just the affected row when it is on screen;
+                // off-screen rows pick up the busy spinner when they are
+                // configured.
+                let row: Int?
+                switch self.selectedTab
+                {
+                case .pending:
+                    row = self.pendingApps.firstIndex { $0.bundleIdentifier == bundleID }
+                case .installed:
+                    row = self.installedApps.firstIndex { $0.bundleIdentifier == bundleID }
+                }
+                if let row
+                {
+                    let indexPath = IndexPath(row: row, section: 0)
+                    if self.tableView.indexPathsForVisibleRows?.contains(indexPath) == true
+                    {
+                        self.tableView.reloadRows(at: [indexPath], with: .none)
+                    }
+                }
+            }
+            else
+            {
+                self.recomputeInFlight()
+                self.tableView.reloadData()
+            }
+            self.syncProgressPopup()
+        }
+    }
+
+    // MARK: - Install progress popup
+
+    /// In-flight progress for a bundle ID, or nil when idle, cancelled, or
+    /// already complete. A multi-app group keeps a finished operation's
+    /// Progress registered until the whole group ends, so fraction 1.0
+    /// counts as done here (mirrors the old row's fractionCompleted < 1.0
+    /// check).
+    private func activeProgress(forBundleID bundleID: String) -> Progress?
+    {
+        guard let progress = AppManager.shared.refreshProgress(forBundleID: bundleID),
+              progress.fractionCompleted < 1.0 else { return nil }
+        return progress
+    }
+
+    private func updateInFlight(bundleID: String)
+    {
+        if activeProgress(forBundleID: bundleID) != nil
+        {
+            if !inFlightBundleIDs.contains(bundleID)
+            {
+                inFlightBundleIDs.append(bundleID)
+            }
+        }
+        else
+        {
+            inFlightBundleIDs.removeAll { $0 == bundleID }
+        }
+    }
+
+    /// Rescans the visible apps for in-flight operations. Used when a
+    /// notification carries no bundle ID and when returning to this tab.
+    private func recomputeInFlight()
+    {
+        var ids: [String] = []
+        for item in pendingApps where activeProgress(forBundleID: item.bundleIdentifier) != nil
+        {
+            ids.append(item.bundleIdentifier)
+        }
+        for app in installedApps where activeProgress(forBundleID: app.bundleIdentifier) != nil
+        {
+            ids.append(app.bundleIdentifier)
+        }
+        // Preserve start order for entries already tracked, then append new ones.
+        let known = inFlightBundleIDs.filter { ids.contains($0) }
+        let fresh = ids.filter { !inFlightBundleIDs.contains($0) }
+        inFlightBundleIDs = known + fresh
+    }
+
+    /// Shows the popup for the first in-flight operation, retargets it to
+    /// the next one when the current app finishes (refresh-all), or
+    /// dismisses it when nothing is in flight anymore.
+    private func syncProgressPopup()
+    {
+        // Drop entries that finished without a notification (multi-app
+        // groups clear progress only when the whole group ends).
+        inFlightBundleIDs.removeAll { activeProgress(forBundleID: $0) == nil }
+
+        guard let bundleID = inFlightBundleIDs.first else
+        {
+            dismissProgressPopup()
+            return
+        }
+
+        if let popup = progressPopup
+        {
+            guard popup.bundleID != bundleID else { return }
+            retargetProgressPopup(popup, to: bundleID)
+            return
+        }
+
+        presentProgressPopup(for: bundleID)
+    }
+
+    private func presentProgressPopup(for bundleID: String)
+    {
+        guard let progress = activeProgress(forBundleID: bundleID) else { return }
+
+        // Not on screen (e.g. the user is on the Me tab): viewWillAppear
+        // picks the operation up when this tab returns.
+        guard view.window != nil else { return }
+
+        // Another modal is up (install dialog, permission review, …):
+        // retry shortly instead of dropping the popup — progress
+        // notifications only fire on start/end, so there may be no
+        // second chance.
+        if presentedViewController != nil
+        {
+            guard !progressPopupRetryPending else { return }
+            progressPopupRetryPending = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.progressPopupRetryPending = false
+                self?.syncProgressPopup()
+            }
+            return
+        }
+
+        let info = displayInfo(forBundleID: bundleID)
+        let popup = InstallProgressPopupViewController(
+            bundleID: bundleID,
+            name: info.name,
+            version: info.version,
+            icon: info.icon,
+            progress: progress,
+            kind: operationKind(forBundleID: bundleID)
+        )
+        popup.onCompleted = { [weak self] in
+            self?.syncProgressPopup()
+        }
+        progressPopup = popup
+        present(popup, animated: true)
+        loadPopupIconIfNeeded(forBundleID: bundleID, popup: popup)
+    }
+
+    private func retargetProgressPopup(_ popup: InstallProgressPopupViewController, to bundleID: String)
+    {
+        guard let progress = activeProgress(forBundleID: bundleID) else
+        {
+            // The next app finished before the retarget ran; re-sync
+            // instead (its removeAll drops this entry first).
+            syncProgressPopup()
+            return
+        }
+        let info = displayInfo(forBundleID: bundleID)
+        popup.retarget(
+            bundleID: bundleID,
+            name: info.name,
+            version: info.version,
+            icon: info.icon,
+            progress: progress,
+            kind: operationKind(forBundleID: bundleID)
+        )
+        loadPopupIconIfNeeded(forBundleID: bundleID, popup: popup)
+    }
+
+    private func dismissProgressPopup()
+    {
+        guard let popup = progressPopup else { return }
+        progressPopup = nil
+        popup.dismiss(animated: true)
+    }
+
+    /// Name, version, and icon for the popup. Installed apps use the cached
+    /// icon (or a placeholder until it loads); pending apps use their
+    /// stored icon; anything else falls back to the bundle ID.
+    private func displayInfo(forBundleID bundleID: String) -> (name: String, version: String?, icon: UIImage?)
+    {
+        if let item = pendingApps.first(where: { $0.bundleIdentifier == bundleID })
+        {
+            return (item.name, item.version, PendingIPAStore.shared.icon(for: item))
+        }
+        if let app = installedApps.first(where: { $0.bundleIdentifier == bundleID })
+        {
+            let icon = iconCache.object(forKey: bundleID as NSString)
+                ?? PendingIPAStore.placeholderIcon(for: app.name)
+            return (app.name, app.version, icon)
+        }
+        return (bundleID, nil, PendingIPAStore.placeholderIcon(for: bundleID))
+    }
+
+    /// Install-family operations register in installationProgress; refresh,
+    /// re-sign, and friends register in refreshProgress. Only used for the
+    /// popup's fallback stage text.
+    private func operationKind(forBundleID bundleID: String) -> InstallProgressPopupViewController.OperationKind
+    {
+        AppManager.shared.installationProgress(forBundleID: bundleID) != nil ? .install : .refresh
+    }
+
+    /// Loads the real icon for an installed app shown in the popup when it
+    /// is not cached yet (the popup starts with a placeholder).
+    private func loadPopupIconIfNeeded(forBundleID bundleID: String, popup: InstallProgressPopupViewController)
+    {
+        guard iconCache.object(forKey: bundleID as NSString) == nil,
+              let app = installedApps.first(where: { $0.bundleIdentifier == bundleID }) else { return }
+
+        Task { @MainActor [weak self, weak popup] in
+            guard let self else { return }
+            let image = try? await app.loadIcon()
+            let finalImage = image ?? PendingIPAStore.placeholderIcon(for: app.name)
+            self.iconCache.setObject(finalImage, forKey: bundleID as NSString)
+
+            // Only update the popup if it still shows the same app.
+            guard let popup, popup.bundleID == bundleID,
+                  self.progressPopup === popup else { return }
+            popup.updateIcon(finalImage)
         }
     }
 
@@ -641,6 +886,8 @@ extension AppsViewController: UITableViewDataSource, UITableViewDelegate
                 statusColor: validity.color,
                 isBusy: isBusy
             )
+            // Progress itself lives in the popup now; the row only shows
+            // the busy spinner while an operation is in flight.
             loadIconIfNeeded(for: app, at: indexPath)
             return cell
         }

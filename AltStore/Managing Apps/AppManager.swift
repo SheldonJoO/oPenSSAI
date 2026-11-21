@@ -22,6 +22,11 @@ extension AppManager
     static let didAddSourceNotification = Notification.Name("io.sidestore.AppManager.didAddSource")
     static let didRemoveSourceNotification = Notification.Name("io.sidestore.AppManager.didRemoveSource")
     static let willInstallAppFromNewSourceNotification = Notification.Name("io.sidestore.AppManager.willInstallAppFromNewSource")
+    /// Posted when an install/refresh progress is registered or cleared
+    /// (start or end of an operation). userInfo carries the bundle ID under
+    /// `appProgressBundleIdentifierKey`, so rows can reload just in time.
+    static let didChangeAppProgressNotification = Notification.Name("io.sidestore.AppManager.didChangeAppProgress")
+    static let appProgressBundleIdentifierKey = "bundleIdentifier"
     
     static let expirationWarningNotificationID = "sidestore-expiration-warning"
     static let enableJITResultNotificationID = "sidestore-enable-jit"
@@ -747,26 +752,40 @@ extension AppManager: PipelineProgress, PipelineExecutionContext, PipelineErrorL
 
     func installationProgress(for app: AppProtocol) -> Progress?
     {
+        return self.installationProgress(forBundleID: app.bundleIdentifier)
+    }
+
+    /// In-flight install/update/reinstall progress for a bundle ID, for
+    /// callers that have no AppProtocol object (e.g. pending .ipa entries).
+    func installationProgress(forBundleID bundleID: String) -> Progress?
+    {
         return self.progressLock.withLock {
-            self.installationProgress[app.bundleIdentifier]
+            self.installationProgress[bundleID]
         }
     }
     
     func refreshProgress(for app: AppProtocol) -> Progress?
     {
+        return self.refreshProgress(forBundleID: app.bundleIdentifier)
+    }
+
+    /// In-flight refresh/re-sign progress for a bundle ID, for callers that
+    /// have no AppProtocol object (mirrors installationProgress(forBundleID:)).
+    /// Falls back to the install progress, so it covers refresh, re-sign,
+    /// reinstall, and install alike; cancelled progress is cleared.
+    func refreshProgress(forBundleID bundleID: String) -> Progress?
+    {
         return self.progressLock.withLock {
-            let bundleID = app.bundleIdentifier
-            
             guard let progress = self.refreshProgress[bundleID] ?? self.installationProgress[bundleID] else {
                 return nil
             }
-            
+
             guard !progress.isCancelled else {
                 self.refreshProgress[bundleID] = nil
                 self.installationProgress[bundleID] = nil
                 return nil
             }
-            
+
             return progress
         }
     }
@@ -816,6 +835,14 @@ extension AppManager: PipelineProgress, PipelineExecutionContext, PipelineErrorL
             }
             debugLog("[AppManager] setProgress: \(progress.map { "\($0)" } ?? "nil") for operation: .\(operationName), totalUnitCount: \(progress?.totalUnitCount ?? 0)")
         }
+
+        // Notify after releasing the lock: observers read the progress back
+        // through the accessors, which take the same (non-reentrant) lock.
+        NotificationCenter.default.post(
+            name: AppManager.didChangeAppProgressNotification,
+            object: self,
+            userInfo: [AppManager.appProgressBundleIdentifierKey: bundleID]
+        )
     }
     
     func getMappedError(for operation: AppOperation, error: Error) -> Error {

@@ -83,8 +83,9 @@ device UDIDs.
 - `AltStore/` - Main iOS app target: UI, tab bar navigation (Browse, My Apps,
   Settings, News), App IDs, permissions, and app management.
 - `AltStore/Shell/` - oPenSSAI's own UI shell (programmatic UIKit, no
-  storyboards): the two-tab floating-pill interface — Apps (pending/installed
-  lists, per-app validity, Renew All) and Me (signing, expiry reminders,
+  storyboards): the three-tab interface — Apps (pending/installed
+  lists, per-app validity, Renew All), Location (virtual location
+  simulation), and Me (signing, expiry reminders,
   appearance & theme, storage, guide, licenses, about). This is the main
   interface on iOS; `LaunchViewController` instantiates `ShellTabBarController`
   instead of the storyboard `TabBarController`. The old storyboard tabs

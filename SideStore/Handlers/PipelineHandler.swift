@@ -181,10 +181,8 @@ final class PipelineHandler: PipelineExecutionHandler,
         await withCheckedContinuation { continuation in
             Task { @MainActor in
                 let alert = UIAlertController(
-                    title: "Finish Refresh",
-                    message: """
-                    To finish refreshing, SideStore must be moved to the background. To do this, you can either go to the Home Screen manually or by hitting Continue. Please reopen SideStore after doing this.
-                    """,
+                    title: NSLocalizedString("Finish Refresh", comment: ""),
+                    message: NSLocalizedString("To finish refreshing, SideStore must be moved to the background. To do this, you can either go to the Home Screen manually or by hitting Continue. Please reopen SideStore after doing this.", comment: ""),
                     preferredStyle: .alert
                 )
                 alert.addAction(UIAlertAction(title: NSLocalizedString("Continue", comment: ""), style: .default, handler: { _ in

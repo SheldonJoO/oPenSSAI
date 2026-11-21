@@ -205,11 +205,24 @@ public func isMinimuxerReady() async -> Result<Bool, MinimuxerError> {
 }
 
 public func ensureMinimuxerReady() async throws {
+    // Wait for the boot sequence first: it loads the pairing file and
+    // starts minimuxer. Without this, an operation run right after launch
+    // sees minimuxer as "pairing not loaded" even though the file is on
+    // disk, and fails with a transient "Pairing Required" error.
+    await AppBootManager.shared.waitForBootSequence()
     if CellularRefreshManager.shared.isEnabled && UserDefaults.standard.enableEMPforWireguard {
         throw OperationError.invalidVPN(
             reason: "WireGuard VPN is not supported with Cellular Refresh because iOS pauses the WireGuard tunnel when cellular data is toggled off."
         )
     }
+    // Diagnostic: record the effective mode + endpoint at operation time,
+    // so a later failure can be traced to the mode the engine actually used
+    // (0707 bug: the UI showed Remote Direct while the engine was still in
+    // localVPN because the mode was only a draft until Save).
+    let mode = await getDeviceConnectionMode()
+    let config = ConnectionConfig.shared
+    let reachableText = config.effectiveEndpointReachable.map { String(describing: $0) } ?? "unknown"
+    debugLog("[oPenSSAI] ensureMinimuxerReady: mode=.\(mode) endpoint=\(config.effectiveEndpointIp ?? "none") reachable=\(reachableText)")
     if !CellularRefreshManager.shared.isEnabled {
         try await withRemotePairingRetry {
             if case .failure(let error) = await isMinimuxerReady() {
@@ -559,6 +572,15 @@ public final class WirelessPairWrapper {
         #if !targetEnvironment(simulator)
         minimuxer.wirelessPair.start(outPath: outPath, resolveFileName: resolveFileName) { result in
             debugLog("[WirelessPairWrapper] start callback received: result=\(result)")
+            // The server-mode pairing session is over (success, failure, or
+            // cancel): end the pairing-code Live Activity even if the
+            // pairing screen's view model is already gone — its own end
+            // call only fires while the screen is alive.
+            if #available(iOS 16.2, *) {
+                Task { @MainActor in
+                    PairingCodeLiveActivityManager.shared.end()
+                }
+            }
             switch result {
             case .success(let device):
                 completion(.success(MinimuxerPairedDevice(

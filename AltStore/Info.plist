@@ -166,7 +166,9 @@
 		<string>_vnc._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>oPenSSAI 需要局域网权限来发现网络上的 Bonjour（mDNS）服务。核心功能不需要此权限。</string>
+	<string>openSSS 需要局域网权限来发现网络上的 Bonjour（mDNS）服务。核心功能不需要此权限。</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>RefreshAllIntent</string>
@@ -238,9 +240,9 @@
 		<string>processing</string>
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>oPenSSAI 使用定位更新来保持后台任务运行。</string>
+	<string>openSSS 使用定位更新来保持后台任务运行。</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>oPenSSAI 使用定位更新来保持后台任务运行。</string>
+	<string>openSSS 使用定位更新来保持后台任务运行。</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

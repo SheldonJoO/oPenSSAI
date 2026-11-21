@@ -113,7 +113,9 @@ final class PendingIPAStore
 
     /// Imports an .ipa into the queue, parsing its metadata. The source may
     /// be a local file URL (Files picker, "Open in") or a remote URL (which
-    /// is downloaded first).
+    /// is downloaded first). Importing an .ipa whose bundle identifier is
+    /// already pending replaces the existing entry in place instead of
+    /// adding a duplicate.
     func add(from sourceURL: URL) async throws -> PendingIPA
     {
         let id = UUID().uuidString
@@ -121,36 +123,49 @@ final class PendingIPAStore
 
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
 
-        // Copy (or download) + parse off the main actor.
-        let parsed: ParsedIPA = try await Task.detached(priority: .userInitiated) {
-            if sourceURL.isFileURL
-            {
-                let isScoped = sourceURL.startAccessingSecurityScopedResource()
-                defer { if isScoped { sourceURL.stopAccessingSecurityScopedResource() } }
-                do
+        // Copy (or download) + parse off the main actor. A failed import
+        // (bad .ipa, failed download) removes the copied file again: an
+        // orphaned .ipa would otherwise linger in Documents/PendingIPAs
+        // forever, inflating the storage breakdown with no queue entry
+        // that could ever delete it.
+        let parsed: ParsedIPA
+        do
+        {
+            parsed = try await Task.detached(priority: .userInitiated) {
+                if sourceURL.isFileURL
                 {
-                    try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+                    let isScoped = sourceURL.startAccessingSecurityScopedResource()
+                    defer { if isScoped { sourceURL.stopAccessingSecurityScopedResource() } }
+                    do
+                    {
+                        try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+                    }
+                    catch
+                    {
+                        throw PendingIPAError.copyFailed
+                    }
                 }
-                catch
+                else
                 {
-                    throw PendingIPAError.copyFailed
+                    let (tempURL, _) = try await URLSession.shared.download(from: sourceURL)
+                    do
+                    {
+                        try FileManager.default.copyItem(at: tempURL, to: destinationURL)
+                    }
+                    catch
+                    {
+                        throw PendingIPAError.copyFailed
+                    }
                 }
-            }
-            else
-            {
-                let (tempURL, _) = try await URLSession.shared.download(from: sourceURL)
-                do
-                {
-                    try FileManager.default.copyItem(at: tempURL, to: destinationURL)
-                }
-                catch
-                {
-                    throw PendingIPAError.copyFailed
-                }
-            }
 
-            return try Self.parseIPA(at: destinationURL)
-        }.value
+                return try Self.parseIPA(at: destinationURL)
+            }.value
+        }
+        catch
+        {
+            try? FileManager.default.removeItem(at: destinationURL)
+            throw error
+        }
 
         // Persist the icon, if any.
         var hasIcon = false
@@ -172,7 +187,20 @@ final class PendingIPAStore
             hasIcon: hasIcon
         )
 
-        items.insert(item, at: 0)
+        // Re-importing an .ipa for an app that is already pending replaces
+        // the existing entry in place (preserving list order) instead of
+        // adding a duplicate; the replaced entry's files are removed.
+        if let index = items.firstIndex(where: { $0.bundleIdentifier == item.bundleIdentifier })
+        {
+            let oldItem = items[index]
+            items[index] = item
+            try? FileManager.default.removeItem(at: ipaURL(for: oldItem))
+            try? FileManager.default.removeItem(at: directoryURL.appendingPathComponent(oldItem.iconFileName))
+        }
+        else
+        {
+            items.insert(item, at: 0)
+        }
         saveIndex()
         NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
         return item
@@ -254,7 +282,32 @@ final class PendingIPAStore
             return
         }
         // Drop entries whose .ipa file is gone (e.g. removed from Files).
-        items = decoded.filter { FileManager.default.fileExists(atPath: ipaURL(for: $0).path) }
+        let existing = decoded.filter { FileManager.default.fileExists(atPath: ipaURL(for: $0).path) }
+        // Drop duplicates by bundle identifier (imports from before dedupe
+        // could leave identical entries pending); keep the first occurrence
+        // and remove the duplicate entries' files so no orphans linger.
+        var seen = Set<String>()
+        var deduped = [PendingIPA]()
+        var changed = false
+        for item in existing
+        {
+            if seen.contains(item.bundleIdentifier)
+            {
+                changed = true
+                try? FileManager.default.removeItem(at: ipaURL(for: item))
+                try? FileManager.default.removeItem(at: directoryURL.appendingPathComponent(item.iconFileName))
+            }
+            else
+            {
+                seen.insert(item.bundleIdentifier)
+                deduped.append(item)
+            }
+        }
+        items = deduped
+        if changed
+        {
+            saveIndex()
+        }
     }
 
     private func saveIndex()

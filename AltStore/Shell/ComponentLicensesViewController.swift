@@ -345,7 +345,7 @@ final class LicenseDetailViewController: UIViewController
         nameLabel.text = component.name
 
         let versionLabel = UILabel()
-        versionLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        versionLabel.font = ShellTheme.rowValueFont
         versionLabel.textColor = ShellTheme.secondaryText
         versionLabel.numberOfLines = 0
         if let version = component.version
@@ -363,13 +363,13 @@ final class LicenseDetailViewController: UIViewController
         licenseTitleLabel.text = component.license.rawValue
 
         let licenseBodyLabel = UILabel()
-        licenseBodyLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        licenseBodyLabel.font = ShellTheme.rowValueFont
         licenseBodyLabel.textColor = ShellTheme.secondaryText
         licenseBodyLabel.numberOfLines = 0
         licenseBodyLabel.text = component.license.summary
 
         let summaryLabel = UILabel()
-        summaryLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        summaryLabel.font = ShellTheme.rowValueFont
         summaryLabel.textColor = ShellTheme.secondaryText
         summaryLabel.numberOfLines = 0
         summaryLabel.text = component.summary

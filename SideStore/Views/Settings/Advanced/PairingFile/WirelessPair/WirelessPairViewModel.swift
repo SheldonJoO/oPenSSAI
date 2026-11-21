@@ -74,6 +74,9 @@ final class WirelessPairViewModel: ObservableObject {
     @Published var statusText = NSLocalizedString("Ready to pair", comment: "")
     @Published var subStatusText = NSLocalizedString("Tap Start to advertise this device on the local network.", comment: "")
     @Published var pinCode: String? = nil
+    /// Why the pairing code may not be showing in the Dynamic Island
+    /// (e.g. Live Activities disabled), so the PIN sheet can say so.
+    @Published var liveActivityHint: String? = nil
     @Published var isAdvertising = false
     @Published var pairedDevice: MinimuxerPairedDevice? = nil
     @Published var errorMessage: String? = nil
@@ -147,10 +150,26 @@ final class WirelessPairViewModel: ObservableObject {
         wirelessPairing.onPinReceived = { [weak self] (pin: String) in
             debugLog("[WirelessPairViewModel] onPinReceived callback received: pin='\(pin)'")
             Task { @MainActor in
+                // Start the Live Activity BEFORE the weak-self guard below:
+                // this closure is retained by the singleton pairing service,
+                // so it outlives this view model — but the view model dies
+                // as soon as the user leaves this screen (e.g. to open
+                // Settings and tap "Pair with SideStore"), while the pairing
+                // server keeps running. The code must reach the Dynamic
+                // Island even then, or the user is left staring at the
+                // system prompt with nowhere to read it.
+                if #available(iOS 16.2, *) {
+                    PairingCodeLiveActivityManager.shared.start(pinCode: pin)
+                }
                 guard let self = self else { return }
                 self.pinCode = pin
                 self.statusText = NSLocalizedString("Device Connected", comment: "")
                 self.subStatusText = NSLocalizedString("Enter the pairing code shown below on your other device settings screen.", comment: "")
+                if #available(iOS 16.2, *) {
+                    // Surface why the island may not be showing the code
+                    // (e.g. Live Activities disabled) so the user can fix it.
+                    self.liveActivityHint = PairingCodeLiveActivityManager.shared.lastStartFailure
+                }
             }
         }
         
@@ -490,6 +509,7 @@ final class WirelessPairViewModel: ObservableObject {
         debugLog("[WirelessPairViewModel] startPairing() starting advertisement with base path: '\(docsPath)'")
         isAdvertising = true
         pinCode = nil
+        endPairingCodeLiveActivity()
         errorMessage = nil
         serviceID = nil
         port = nil
@@ -508,6 +528,7 @@ final class WirelessPairViewModel: ObservableObject {
                 guard self.isAdvertising else { return }
                 self.isAdvertising = false
                 self.pinCode = nil
+                self.endPairingCodeLiveActivity()
                 self.serviceID = nil
                 self.port = nil
                 
@@ -530,6 +551,15 @@ final class WirelessPairViewModel: ObservableObject {
         }
     }
 
+    /// End the pairing-code Live Activity, if one is running. No-op below iOS 16.2.
+    /// Also clears the island hint: it is only shown while a code is displayed.
+    private func endPairingCodeLiveActivity() {
+        liveActivityHint = nil
+        if #available(iOS 16.2, *) {
+            PairingCodeLiveActivityManager.shared.end()
+        }
+    }
+
     func stopPairing() {
         debugLog("[WirelessPairViewModel] stopPairing() stopping advertisement and tearing down session")
         wirelessPairing.stop()
@@ -538,6 +568,7 @@ final class WirelessPairViewModel: ObservableObject {
         statusText = NSLocalizedString("Ready to pair", comment: "")
         subStatusText = NSLocalizedString("Tap Start to advertise this device on the local network.", comment: "")
         pinCode = nil
+        endPairingCodeLiveActivity()
         errorMessage = nil
         serviceID = nil
         port = nil
@@ -553,6 +584,7 @@ final class WirelessPairViewModel: ObservableObject {
         debugLog("[WirelessPairViewModel] triggerPairing() initiating handshake to \(targetIp):\(targetPort), base path: '\(docsPath)'")
         isAdvertising = true
         pinCode = nil
+        endPairingCodeLiveActivity()
         errorMessage = nil
         serviceID = nil
         port = nil
@@ -572,6 +604,7 @@ final class WirelessPairViewModel: ObservableObject {
                 debugLog("[WirelessPairViewModel] triggerPairing() completion received: result=\(result)")
                 self.isAdvertising = false
                 self.pinCode = nil
+                self.endPairingCodeLiveActivity()
                 self.serviceID = nil
                 self.port = nil
                 

@@ -86,6 +86,76 @@ enum PipelineStep: OperationStep {
         }
         return step(for: type(of: operation))
     }
+
+    /// User-visible stage label for the install-progress popup, published on
+    /// the operation Progress's `localizedDescription` by PipelineExecutor
+    /// as each step starts.
+    var localizedStageDescription: String {
+        switch self {
+        case .preflightChecks:
+            return NSLocalizedString("Checking requirements…", comment: "")
+        case .userCustomization:
+            return NSLocalizedString("Customizing app…", comment: "")
+        case .downloadApp:
+            return NSLocalizedString("Downloading app…", comment: "")
+        case .verifyApp:
+            return NSLocalizedString("Verifying app…", comment: "")
+        case .cacheApp:
+            return NSLocalizedString("Caching app…", comment: "")
+        case .stageApp:
+            return NSLocalizedString("Preparing app…", comment: "")
+        case .stageBackupApp:
+            return NSLocalizedString("Preparing backup helper…", comment: "")
+        case .updateAppCertificate:
+            return NSLocalizedString("Updating signing certificate…", comment: "")
+        case .verifyCertificate:
+            return NSLocalizedString("Verifying certificate…", comment: "")
+        case .changeAppIcon:
+            return NSLocalizedString("Updating app icon…", comment: "")
+        case .removeAppExtensions:
+            return NSLocalizedString("Removing app extensions…", comment: "")
+        case .fetchProvisioningProfiles:
+            return NSLocalizedString("Fetching provisioning profiles…", comment: "")
+        case .prepareAppExtensionBundleIDs:
+            return NSLocalizedString("Preparing extension IDs…", comment: "")
+        case .embedSigningCert:
+            return NSLocalizedString("Embedding signing certificate…", comment: "")
+        case .resignApp:
+            return NSLocalizedString("Re-signing app…", comment: "")
+        case .createIPA:
+            return NSLocalizedString("Packaging app…", comment: "")
+        case .exportResignedIPA:
+            return NSLocalizedString("Exporting signed app…", comment: "")
+        case .sendApp:
+            return NSLocalizedString("Sending app to device…", comment: "")
+        case .installApp:
+            return NSLocalizedString("Installing on device…", comment: "")
+        case .refreshApp:
+            return NSLocalizedString("Refreshing app…", comment: "")
+        case .patchInfoPlist:
+            return NSLocalizedString("Updating app info…", comment: "")
+        case .cacheSigningCert:
+            return NSLocalizedString("Saving signing certificate…", comment: "")
+        case .cacheResignedMetadata:
+            return NSLocalizedString("Saving app info…", comment: "")
+        case .cleanStagedApp:
+            return NSLocalizedString("Cleaning up…", comment: "")
+        case .backupAppData:
+            return NSLocalizedString("Backing up app data…", comment: "")
+        case .restoreAppData:
+            return NSLocalizedString("Restoring app data…", comment: "")
+        case .removeBackupData:
+            return NSLocalizedString("Removing backup data…", comment: "")
+        case .uninstallApp:
+            return NSLocalizedString("Uninstalling app…", comment: "")
+        case .markAppInactive:
+            return NSLocalizedString("Marking app inactive…", comment: "")
+        case .removeApp:
+            return NSLocalizedString("Removing app…", comment: "")
+        case .deactivateApp:
+            return NSLocalizedString("Deactivating app…", comment: "")
+        }
+    }
 }
 
 enum StandaloneStep: OperationStep {

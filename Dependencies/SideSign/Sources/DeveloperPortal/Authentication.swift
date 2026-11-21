@@ -348,7 +348,12 @@ public extension DeveloperPortal {
 
         guard let responseDictionary = parsePlistOrJSON(data) else {
             let rawStr = String(data: data, encoding: .utf8) ?? data.hexEncodedString()
-            debugLog("[SideSign] Auth endpoint returned invalid response format: \(rawStr)")
+            debugLog("[SideSign] Auth endpoint returned invalid response format (HTTP \(statusCode)): \(rawStr)")
+            if statusCode != 0 && statusCode != HTTPStatusCodes.ok {
+                // Surface the real HTTP status (e.g. Apple's 503 edge rejection) instead of a
+                // generic "unparseable format" — the status is what diagnoses the failure.
+                throw ServerError.badServerResponse(reason: "Apple authentication service returned HTTP \(statusCode)", jsonPayload: rawStr)
+            }
             throw ServerError.invalidResponseFormat(rawPayload: rawStr)
         }
 

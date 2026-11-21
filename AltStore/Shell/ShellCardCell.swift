@@ -4,8 +4,9 @@
 //  oPenSSAI
 //
 //  Base table cell for the shell's card lists. Each section renders as one
-//  rounded card (20pt corners, Seal-style); the cell draws its slice of the
-//  card background depending on its position in the section.
+//  rounded card (16pt corners, per ShellTheme.cardCornerRadius); the cell
+//  draws its slice of the card background depending on its position in the
+//  section.
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //

@@ -35,7 +35,12 @@ public enum MinimuxerConstants {
     public static let ddiManifestURL    = "https://raw.githubusercontent.com/doronz88/DeveloperDiskImage/refs/heads/main/PersonalizedImages/Xcode_iOS_DDI_Personalized/BuildManifest.plist"
 
     // WirelessPair Constants
-    public static let defaultHostName = "SideStore"
+    // Human-readable host name shown on the device during wireless pairing
+    // (Bonjour TXT "name" + pairing handshake; iOS shows it as "Pair with
+    // <name>" and in the 6-digit code prompt). Not the certificate
+    // machineName and not part of the pairing-file identity, so renaming
+    // only affects new pairings.
+    public static let defaultHostName = "openSSS"
     public static let defaultHostModel = "Mac17,7"
     public static let defaultBindPort: UInt16 = 0
     public static let defaultAdDomain = ""

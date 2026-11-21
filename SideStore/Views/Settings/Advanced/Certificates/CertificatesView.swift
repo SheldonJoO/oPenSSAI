@@ -75,6 +75,9 @@ struct CertificatesView: View {
                     onDelete: { certificateToDelete = $0; showDeleteConfirmation = true }
                 )
             }
+            .listStyle(.insetGrouped)
+            .listRowBackground(Color.shellCard)
+            .shellListBackground()
             .refreshable {
                 await withCheckedContinuation { continuation in
                     viewModel.loadCertificates(presentingViewController: presentingViewController, isPullToRefresh: true) {
@@ -177,6 +180,8 @@ struct CertificatesView: View {
                             .foregroundColor(.red)
                     }
                 }
+                .listRowBackground(Color.shellCard)
+                .shellListBackground()
                 .navigationTitle("Import Failures")
                 #if !os(tvOS)
                 .navigationBarTitleDisplayMode(.inline)
@@ -286,12 +291,16 @@ struct CertificatesView: View {
             requestedDate: cert.requestedDate,
             serialNumDecimal: cert.serialNumDecimal
         )
-        let detailVC = UIHostingController(rootView: CertificateDetailView(certificate: cert, portalMetadata: metadata, viewModel: viewModel))
-        #if !os(tvOS)
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
+        let detailVC: UIViewController
+        #if os(iOS)
+        detailVC = ShellHostingController(rootView: CertificateDetailView(certificate: cert, portalMetadata: metadata, viewModel: viewModel))
+        // The shell nav bar (opaque, no shadow line); the old default
+        // background appearance made this screen's bar look system-default.
+        let appearance = ShellTabBarController.makeNavigationBarAppearance()
         detailVC.navigationItem.scrollEdgeAppearance = appearance
-        detailVC.navigationItem.standardAppearance   = appearance
+        detailVC.navigationItem.standardAppearance = appearance
+        #else
+        detailVC = UIHostingController(rootView: CertificateDetailView(certificate: cert, portalMetadata: metadata, viewModel: viewModel))
         #endif
         presentingViewController?.navigationController?.pushViewController(detailVC, animated: true)
     }
@@ -368,7 +377,7 @@ private struct LoadingOverlay: View {
             ProgressView()
                 .padding(20)
                 #if !os(tvOS)
-                .background(Color(.secondarySystemBackground))
+                .background(Color.shellCard)
                 #else
                 .background(Color.white.opacity(0.1))
                 #endif
@@ -411,6 +420,8 @@ private struct CreateCertificateSheetView: View {
                     TextField("Machine Name", text: $machineName)
                 }
             }
+            .listRowBackground(Color.shellCard)
+            .shellListBackground()
             .navigationTitle("New Certificate")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
