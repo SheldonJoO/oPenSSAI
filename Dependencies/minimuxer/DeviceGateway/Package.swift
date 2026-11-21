@@ -38,15 +38,21 @@ let package = Package(
 //        .package(path: "../../../../local/RemotePairingKit")
     ],
     targets: [
-         .binaryTarget(
-             name: "IDevice",
-             url: "https://github.com/SideStore/idevice/releases/download/v0.1.68-ss-3e55c84/idevice-xcframework-v0.1.68-ss-3e55c84.zip#DeviceGateway",
-             checksum: "445702d53942597deb4cdec2c4122d16a3f4ac124ce26cd75b68dab3dad92416"
-         ),
-//        .binaryTarget(
-//            name: "IDevice",
-//            path: "../../../../local/idevice/swift/IDevice.xcframework"
-//        ),
+         // URL binaryTarget: the released xcframework was built without the
+         // location_simulation feature, so its binary lacks the DVT location
+         // symbols (the header declares them, the .a does not define them).
+         // Use the locally built xcframework with location_simulation on
+         // (see ~/workspace/idevice-location/README.md); the file itself
+         // lives outside git (local/ is ignored) on the build Mac.
+//         .binaryTarget(
+//             name: "IDevice",
+//             url: "https://github.com/SideStore/idevice/releases/download/v0.1.68-ss-3e55c84/idevice-xcframework-v0.1.68-ss-3e55c84.zip#DeviceGateway",
+//             checksum: "445702d53942597deb4cdec2c4122d16a3f4ac124ce26cd75b68dab3dad92416"
+//         ),
+        .binaryTarget(
+            name: "IDevice",
+            path: "../../../../local/idevice/swift/IDevice.xcframework"
+        ),
         .binaryTarget(
             name: "libimobiledevice",
             url: "https://github.com/SideStore/libimobiledevice-xcframework/releases/download/1.4.0-ss-0f88f7b/libimobiledevice.xcframework.zip#DeviceGateway",
