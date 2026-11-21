@@ -30,6 +30,14 @@ struct PairingTutorialView: View {
     @State private var importStatus: String? = nil
     @State private var isStartingConnection = false
 
+    // @MainActor on body: under Xcode 16.4 this file's bare ScrollView
+    // and .toolbar calls are ambiguous between SwiftUI's isolated and
+    // nonisolated overloads, because their closures touch only
+    // nonisolated members (isModal, dismiss, computed sections) — every
+    // other view in this module resolves only because its closures touch
+    // @State. Pinning body to the main actor pins the isolated overloads
+    // for the whole body at once instead of whack-a-mole per call site.
+    @MainActor
     var body: some View {
         // Explicit showsIndicators: a bare ScrollView { } is ambiguous
         // between SwiftUI's two inits here (isolated vs nonisolated
