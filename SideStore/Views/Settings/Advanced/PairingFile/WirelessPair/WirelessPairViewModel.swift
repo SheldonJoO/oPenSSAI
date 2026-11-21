@@ -153,7 +153,7 @@ final class WirelessPairViewModel: ObservableObject {
                 self.subStatusText = NSLocalizedString("Enter the pairing code shown below on your other device settings screen.", comment: "")
                 // Show the code in the Dynamic Island so it stays visible
                 // while the user is away from the app (e.g. in Settings).
-                if #available(iOS 16.1, *) {
+                if #available(iOS 16.2, *) {
                     PairingCodeLiveActivityManager.shared.start(pinCode: pin)
                 }
             }
@@ -537,9 +537,9 @@ final class WirelessPairViewModel: ObservableObject {
         }
     }
 
-    /// End the pairing-code Live Activity, if one is running. No-op below iOS 16.1.
+    /// End the pairing-code Live Activity, if one is running. No-op below iOS 16.2.
     private func endPairingCodeLiveActivity() {
-        if #available(iOS 16.1, *) {
+        if #available(iOS 16.2, *) {
             PairingCodeLiveActivityManager.shared.end()
         }
     }

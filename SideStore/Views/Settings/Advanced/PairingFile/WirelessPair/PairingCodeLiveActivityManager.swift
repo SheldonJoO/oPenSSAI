@@ -13,14 +13,15 @@ import Foundation
 /// device. Owned by `WirelessPairViewModel`: start when `pinCode` is set,
 /// end when pairing completes, fails, or is cancelled.
 ///
-/// Live Activities need iOS 16.1+ (deployment target is iOS 15.0), so the
-/// whole type is availability-gated and callers check `#available` first.
+/// Live Activities need iOS 16.2+ for the ActivityContent-based APIs used
+/// here (deployment target is iOS 15.0), so the whole type is
+/// availability-gated and callers check `#available` first.
 ///
 /// Needs proper testing: Live Activities only render on a real device with
 /// a Dynamic Island (or on the Lock Screen on other devices) — verify
 /// on-device that the activity starts when the PIN sheet appears and ends
 /// on success, failure, and cancel.
-@available(iOS 16.1, *)
+@available(iOS 16.2, *)
 @MainActor
 final class PairingCodeLiveActivityManager {
     static let shared = PairingCodeLiveActivityManager()

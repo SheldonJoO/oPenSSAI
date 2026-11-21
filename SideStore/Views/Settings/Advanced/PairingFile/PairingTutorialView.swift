@@ -49,7 +49,7 @@ struct PairingTutorialView: View {
         .toolbar {
             if isModal {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
+                    SwiftUI.Button {
                         dismiss()
                     } label: {
                         Text("Done")
