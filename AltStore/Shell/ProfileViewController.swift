@@ -44,7 +44,7 @@ final class ProfileViewController: UIViewController
         }
     }
 
-    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette }
+    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette, connection }
     private enum LocationRow: Int, CaseIterable { case virtualLocation }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
@@ -77,7 +77,9 @@ final class ProfileViewController: UIViewController
 
         view.addSubview(tableView)
 
-        let bottomInset = ShellTheme.pillHeight + ShellTheme.pillBottomMargin + 24
+        // The standard tab bar is accounted for by the safe area; only a
+        // small breathing room below the last row is needed.
+        let bottomInset: CGFloat = 24
         tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
         tableView.verticalScrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
 
@@ -406,6 +408,13 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 cell.configure(
                     iconSystemName: "server.rack", iconTint: accent,
                     title: NSLocalizedString("Anisette Settings", comment: ""))
+            case .connection:
+                cell.configure(
+                    iconSystemName: "network", iconTint: accent,
+                    title: NSLocalizedString("Connection Settings", comment: ""),
+                    value: ConnectionConfig.shared.useLocalVPN
+                        ? NSLocalizedString("Local VPN", comment: "")
+                        : NSLocalizedString("Remote Direct", comment: ""))
             case .none:
                 break
             }
@@ -511,6 +520,8 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                     title: NSLocalizedString("Signing Certificate", comment: ""))
             case .anisette:
                 navigationController?.pushViewController(AnisetteSettingsViewController(), animated: true)
+            case .connection:
+                navigationController?.pushViewController(ConnectionSettingsViewController(), animated: true)
             case .none:
                 break
             }
@@ -540,7 +551,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .community:
                 openWebURL(AppConstants.URLs.sideStoreGitHub, preferredTintColor: ShellTheme.accentColor)
             case .support:
-                openWebURL(AppConstants.URLs.sideStoreIssues, preferredTintColor: ShellTheme.accentColor)
+                navigationController?.pushViewController(DonationViewController(), animated: true)
             case .none:
                 break
             }

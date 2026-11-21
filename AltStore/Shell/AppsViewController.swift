@@ -135,7 +135,9 @@ final class AppsViewController: UIViewController
         view.addSubview(segmentedTabsView)
         view.addSubview(tableView)
 
-        let bottomInset = ShellTheme.pillHeight + ShellTheme.pillBottomMargin + 24
+        // The standard tab bar is accounted for by the safe area; only a
+        // small breathing room below the last row is needed.
+        let bottomInset: CGFloat = 24
         tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
         tableView.verticalScrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
 
@@ -156,6 +158,9 @@ final class AppsViewController: UIViewController
         NotificationCenter.default.addObserver(
             self, selector: #selector(pendingStoreDidChange),
             name: PendingIPAStore.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(appProgressDidChange(_:)),
+            name: AppManager.didChangeAppProgressNotification, object: nil)
         NotificationCenter.default.addObserver(
             self, selector: #selector(importAppDeepLink(_:)),
             name: AppDelegate.importAppDeepLinkNotification, object: nil)
@@ -209,6 +214,46 @@ final class AppsViewController: UIViewController
         {
             tableView.reloadData()
         }
+    }
+
+    /// An install/refresh progress was registered or cleared. Progress is
+    /// set asynchronously (PipelineRunner runs detached, after a minimuxer
+    /// readiness check), so a reload right after starting an operation
+    /// would run too early — this notification is what makes the bar
+    /// appear as soon as the operation actually starts.
+    @objc private func appProgressDidChange(_ notification: Notification)
+    {
+        // Posted on a background thread; hop to main before touching the table view.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            guard let bundleID = notification.userInfo?[AppManager.appProgressBundleIdentifierKey] as? String else
+            {
+                self.tableView.reloadData()
+                return
+            }
+            // Reload just the affected row when it is on screen; off-screen
+            // rows pick up the progress when they are configured.
+            let row: Int?
+            switch self.selectedTab
+            {
+            case .pending:
+                row = self.pendingApps.firstIndex { $0.bundleIdentifier == bundleID }
+            case .installed:
+                row = self.installedApps.firstIndex { $0.bundleIdentifier == bundleID }
+            }
+            guard let row else { return }
+            let indexPath = IndexPath(row: row, section: 0)
+            guard self.tableView.indexPathsForVisibleRows?.contains(indexPath) == true else { return }
+            self.tableView.reloadRows(at: [indexPath], with: .none)
+        }
+    }
+
+    /// In-flight progress for a row, or nil when idle or already complete
+    /// (mirrors upstream MyAppsViewController's fractionCompleted < 1.0 check).
+    private func activeProgress(_ progress: Progress?) -> Progress?
+    {
+        guard let progress, progress.fractionCompleted < 1.0 else { return nil }
+        return progress
     }
 
     @objc private func applyTheme()
@@ -615,6 +660,7 @@ extension AppsViewController: UITableViewDataSource, UITableViewDelegate
                 bundleIdentifier: item.bundleIdentifier,
                 status: NSLocalizedString("Pending", comment: "")
             )
+            cell.setProgress(activeProgress(AppManager.shared.installationProgress(forBundleID: item.bundleIdentifier)))
             return cell
 
         case .installed:
@@ -641,6 +687,9 @@ extension AppsViewController: UITableViewDataSource, UITableViewDelegate
                 statusColor: validity.color,
                 isBusy: isBusy
             )
+            // refreshProgress falls back to installationProgress, so this
+            // covers refresh, re-sign, and reinstall alike.
+            cell.setProgress(activeProgress(AppManager.shared.refreshProgress(for: app)))
             loadIconIfNeeded(for: app, at: indexPath)
             return cell
         }
@@ -698,6 +747,7 @@ extension AppsViewController: UITableViewDataSource, UITableViewDelegate
                 statusColor: validity.color,
                 isBusy: isBusy
             )
+            cell.setProgress(activeProgress(AppManager.shared.refreshProgress(for: app)))
         }
     }
 
