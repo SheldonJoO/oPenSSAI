@@ -41,6 +41,13 @@ struct SimulatedLocation: Codable, Equatable, Sendable
 }
 
 /// Snapshot of the simulation state, as reported by the transport.
+/// `active` is what the transport believes locally; `confirmedActive`
+/// is only true when the device actually acknowledged a coordinate set
+/// (on-device: a successful re-set through verifyStatus(); helper: a
+/// fresh report from the helper process holding the live session).
+/// The two can differ after iOS suspends the app and the DVT session
+/// drops without the transport noticing — the screen shows that gap
+/// instead of presenting a stale "active" as fact.
 struct LocationSimulationStatus: Decodable, Equatable, Sendable
 {
     var active: Bool
@@ -48,11 +55,40 @@ struct LocationSimulationStatus: Decodable, Equatable, Sendable
     var longitude: Double?
     /// Whether the helper currently holds a live device session.
     var connected: Bool
+    /// Whether the active state was confirmed with the device.
+    /// Never true for a plain status read.
+    var confirmedActive: Bool = false
+    /// When the active state was last confirmed with the device
+    /// (nil = never confirmed).
+    var lastConfirmedAt: Date? = nil
 
     var location: SimulatedLocation?
     {
         guard let latitude, let longitude else { return nil }
         return SimulatedLocation(latitude: latitude, longitude: longitude, name: nil)
+    }
+}
+
+extension LocationSimulationStatus
+{
+    /// The helper's /status JSON only carries the four base fields;
+    /// confirmation is local bookkeeping, so it decodes leniently.
+    /// (In an extension so the memberwise initializer survives.)
+    private enum CodingKeys: String, CodingKey
+    {
+        case active, latitude, longitude, connected
+        case confirmedActive, lastConfirmedAt
+    }
+
+    init(from decoder: Decoder) throws
+    {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.active = try container.decode(Bool.self, forKey: .active)
+        self.latitude = try container.decodeIfPresent(Double.self, forKey: .latitude)
+        self.longitude = try container.decodeIfPresent(Double.self, forKey: .longitude)
+        self.connected = try container.decode(Bool.self, forKey: .connected)
+        self.confirmedActive = try container.decodeIfPresent(Bool.self, forKey: .confirmedActive) ?? false
+        self.lastConfirmedAt = try container.decodeIfPresent(Date.self, forKey: .lastConfirmedAt)
     }
 }
 
@@ -110,6 +146,23 @@ protocol LocationSimulationService: AnyObject, Sendable
     func setLocation(_ location: SimulatedLocation) async throws
     func clearLocation() async throws
     func fetchStatus() async throws -> LocationSimulationStatus
+    /// Like fetchStatus(), but the returned status is checked against
+    /// the device: `confirmedActive` is true only when the device
+    /// acknowledged the simulation. The DVT API has no status query,
+    /// so on-device verification re-sets the active coordinate and
+    /// reports the outcome; the helper's fresh report from the process
+    /// holding the live session counts as its confirmation.
+    func verifyStatus() async throws -> LocationSimulationStatus
+}
+
+extension LocationSimulationService
+{
+    /// Default: no transport-level verification available — a plain
+    /// status read, with `confirmedActive` left false.
+    func verifyStatus() async throws -> LocationSimulationStatus
+    {
+        return try await fetchStatus()
+    }
 }
 
 /// Talks to the Mac helper over HTTP (see tools/location-helper).
@@ -148,6 +201,18 @@ final class HelperLocationService: LocationSimulationService, @unchecked Sendabl
     {
         let request = URLRequest(url: baseURL.appendingPathComponent("status"))
         return try await perform(request, expecting: LocationSimulationStatus.self)
+    }
+
+    /// A fresh /status answer from the helper process is its
+    /// confirmation: the helper holds the live DVT session itself and
+    /// re-sends the coordinate every few seconds, so a report fetched
+    /// right now reflects a session that was alive moments ago.
+    func verifyStatus() async throws -> LocationSimulationStatus
+    {
+        var status = try await fetchStatus()
+        status.confirmedActive = status.active
+        status.lastConfirmedAt = status.active ? Date() : nil
+        return status
     }
 
     private func perform<T: Decodable>(_ request: URLRequest, expecting type: T.Type) async throws -> T
@@ -240,7 +305,30 @@ final class OnDeviceLocationService: LocationSimulationService, @unchecked Senda
         {
             throw Self.mapError(error)
         }
-        return LocationSimulationStatus(active: state.active, latitude: state.latitude, longitude: state.longitude, connected: state.connected)
+        // A plain read never touches the device: confirmedActive stays
+        // false. Use verifyStatus() for a checked state.
+        return LocationSimulationStatus(active: state.active, latitude: state.latitude, longitude: state.longitude, connected: state.connected,
+                                        confirmedActive: state.confirmed, lastConfirmedAt: nil)
+    }
+
+    /// Re-confirms the simulation with the device (see
+    /// DeviceGatewayAPI.verifyLocationSimulation): the gateway re-sets
+    /// the active coordinate — re-establishing the DVT session first
+    /// when iOS suspended the app and it dropped — and the outcome
+    /// decides the reported state. A failed re-set comes back inactive.
+    func verifyStatus() async throws -> LocationSimulationStatus
+    {
+        let state: LocationSimulationState
+        do
+        {
+            state = try await gateway.verifyLocationSimulation()
+        }
+        catch
+        {
+            throw Self.mapError(error)
+        }
+        return LocationSimulationStatus(active: state.active, latitude: state.latitude, longitude: state.longitude, connected: state.connected,
+                                        confirmedActive: state.confirmed, lastConfirmedAt: state.confirmed ? Date() : nil)
     }
 
     /// Reads Developer Mode from the device (lockdown DeveloperModeStatus).
@@ -261,7 +349,11 @@ final class OnDeviceLocationService: LocationSimulationService, @unchecked Senda
     /// Keeps the app alive briefly after it leaves the foreground so the
     /// DVT session is not cut the moment the user switches apps. iOS still
     /// suspends the app after a few minutes — the screen tells the user to
-    /// keep the app in the foreground while simulating.
+    /// keep the app in the foreground while simulating, and re-verifies
+    /// (verifyStatus(), which re-establishes the session and re-sets the
+    /// coordinate) whenever it reappears or the app returns to the
+    /// foreground, so a dropped session is picked up instead of silently
+    /// reported as still active.
     @MainActor
     private func beginBackgroundTask()
     {
@@ -451,7 +543,8 @@ final class LocationSimulationManager
 
     /// Starts simulation on the preferred transport (on-device first),
     /// falling back to the helper when on-device fails. Returns the
-    /// transport actually used.
+    /// transport actually used. A successful set is itself a device
+    /// confirmation, so lastStatus is recorded as confirmed.
     @discardableResult
     func setLocation(_ location: SimulatedLocation) async throws -> LocationTransport
     {
@@ -463,6 +556,8 @@ final class LocationSimulationManager
                 try await service(for: transport, shortTimeout: index > 0).setLocation(location)
                 activeTransport = transport
                 lastLocation = location
+                lastStatus = LocationSimulationStatus(active: true, latitude: location.latitude, longitude: location.longitude, connected: true,
+                                                      confirmedActive: true, lastConfirmedAt: Date())
                 return transport
             }
             catch
@@ -485,6 +580,7 @@ final class LocationSimulationManager
             do
             {
                 try await service(for: transport).clearLocation()
+                lastStatus = LocationSimulationStatus(active: false, latitude: nil, longitude: nil, connected: false)
                 return
             }
             catch
@@ -496,8 +592,16 @@ final class LocationSimulationManager
         throw firstError ?? LocationSimulationError.noTransportAvailable
     }
 
+    /// Refreshes the status from the transports. With `verify` set, each
+    /// transport is asked for a device-checked status (on-device: the
+    /// active coordinate is re-set and the outcome decides the state;
+    /// helper: a fresh report from the process holding the session).
+    /// The screen verifies whenever it appears and when the app returns
+    /// to the foreground, so a session dropped while suspended is
+    /// re-established — or honestly reported inactive — instead of
+    /// showing a stale local "active".
     @discardableResult
-    func refreshStatus() async -> LocationSimulationStatus?
+    func refreshStatus(verify: Bool = false) async -> LocationSimulationStatus?
     {
         // Query in preference order. The first active status wins, so a
         // simulation started on the other transport does not go unnoticed;
@@ -508,7 +612,8 @@ final class LocationSimulationManager
             let status: LocationSimulationStatus
             do
             {
-                status = try await service(for: transport, shortTimeout: index > 0).fetchStatus()
+                let transportService = try service(for: transport, shortTimeout: index > 0)
+                status = verify ? try await transportService.verifyStatus() : try await transportService.fetchStatus()
             }
             catch
             {

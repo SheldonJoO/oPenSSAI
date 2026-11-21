@@ -94,6 +94,32 @@ open class PersistentContainer: NSPersistentContainer, @unchecked Sendable {
         #endif
     }
     
+    #if !os(tvOS)
+    /// Database files found in locations OTHER than the current default
+    /// directory. The store location flips with App Group availability
+    /// (shared container vs. private sandbox), so after a re-sign an
+    /// older database can be left behind in the other location while the
+    /// app opens a fresh, empty one. Callers use this to warn the user —
+    /// never to move data automatically.
+    public static func alternateDatabaseFileURLs() -> [URL] {
+        let currentDirectory = Self.defaultDirectoryURL()
+        var candidates: [URL] = []
+        if let sharedDirectory = FileManager.default.altstoreSharedDirectory {
+            candidates.append(sharedDirectory.appendingPathComponent("Database"))
+        }
+        if let appSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            candidates.append(appSupportDirectory.appendingPathComponent("Database"))
+        }
+        let currentPath = currentDirectory.standardizedFileURL.path
+        return candidates
+            .filter { $0.standardizedFileURL.path != currentPath }
+            .flatMap { directory in
+                [AppConstants.Database.fileName, AppConstants.Database.legacyFileName].map { directory.appendingPathComponent($0) }
+            }
+            .filter { FileManager.default.fileExists(atPath: $0.path) }
+    }
+    #endif
+
     public init(name: String, bundle: Bundle) {
         let models = [bundle]
         let managedObjectModel = NSManagedObjectModel.mergedModel(from: models)!

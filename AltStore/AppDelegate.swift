@@ -184,9 +184,19 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
                 
                 await WidgetDataManager.publishCurrentInstalledAppsIfNeeded(in: DatabaseManager.shared.viewContext)
                 
-                if isFirstLaunch
+                if isFirstLaunch && !AuthManager.shared.isAuthenticated
                 {
+                    // Truly fresh install: no Keychain credentials
+                    // survived, so clearing any stale sign-in state is
+                    // harmless. When credentials DID survive a reinstall
+                    // (Keychain outlives the app sandbox), keep them —
+                    // wiping them here used to log the user out right
+                    // after every reinstall.
                     await AuthManager.shared.signOut()
+                }
+                else if isFirstLaunch
+                {
+                    debugLog("[AppDelegate] First launch with surviving Keychain credentials; keeping sign-in state.")
                 }
 
                 // Perform one-time maintenance tasks after database is started
@@ -238,6 +248,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         Task.detached {
             await AppManager.shared.reconcileInstalledApps()
         }
+
+        // P0-3: retry any background refresh that failed earlier, now that
+        // the user is back in the app.
+        self.retryFailedBackgroundRefreshIfNeeded()
     }
 
     func applicationDidBecomeActive(_ application: UIApplication)
@@ -382,6 +396,13 @@ extension AppDelegate
             // no-op
         }
         
+        #if !os(tvOS)
+        // P0-2: BGTaskScheduler as a second background-refresh trigger
+        // source. Must register before the app finishes launching.
+        BackgroundRefreshTaskScheduler.register()
+        BackgroundRefreshTaskScheduler.schedule()
+        #endif
+
         #if DEBUG && targetEnvironment(simulator)
         UIApplication.shared.registerForRemoteNotifications()
         #endif
@@ -406,7 +427,6 @@ extension AppDelegate
     
     func application(_ application: UIApplication, performFetchWithCompletionHandler backgroundFetchCompletionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     {
-        BackgroundServiceManager.ensureBackgroundServicesStarted()
         #if !os(tvOS)
         if UserDefaults.standard.isBackgroundRefreshEnabled && !UserDefaults.standard.presentedLaunchReminderNotification
         {
@@ -424,11 +444,22 @@ extension AppDelegate
         }
         #endif
         
+        self.runBackgroundRefresh(completion: backgroundFetchCompletionHandler)
+    }
+
+    /// Shared background-refresh core for Background Fetch and
+    /// BGTaskScheduler (P0-2): extended background task + database start +
+    /// source fetch + app refresh. Calls completion exactly once, with the
+    /// combined result from performBackgroundFetch.
+    func runBackgroundRefresh(completion: @escaping (UIBackgroundFetchResult) -> Void)
+    {
+        BackgroundServiceManager.ensureBackgroundServicesStarted()
+
         BackgroundTaskManager.shared.performExtendedBackgroundTask { (taskResult, taskCompletionHandler) in
             if let error = taskResult.error
             {
                 debugLog("Error starting extended background task. Aborting. \(error)")
-                backgroundFetchCompletionHandler(.failed)
+                completion(.failed)
                 taskCompletionHandler()
                 return
             }
@@ -438,14 +469,14 @@ extension AppDelegate
                 {
                     try await DatabaseManager.shared.start()
                     self.performBackgroundFetch { (backgroundFetchResult) in
-                        backgroundFetchCompletionHandler(backgroundFetchResult)
+                        completion(backgroundFetchResult)
                     } refreshAppsCompletionHandler: { (refreshAppsResult) in
                         taskCompletionHandler()
                     }
                 }
                 catch
                 {
-                    backgroundFetchCompletionHandler(.failed)
+                    completion(.failed)
                     taskCompletionHandler()
                 }
             }
@@ -455,24 +486,312 @@ extension AppDelegate
     func performBackgroundFetch(backgroundFetchCompletionHandler: @escaping (UIBackgroundFetchResult) -> Void,
                                 refreshAppsCompletionHandler: @escaping (Result<[String: Result<InstalledApp, Error>], Error>) -> Void)
     {
+        // Snapshot the apps this run will attempt, so a pipeline-level
+        // failure can still remember which apps need a foreground retry (P0-3).
+        let installedApps: [InstalledApp]
+        let attemptedBundleIDs: [String]
+        if UserDefaults.standard.isBackgroundRefreshEnabled
+        {
+            let context = DatabaseManager.shared.persistentContainer.newBackgroundContext()
+            installedApps = InstalledApp.fetchAppsForBackgroundRefresh(in: context)
+            var ids: [String] = []
+            context.performAndWait { ids = installedApps.map(\.bundleIdentifier) }
+            attemptedBundleIDs = ids
+        }
+        else
+        {
+            installedApps = []
+            attemptedBundleIDs = []
+        }
+
+        // P0-2: the fetch result must reflect the refresh outcome. Source
+        // fetching and app refreshing run in parallel; the completion is
+        // reported once both finish. A source-fetch failure on its own
+        // must never report .failed, or iOS throttles future fetches.
+        let coordinator = BackgroundFetchCoordinator { sourcesResult, refreshResult in
+            // P0-3: remember failed apps so the next foreground launch can
+            // retry them, and remind the user on a backoff schedule.
+            Self.recordBackgroundRefreshOutcome(refreshResult, attemptedBundleIDs: attemptedBundleIDs)
+
+            let fetchResult = Self.combinedFetchResult(sourcesResult: sourcesResult, refreshResult: refreshResult)
+            backgroundFetchCompletionHandler(fetchResult)
+            refreshAppsCompletionHandler(refreshResult)
+        }
+
         self.fetchSources { (result) in
-            switch result
-            {
-            case .failure: backgroundFetchCompletionHandler(.failed)
-            case .success: backgroundFetchCompletionHandler(.newData)
-            }
-            
-            if !UserDefaults.standard.isBackgroundRefreshEnabled
-            {
-                refreshAppsCompletionHandler(.success([:]))
+            coordinator.finishSources(result)
+        }
+
+        guard UserDefaults.standard.isBackgroundRefreshEnabled else
+        {
+            coordinator.finishRefresh(.success([:]))
+            return
+        }
+
+        do
+        {
+            _ = try AppManager.shared.backgroundRefresh(installedApps) { (result) in
+                coordinator.finishRefresh(result)
             }
         }
+        catch
+        {
+            // backgroundRefresh can throw synchronously (operation init);
+            // previously that swallowed the refresh completion entirely.
+            coordinator.finishRefresh(.failure(error))
+        }
+    }
+
+    /// Combines the source-fetch and app-refresh outcomes into one
+    /// UIBackgroundFetchResult. The refresh outcome decides; the source
+    /// fetch can only upgrade an otherwise idle run to .newData, never
+    /// downgrade it to .failed.
+    private static func combinedFetchResult(sourcesResult: Result<Set<Source>, Error>?,
+                                            refreshResult: Result<[String: Result<InstalledApp, Error>], Error>) -> UIBackgroundFetchResult
+    {
+        switch refreshResult
+        {
+        case .failure:
+            // The refresh itself failed: the run was unproductive.
+            return .failed
+
+        case .success(let results):
+            if results.isEmpty
+            {
+                // Nothing needed refreshing; sources decide.
+                if case .success = sourcesResult
+                {
+                    return .newData
+                }
+                return .noData
+            }
+
+            let succeededCount = results.values.filter {
+                if case .success = $0 { return true }
+                return false
+            }.count
+
+            if succeededCount == results.count
+            {
+                return .newData
+            }
+            else if succeededCount > 0
+            {
+                // Partial success: work was done, don't punish scheduling.
+                return .newData
+            }
+            else
+            {
+                // Every app failed.
+                return .failed
+            }
+        }
+    }
+}
+
+extension AppDelegate
+{
+    /// Local-notification identifier for the P0-3 retry reminder. Fixed so
+    /// a newer failure replaces any pending reminder instead of stacking.
+    nonisolated static let refreshRetryReminderNotificationID = "sidestore-refresh-retry-reminder"
+
+    /// Records the outcome of a background refresh run (P0-3). Failed apps
+    /// are remembered so the next foreground launch retries them, and a
+    /// local notification reminds the user to open the app on a backoff
+    /// schedule. A clean run clears any pending retry.
+    private static func recordBackgroundRefreshOutcome(_ result: Result<[String: Result<InstalledApp, Error>], Error>,
+                                                attemptedBundleIDs: [String])
+    {
+        switch result
+        {
+        case .success(let results):
+            let failedBundleIDs = results.compactMap { (bundleID, result) -> String? in
+                if case .failure = result { return bundleID }
+                return nil
+            }
+
+            if failedBundleIDs.isEmpty
+            {
+                Self.clearPendingRefreshRetry()
+            }
+            else
+            {
+                Self.noteFailedRefresh(bundleIDs: failedBundleIDs)
+            }
+            
+        case .failure:
+            // Whole pipeline failed before per-app results existed: retry
+            // everything this run attempted. Nothing attempted means there
+            // was nothing to refresh (e.g. .noInstalledApps), not a retry
+            // candidate.
+            guard !attemptedBundleIDs.isEmpty else
+            {
+                Self.clearPendingRefreshRetry()
+                return
+            }
+            Self.noteFailedRefresh(bundleIDs: attemptedBundleIDs)
+        }
+    }
+
+    /// Remembers failed apps and schedules an "open the app to retry"
+    /// reminder on exponential backoff: 1h after the 1st failure, 2h after
+    /// the 2nd, 4h, 8h, ... capped at 24h.
+    private static func noteFailedRefresh(bundleIDs: [String])
+    {
+        guard !bundleIDs.isEmpty else { return }
+
+        let defaults = UserDefaults.standard
+        defaults.pendingFailedRefreshBundleIDs = bundleIDs
+
+        let attemptCount = defaults.failedRefreshAttemptCount + 1
+        defaults.failedRefreshAttemptCount = attemptCount
         
+        let delayHours = min(pow(2.0, Double(attemptCount - 1)), 24.0)
+        let delay = delayHours * 60 * 60
+
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("Failed to Refresh Apps", comment: "")
+        content.body = String(format: NSLocalizedString("%lld apps failed to refresh in the background. Open openSSS to retry.", comment: ""), bundleIDs.count)
+        content.sound = .default
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
+        let request = UNNotificationRequest(identifier: Self.refreshRetryReminderNotificationID, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+
+        debugLog("[AppDelegate] Scheduled refresh-retry reminder in \(delayHours)h for \(bundleIDs.count) app(s) (attempt \(attemptCount)).")
+    }
+
+    private static func clearPendingRefreshRetry()
+    {
+        let defaults = UserDefaults.standard
+        defaults.pendingFailedRefreshBundleIDs = nil
+        defaults.failedRefreshAttemptCount = 0
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [Self.refreshRetryReminderNotificationID])
+    }
+
+    /// P0-3: if a background refresh failed earlier, retry the failed apps
+    /// as soon as the user returns to the foreground instead of waiting for
+    /// the next background window. Runs the same foreground refresh path as
+    /// Renew All, so progress shows in the shell UI.
+    private func retryFailedBackgroundRefreshIfNeeded()
+    {
         guard UserDefaults.standard.isBackgroundRefreshEnabled else { return }
+        guard let failedBundleIDs = UserDefaults.standard.pendingFailedRefreshBundleIDs,
+              !failedBundleIDs.isEmpty else { return }
+        guard !AppManager.shared.isActivelyManagingAnyApp else
+        {
+            debugLog("[AppDelegate] Skipping foreground refresh retry: another operation is in progress.")
+            return
+        }
+
+        // The user is here now and the retry is running: cancel the reminder.
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [Self.refreshRetryReminderNotificationID])
+
+        Task { @MainActor in
+            do
+            {
+                try await DatabaseManager.shared.start()
+            }
+            catch
+            {
+                debugLog("[AppDelegate] Failed to start DatabaseManager for foreground refresh retry. \(error)")
+                return
+            }
+
+            let context = DatabaseManager.shared.viewContext
+            let predicate = NSPredicate(format: "%K IN %@", #keyPath(InstalledApp.bundleIdentifier), failedBundleIDs)
+            let apps = InstalledApp.all(satisfying: predicate, in: context).filter { $0.isActive }
+
+            guard !apps.isEmpty else
+            {
+                // Apps are gone (uninstalled): nothing left to retry.
+                UserDefaults.standard.pendingFailedRefreshBundleIDs = nil
+                UserDefaults.standard.failedRefreshAttemptCount = 0
+                return
+            }
+
+            debugLog("[AppDelegate] Retrying failed background refresh for \(apps.count) app(s) in foreground.")
+            let group = AppManager.shared.refresh(apps, presentingViewController: nil)
+            group.completionHandler = { results in
+                DispatchQueue.main.async {
+                    // Re-record: still-failing apps stay pending (backoff
+                    // grows); a clean run clears the pending retry.
+                    let failed = results.compactMap { (bundleID, result) -> String? in
+                        if case .failure = result { return bundleID }
+                        return nil
+                    }
+                    if failed.isEmpty
+                    {
+                        Self.clearPendingRefreshRetry()
+                    }
+                    else
+                    {
+                        Self.noteFailedRefresh(bundleIDs: failed)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Coordinates the two parallel branches of a background fetch (source
+/// fetching + app refreshing) and reports a single combined result once
+/// both finish. Thread-safe: either branch may finish on any queue, and
+/// the finish handler fires exactly once.
+private final class BackgroundFetchCoordinator: @unchecked Sendable
+{
+    typealias SourcesResult = Result<Set<Source>, Error>
+    typealias RefreshResult = Result<[String: Result<InstalledApp, Error>], Error>
+
+    private let lock = NSLock()
+    private var sourcesResult: SourcesResult?
+    private var refreshResult: RefreshResult?
+    private var didFinish = false
+    private let finishHandler: (SourcesResult?, RefreshResult) -> Void
+
+    init(finishHandler: @escaping (SourcesResult?, RefreshResult) -> Void)
+    {
+        self.finishHandler = finishHandler
+    }
+
+    func finishSources(_ result: SourcesResult)
+    {
+        self.finish(sources: result, refresh: nil)
+    }
+
+    func finishRefresh(_ result: RefreshResult)
+    {
+        self.finish(sources: nil, refresh: result)
+    }
+
+    private func finish(sources: SourcesResult?, refresh: RefreshResult?)
+    {
+        var handlerToCall: ((SourcesResult?, RefreshResult) -> Void)?
+        var pendingSources: SourcesResult?
+        var pendingRefresh: RefreshResult?
         
-        let context = DatabaseManager.shared.persistentContainer.newBackgroundContext()
-        let installedApps = InstalledApp.fetchAppsForBackgroundRefresh(in: context)
-        _ = try? AppManager.shared.backgroundRefresh(installedApps, completionHandler: refreshAppsCompletionHandler)
+        self.lock.lock()
+        if let sources
+        {
+            self.sourcesResult = sources
+        }
+        if let refresh
+        {
+            self.refreshResult = refresh
+        }
+        if !self.didFinish, let refreshResult = self.refreshResult, self.sourcesResult != nil
+        {
+            self.didFinish = true
+            handlerToCall = self.finishHandler
+            pendingSources = self.sourcesResult
+            pendingRefresh = refreshResult
+        }
+        self.lock.unlock()
+
+        if let handlerToCall, let pendingRefresh
+        {
+            handlerToCall(pendingSources, pendingRefresh)
+        }
     }
 }
 

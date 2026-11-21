@@ -15,6 +15,9 @@
 "%@ App IDs" = "%@ 个 App ID";
 "%@ App IDs Remaining" = "剩余 %@ 个 App ID";
 "%@ DAYS" = "%@ 天";
+"%@ Expired" = "%@ 已过期";
+"%@ Expiring Extremely Soon" = "%@ 即将过期";
+"%@ Expiring Soon" = "%@ 快要过期了";
 "%@ Log Empty" = "%@ 日志为空";
 "%@ News" = "%@ 资讯";
 "%@ Unsupported Updates Available" = "%@ 个不受支持的更新可用";
@@ -27,6 +30,7 @@
 "%@ does not support iOS %@." = "%@ 不支持 iOS %@。";
 "%@ failed with code %@." = "%@ 失败，错误码 %@。";
 "%@ failed." = "%@ 失败。";
+"%@ has expired. Please refresh or reinstall the app." = "%@ 已过期。请刷新或重新安装该应用。";
 "%@ is inactive." = "%@ 处于未激活状态。";
 "%@ items" = "%@ 项";
 "%@ keepalive is running." = "%@ 保活服务正在运行。";
@@ -37,12 +41,15 @@
 "%@ returned unexpected output." = "%@ 返回了意外的输出。";
 "%@ timed out." = "%@ 超时。";
 "%@ unexpectedly quit." = "%@ 意外退出。";
+"%@ will expire in 24 hours. Open the app and refresh it to prevent it from expiring." = "%@ 将在 24 小时后过期。请打开应用并刷新，以防过期。";
+"%@ will expire in 6 hours! Refresh now to prevent expiration." = "%@ 将在 6 小时后过期！请立即刷新以防过期。";
 "%@/%@" = "%@/%@";
 "%@: %@" = "%@：%@";
 "%@ms" = "%@ 毫秒";
 "%d Pending Actions" = "%d 个待处理操作";
 "%lld" = "%lld";
 "%lld active on portal" = "在开发者门户上激活 %lld 个";
+"%lld apps failed to refresh in the background. Open openSSS to retry." = "%lld 个应用在后台刷新失败。请打开 openSSS 重试。";
 "%lld bytes" = "%lld 字节";
 "%lld configured" = "已配置 %lld 个";
 "%lld devices" = "%lld 台设备";
@@ -88,6 +95,7 @@
 "AVAILABLE FOR YOUR ACCOUNT (%lld)" = "你的账户可用（%lld）";
 "About" = "关于";
 "Account Repair Required" = "需要修复账户";
+"Account Setup Complete" = "账号设置已完成";
 "Account Verification" = "账户验证";
 "Account malformed." = "账号数据格式错误。";
 "Account not found or missing credentials." = "未找到账号或缺少凭据。";
@@ -103,6 +111,7 @@
 "Active Signing Certificate" = "当前签名证书";
 "Active Theme Accent" = "当前主题强调色";
 "Active signing certificate is not present and wasn't fetched/setup properly. You can complete the pending actions later or go into Settings -> Certificate Management and setup certificates manually." = "当前没有已获取的签名证书，且未能正确下载或配置。你可以稍后完成待处理操作，或前往“设置 -> 证书管理”手动配置证书。";
+"Active signing certificate is not present and wasn't fetched/setup properly. You can complete this later from Me → Apple IDs: tap your Apple ID, then Complete Pending Actions." = "未找到有效的签名证书，且未能获取或配置证书。稍后可在「我的」→「Apple ID」里完成：点你的 Apple ID，再点「完成待办事项」。";
 "Active signing certificate pending" = "签名证书待处理";
 "Add" = "添加";
 "Add Custom Certificate ID" = "添加自定义证书 ID";
@@ -121,6 +130,7 @@
 "Address unavailable" = "地址不可用";
 "Advanced / Custom Keys" = "高级 / 自定义键名";
 "All Certificates" = "全部证书";
+"All News" = "全部资讯";
 "All apps have been refreshed." = "所有应用均已刷新。";
 "All apps have been resigned." = "所有应用均已重签。";
 "All pairing files have been reset. Please restart SideStore." = "所有配对文件已重置，请重新启动 openSSS。";
@@ -167,6 +177,7 @@
 "Apple TV" = "Apple TV";
 "Apple Watch" = "Apple Watch";
 "Approve" = "批准";
+"Apps Refresh Automatically" = "应用自动刷新";
 "Are you sure you want to clear SideStore's cache?\n\nCache Size: %@" = "确定要清除 openSSS 的缓存吗？\n\n缓存大小：%@";
 "Are you sure you want to clear all existing refresh attempt entries?" = "确定要清除所有已有的刷新尝试记录吗？";
 "Are you sure you want to clear the error log?" = "确定要清除错误日志吗？";
@@ -282,6 +293,7 @@
 "Client Config" = "客户端配置";
 "Close" = "关闭";
 "Code Signature Seal" = "代码签名封印";
+"Complete Pending Actions" = "完成待办事项";
 "Configured" = "已配置";
 "Configured Target" = "已配置目标";
 "Configures the local UDP loopback host and port bound by EMProxy." = "配置 EMProxy 绑定的本地 UDP 回环主机与端口。";
@@ -289,6 +301,7 @@
 "Confirm applying this certificate:" = "确认应用此证书：";
 "Confirm applying this provisioning profile:" = "确认应用此描述文件：";
 "Connect to Target Device" = "连接到目标设备";
+"Connect to Wi-Fi and VPN" = "连接 Wi-Fi 与 VPN";
 "Connect to a Wi-Fi network, Bridge or a Wired network connection!" = "请连接到 Wi-Fi 网络、桥接或有线网络连接！";
 "Connecting to Developer Portal..." = "正在连接开发者门户...";
 "Connection" = "连接";
@@ -424,6 +437,7 @@
 "Device UDID" = "设备 UDID";
 "Device connection is not started. Pair the device or restart the app." = "设备连接未启动，请先完成配对或重启应用";
 "Device is not reachable at the specified IP or Endpoint." = "无法连接指定 IP 或端点上的设备。";
+"Device registration and signing certificate are ready." = "设备注册与签名证书均已就绪。";
 "Device registration pending" = "设备注册待处理";
 "Devices (%lld/%lld)" = "设备（%lld/%lld）";
 "Devices registered on your developer team can run development-signed apps. Tap any device to edit its name, disable, or delete it." = "注册在你开发者团队下的设备可以运行开发者签名的应用。点击任意设备可修改名称、停用或删除。";
@@ -445,6 +459,7 @@
 "Done" = "完成";
 "Download %@" = "下载 %@";
 "Download %@ %@" = "下载 %@ %@";
+"Download Apps" = "下载应用";
 "Download Profile (.mobileprovision)" = "下载描述文件（.mobileprovision）";
 "Download Provisioning Profile" = "下载描述文件";
 "Downloading %@…" = "正在下载 %@…";
@@ -492,6 +507,7 @@
 "Error" = "错误";
 "Error Description" = "错误描述";
 "Error Details" = "错误详情";
+"Error Log" = "错误日志";
 "Error launching oPenSSAI" = "启动 openSSS 时出错";
 "Errors that occur when sideloading or refreshing apps will appear here." = "侧载或刷新应用时发生的错误会显示在这里。";
 "Executable" = "可执行文件";
@@ -605,6 +621,7 @@
 "Generate" = "生成";
 "Get LocalDevVPN on App Store" = "在 App Store 获取 LocalDevVPN";
 "Get Started" = "开始使用";
+"Got it" = "知道了";
 "Gradient" = "渐变";
 "Group By" = "分组方式";
 "Group Certificates" = "分组证书";
@@ -614,6 +631,7 @@
 "Help" = "帮助";
 "Hidden" = "已隐藏";
 "How do I get a pairing file?" = "如何获取配对文件？";
+"How it works" = "使用方法";
 "How would you like to receive your verification code?" = "你希望如何接收验证码？";
 "ID: " = "编号：";
 "ID: %@" = "编号：%@";
@@ -706,6 +724,7 @@
 "LIVE INTERFACE PREVIEW" = "实时接口预览";
 "LOCAL NETWORK INTERFACES" = "本地网络接口";
 "LOGGING & DIAGNOSTICS" = "日志与诊断";
+"Last Confirmed" = "上次确认";
 "Last Updated" = "最后更新";
 "Last Updated: %@" = "最后更新：%@";
 "Latest Server Response" = "最近的服务器响应";
@@ -818,6 +837,7 @@
 "Notice" = "提示";
 "OK" = "好";
 "ONBOARDING" = "使用引导";
+"Older Database Found" = "发现旧数据库";
 "Omit" = "省略";
 "On-Device" = "本机直连";
 "On-Device Sideloading" = "设备端侧载";
@@ -1054,6 +1074,7 @@
 "Select Pairing File" = "选择配对文件";
 "Select Phone Number" = "选择电话号码";
 "Select Provisioning Profile" = "选择描述文件";
+"Select a Team" = "选择团队";
 "Select additional entitlements below or tap '+' to add one." = "在下方选择额外的授权项，或轻点 “+” 添加一个。";
 "Select devices allowed to run apps with this profile, or enter a custom Device ID / UDID." = "选择允许使用此描述文件运行应用的设备，或输入自定义设备 ID / UDID。";
 "Select iOS Development certificate(s) to revoke:" = "选择要吊销的 iOS Development 证书：";
@@ -1113,6 +1134,7 @@
 "Signing certificate & device registration pending" = "签名证书与设备注册待处理";
 "Signing certificate mismatch detected." = "检测到签名证书不匹配。";
 "Silent keepalive background audio loop" = "静音保活后台音频循环";
+"Simulating (Unverified)" = "模拟中（未确认）";
 "Skip" = "跳过";
 "Skip & Continue" = "跳过并继续";
 "Social" = "社交";
@@ -1157,6 +1179,7 @@
 "Tap toggle to view %@ profile" = "轻点开关查看 %@ 描述文件";
 "Team App ID" = "团队 App ID";
 "Team ID: %@" = "团队 ID：%@";
+"Teams" = "团队";
 "Test Connection (Ping)" = "测试连接（Ping）";
 "Text Message (SMS)" = "短信（SMS）";
 "Text Message (SMS) (Recommended)" = "短信（SMS）（推荐）";
@@ -1351,6 +1374,7 @@
 "You must also delete it from the home screen to fully uninstall the app." = "你还需要从主屏幕删除该应用，才能将其完全卸载。";
 "You will need to log back into Apple ID in oPenSSAI." = "你需要重新登录 Apple ID 才能继续使用 openSSS。";
 "You're All Set!" = "一切就绪！";
+"Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later from Me → Apple IDs: tap your Apple ID, then Complete Pending Actions." = "你的设备尚未在此开发团队下注册。完成注册前无法安装或刷新应用。稍后可在「我的」→「Apple ID」里完成：点你的 Apple ID，再点「完成待办事项」。";
 "Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later in Settings." = "你的设备尚未注册到该开发者团队下。完成注册前无法安装或刷新应用，你可以稍后在“设置”中完成。";
 "Your pairing code is %@." = "你的配对码是 %@。";
 "Your saved preference is **%@**, but the provided pairing file is **%@**.\n\nDo you want to switch and accept **%@** as your current protocol?" = "你保存的偏好为 **%@**，但所提供的配对文件为 **%@**。\n\n是否切换并将 **%@** 接受为当前协议？";
@@ -1721,6 +1745,7 @@
 "Your pledge is no longer active. Please renew it to continue using %@ normally." = "你的赞助已不再有效。请续费以继续正常使用 %@。";
 "^[%lld app](inflect: true)" = "^[%lld 个应用](inflect: true)";
 "openSSS could not determine this device's UDID: %@\n\nPlease replace your pairing using iloader or idevice_pair." = "openSSS 无法确定此设备的 UDID：%@\n\n请用 iloader 或 idevice_pair 重新配对。";
+"openSSS found an older database in another location, so this install opened a fresh, empty database instead. Your installed apps and sign-in from the older database are untouched, but they are not visible here.\n\nThis usually happens after reinstalling with a different signing method. Sign in again to continue using this install." = "openSSS 在另一个位置发现了一个旧数据库，因此本次安装改用了一个全新的空数据库。你旧数据库里的已安装应用和登录信息都还在，只是这里看不到。\n\n这通常是因为换了签名方式重装。重新登录即可继续使用本次安装。";
 "openSSS is unable to reach the device endpoint:\n%@\n\nPlease check Connection Settings on the Me tab." = "openSSS 无法连接设备端点：\n%@\n\n请检查「我的」里的连接设置。";
 "openSSS was denied permission to launch %@." = "openSSS 没有权限启动 %@。";
 "openSSS's shared app group “%@” could not be accessed." = "无法访问 openSSS 的共享 App Group“%@”。";

@@ -76,7 +76,11 @@ class AddSourceViewController: UICollectionViewController
     override func viewDidLoad()
     {
         super.viewDidLoad()
-                
+
+        // No Base.lproj: the storyboard's English title is baked in,
+        // so it is overridden in code.
+        self.navigationItem.title = NSLocalizedString("Add Source", comment: "")
+
         self.navigationController?.isModalInPresentation = true
         self.navigationController?.view.tintColor = .altPrimary
         

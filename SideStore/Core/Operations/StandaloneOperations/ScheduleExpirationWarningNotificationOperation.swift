@@ -30,18 +30,34 @@ final class ScheduleExpirationWarningNotificationOperation: BaseStandaloneOperat
         let center = UNUserNotificationCenter.current()
         let now = Date()
         var expirationDate = Date()
+        var bundleIdentifier = ""
+        var appName = ""
         self.setProgress(30)
         installedApp.managedObjectContext?.performAndWait {
             expirationDate = installedApp.expirationDate
+            bundleIdentifier = installedApp.bundleIdentifier
+            appName = installedApp.name
         }
 
-        let milestones: [(id: String, timeBeforeExp: TimeInterval, title: String, body: String)] = [
-            ("24h", 24 * 60 * 60, "oPenSSAI Expiring Soon", "oPenSSAI will expire in 24 hours. Open the app and refresh it to prevent it from expiring."),
-            ("6h",   6 * 60 * 60, "oPenSSAI Expiring Extremely Soon", "oPenSSAI will expire in 6 hours! Refresh now to prevent expiration."),
-            ("0h",   0,           "oPenSSAI Expired", "oPenSSAI has expired. Please refresh or reinstall the app.")
+        // P0-4: warnings are per-app, with the app name in the copy. For
+        // openSSS itself keep the localized display name ("openSSS") so
+        // the copy reads exactly as before.
+        if bundleIdentifier == StoreApp.altstoreAppID
+        {
+            appName = NSLocalizedString("oPenSSAI", comment: "")
+        }
+
+        let milestones: [(id: String, timeBeforeExp: TimeInterval, titleFormat: String, bodyFormat: String)] = [
+            ("24h", 24 * 60 * 60, "%@ Expiring Soon", "%@ will expire in 24 hours. Open the app and refresh it to prevent it from expiring."),
+            ("6h",   6 * 60 * 60, "%@ Expiring Extremely Soon", "%@ will expire in 6 hours! Refresh now to prevent expiration."),
+            ("0h",   0,           "%@ Expired", "%@ has expired. Please refresh or reinstall the app.")
         ]
 
-        let allIdentifiers = milestones.map { "\(AppManager.expirationWarningNotificationID).\($0.id)" }
+        // Identifiers are per-bundleID so every installed app gets its own
+        // warnings (P0-4). Also drop the legacy pre-0714 identifiers, which
+        // covered only openSSS and would otherwise double-fire for it.
+        let allIdentifiers = milestones.map { "\(AppManager.expirationWarningNotificationID).\(bundleIdentifier).\($0.id)" }
+            + milestones.map { "\(AppManager.expirationWarningNotificationID).\($0.id)" }
         self.setProgress(50)
         center.removePendingNotificationRequests(withIdentifiers: allIdentifiers)
 
@@ -57,7 +73,7 @@ final class ScheduleExpirationWarningNotificationOperation: BaseStandaloneOperat
                 self.setProgress(percent)
             }
             
-            let identifier = "\(AppManager.expirationWarningNotificationID).\(milestone.id)"
+            let identifier = "\(AppManager.expirationWarningNotificationID).\(bundleIdentifier).\(milestone.id)"
             let targetDate = expirationDate.addingTimeInterval(-milestone.timeBeforeExp)
             let triggerInterval = targetDate.timeIntervalSince(now)
 
@@ -65,8 +81,8 @@ final class ScheduleExpirationWarningNotificationOperation: BaseStandaloneOperat
             guard triggerInterval > 0 else { continue }
 
             let content = UNMutableNotificationContent()
-            content.title = NSLocalizedString(milestone.title, comment: "")
-            content.body = NSLocalizedString(milestone.body, comment: "")
+            content.title = String(format: NSLocalizedString(milestone.titleFormat, comment: ""), appName)
+            content.body = String(format: NSLocalizedString(milestone.bodyFormat, comment: ""), appName)
             content.sound = .default
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: triggerInterval, repeats: false)
@@ -83,5 +99,13 @@ final class ScheduleExpirationWarningNotificationOperation: BaseStandaloneOperat
         #endif
         self.setProgress(100)
         return true
+    }
+
+    /// Removes all pending expiration warnings for one app (e.g. when the
+    /// app is uninstalled), so a removed app never warns about expiring.
+    static func removePendingWarnings(forBundleIdentifier bundleIdentifier: String)
+    {
+        let identifiers = ["24h", "6h", "0h"].map { "\(AppManager.expirationWarningNotificationID).\(bundleIdentifier).\($0)" }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 }

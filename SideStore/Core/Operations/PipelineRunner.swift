@@ -273,13 +273,18 @@ final class PipelineRunner: Sendable
             await WidgetDataManager.publishCurrentInstalledApps(in: dbContext)
             debugLog("[AppManager] performOperation: Reloading COMPLETE for widget timelines.")
             
-            if result.bundleIdentifier == StoreApp.altstoreAppID {
+            // P0-4: re-schedule expiration warnings for every app after a
+            // successful refresh/install, not just openSSS itself. A
+            // notification failure must never fail the install itself.
+            do {
                 let context = StandaloneOperationContext(steps: .scheduleExpirationWarningNotification, dbBackgroundContext: group.dbContext)
                 let scheduleNotifOp = try ScheduleExpirationWarningNotificationOperation(
                     installedApp: result,
                     context: context
                 )
                 try await scheduleNotifOp.execute()
+            } catch {
+                debugLog("[AppManager] Failed to schedule expiration notification for \(result.bundleIdentifier): \(error)")
             }
             await CellularRefreshManager.shared.turnOnDataIfNeeded()
         } catch {

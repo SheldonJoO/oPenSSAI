@@ -425,6 +425,9 @@
                     <connections>
                         <outlet property="contentStackView" destination="bp6-55-IG2" id="k0Q-yS-Dxp"/>
                         <outlet property="dismissButton" destination="qZ9-AR-2zK" id="w5c-v6-TcC"/>
+                        <outlet property="step2TitleLabel" destination="esj-pD-D4A" id="s2T-1a-BcD"/>
+                        <outlet property="step3TitleLabel" destination="JeJ-bk-UCA" id="s3T-2b-CdE"/>
+                        <outlet property="step4TitleLabel" destination="nvb-Aq-sYa" id="s4T-3c-DeF"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3Q4-ya-qhc" userLabel="First Responder" sceneMemberID="firstResponder"/>

@@ -83,7 +83,7 @@ final class AppManager: ObservableObject, @unchecked Sendable
         let dbBackgroundContext = DatabaseManager.shared.persistentContainer.newBackgroundContext()
 
         do {
-            let (activeBundleIDs, activeSignatures, altStoreApp) = try await dbBackgroundContext.perform {
+            let (activeBundleIDs, activeSignatures, _, appsForWarnings) = try await dbBackgroundContext.perform {
                 let installedApps = InstalledApp.all(in: dbBackgroundContext)
                 var altStore: InstalledApp?
 
@@ -102,6 +102,8 @@ final class AppManager: ObservableObject, @unchecked Sendable
                     guard !isDeclared, !legacyApps.contains(app.bundleIdentifier) else { continue }
 
                     CacheResignedMetadataOperation.clearCustomizations(for: app)
+                    // P0-4: drop this app's expiration warnings with it.
+                    ScheduleExpirationWarningNotificationOperation.removePendingWarnings(forBundleIdentifier: app.bundleIdentifier)
                     dbBackgroundContext.delete(app)
                     if var patched = UserDefaults.standard.patchedApps {
                         patched.removeAll { $0 == app.bundleIdentifier }
@@ -119,11 +121,13 @@ final class AppManager: ObservableObject, @unchecked Sendable
                 let active = installedApps.filter { !$0.isDeleted }
                 let ids = Set(active.map(\.resignedBundleIdentifier))
                 let sigs = Set(active.compactMap(\.appBundleFingerprint))
+                // P0-4: expiration warnings cover every active installed app.
+                let appsForWarnings = active.filter { $0.isActive }
 
-                return (ids, sigs, altStore)
+                return (ids, sigs, altStore, appsForWarnings)
             }
 
-            await scheduleExpirationWarning(for: altStoreApp, in: dbBackgroundContext)
+            await scheduleExpirationWarnings(for: appsForWarnings, in: dbBackgroundContext)
 
             CacheAppOperation.pruneUnusedCaches(activeSignatures: activeSignatures, activeBundleIDs: activeBundleIDs) { [weak self] in
                 self?.isActivelyManagingApp(withBundleID: $0) ?? false
@@ -133,15 +137,19 @@ final class AppManager: ObservableObject, @unchecked Sendable
         }
     }
 
-    private func scheduleExpirationWarning(for altStoreApp: InstalledApp?, in context: NSManagedObjectContext) async {
+    private func scheduleExpirationWarnings(for installedApps: [InstalledApp], in context: NSManagedObjectContext) async {
         #if !targetEnvironment(simulator)
-        guard let altStoreApp else { return }
-        do {
-            let opContext = StandaloneOperationContext(steps: .scheduleExpirationWarningNotification, dbBackgroundContext: context)
-            let op = try ScheduleExpirationWarningNotificationOperation(installedApp: altStoreApp, context: opContext)
-            try await op.execute()
-        } catch {
-            debugLog("[AppManager] Failed to schedule expiration notification: \(error)")
+        // P0-4: schedule expiration warnings for every installed app, not just openSSS.
+        for installedApp in installedApps {
+            var bundleID = ""
+            context.performAndWait { bundleID = installedApp.bundleIdentifier }
+            do {
+                let opContext = StandaloneOperationContext(steps: .scheduleExpirationWarningNotification, dbBackgroundContext: context)
+                let op = try ScheduleExpirationWarningNotificationOperation(installedApp: installedApp, context: opContext)
+                try await op.execute()
+            } catch {
+                debugLog("[AppManager] Failed to schedule expiration notification for \(bundleID): \(error)")
+            }
         }
         #endif
     }
@@ -602,7 +610,15 @@ final class AppManager: ObservableObject, @unchecked Sendable
         debugLog("[AppManager] deleteApp() called for app: \(installedApp.bundleIdentifier)")
         let pipelineHandler = self.makePipelineHandler(presentingViewController: presentingViewController)
         let dbContext = self.getValidDbContext()
-        self.pipelineRunner.performSingleOperation(.deleteApp(installedApp), handler: pipelineHandler, dbContext: dbContext, completionHandler: completionHandler)
+        let bundleID = installedApp.bundleIdentifier
+        self.pipelineRunner.performSingleOperation(.deleteApp(installedApp), handler: pipelineHandler, dbContext: dbContext) { result in
+            if case .success = result
+            {
+                // P0-4: drop this app's expiration warnings with it.
+                ScheduleExpirationWarningNotificationOperation.removePendingWarnings(forBundleIdentifier: bundleID)
+            }
+            completionHandler(result)
+        }
     }
     
     @discardableResult
@@ -649,7 +665,15 @@ final class AppManager: ObservableObject, @unchecked Sendable
         debugLog("[AppManager] removeApp() called for app: \(installedApp.bundleIdentifier)")
         let pipelineHandler = self.makePipelineHandler(presentingViewController: presentingViewController)
         let dbContext = self.getValidDbContext()
-        self.pipelineRunner.performVoidOperation(.removeApp(installedApp), handler: pipelineHandler, dbContext: dbContext, completionHandler: completionHandler)
+        let bundleID = installedApp.bundleIdentifier
+        self.pipelineRunner.performVoidOperation(.removeApp(installedApp), handler: pipelineHandler, dbContext: dbContext) { result in
+            if case .success = result
+            {
+                // P0-4: drop this app's expiration warnings with it.
+                ScheduleExpirationWarningNotificationOperation.removePendingWarnings(forBundleIdentifier: bundleID)
+            }
+            completionHandler(result)
+        }
     }
     
     func removeDeactivatedApp(_ installedApp: InstalledApp, completionHandler: @escaping (Result<Void, Error>) -> Void)

@@ -69,7 +69,7 @@ final class LocationSimulationViewController: UIViewController
     }
 
     private enum PrerequisiteRow: Int, CaseIterable { case developerMode, pairingFile, backend }
-    private enum StatusRow: Int, CaseIterable { case simulation, transport, helper }
+    private enum StatusRow: Int, CaseIterable { case simulation, transport, helper, lastConfirmed }
     private enum CoordinateRow: Int, CaseIterable { case latitude, longitude }
     private enum MapRow: Int, CaseIterable { case search, map }
     private enum ControlRow: Int, CaseIterable { case start, stop }
@@ -88,6 +88,17 @@ final class LocationSimulationViewController: UIViewController
     private var pickedPlaceName: String?
     /// The visible map cell, so coordinate edits elsewhere can move the pin.
     private weak var mapCell: MapPickerCell?
+    /// Foreground re-verification: returning to the app re-checks the
+    /// simulation with the device (viewWillAppear does not fire on a
+    /// foreground return, since the view never disappeared).
+    private var foregroundObserver: NSObjectProtocol?
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -141,12 +152,26 @@ final class LocationSimulationViewController: UIViewController
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+
+        foregroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.refreshStatus(verify: true)
+        }
+    }
+
+    deinit
+    {
+        if let foregroundObserver
+        {
+            NotificationCenter.default.removeObserver(foregroundObserver)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
-        refreshStatus()
+        refreshStatus(verify: true)
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle
@@ -164,13 +189,29 @@ final class LocationSimulationViewController: UIViewController
         }
         if status.active, let location = status.location
         {
-            return "\(NSLocalizedString("Simulating", comment: "")) · \(location.coordinateText)"
+            // Active locally but never confirmed with the device (e.g. the
+            // app was suspended and the DVT session dropped) is shown as
+            // unverified rather than presented as a working simulation.
+            if status.confirmedActive
+            {
+                return "\(NSLocalizedString("Simulating", comment: "")) · \(location.coordinateText)"
+            }
+            return "\(NSLocalizedString("Simulating (Unverified)", comment: "")) · \(location.coordinateText)"
         }
         if !status.connected
         {
             return NSLocalizedString("Connection Failed", comment: "")
         }
         return NSLocalizedString("Not Started", comment: "")
+    }
+
+    private var lastConfirmedText: String
+    {
+        guard let status, let lastConfirmedAt = status.lastConfirmedAt else
+        {
+            return NSLocalizedString("Never", comment: "")
+        }
+        return Self.timeFormatter.string(from: lastConfirmedAt)
     }
 
     private var helperText: String
@@ -299,12 +340,12 @@ final class LocationSimulationViewController: UIViewController
 
     // MARK: - Actions
 
-    private func refreshStatus()
+    private func refreshStatus(verify: Bool = false)
     {
         Task { @MainActor [weak self] in
             guard let self else { return }
             let manager = LocationSimulationManager.shared
-            async let fetchedStatus = manager.refreshStatus()
+            async let fetchedStatus = manager.refreshStatus(verify: verify)
             async let fetchedPrerequisites = manager.checkPrerequisites()
             let (status, prerequisites) = await (fetchedStatus, fetchedPrerequisites)
             self.status = status ?? manager.lastStatus
@@ -555,6 +596,11 @@ extension LocationSimulationViewController: UITableViewDataSource, UITableViewDe
                     iconSystemName: "server.rack", iconTint: accent,
                     title: NSLocalizedString("Location Helper", comment: ""),
                     value: helperText)
+            case .lastConfirmed:
+                cell.configureInfo(
+                    iconSystemName: "checkmark.circle", iconTint: accent,
+                    title: NSLocalizedString("Last Confirmed", comment: ""),
+                    value: lastConfirmedText)
             case .none:
                 break
             }

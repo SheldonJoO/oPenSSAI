@@ -23,6 +23,14 @@ public final class AuthManager: @unchecked Sendable {
     private var team: ALTTeam?
     private var session: ALTAppleAPISession?
 
+    /// Whether the app holds credentials that identify a signed-in Apple
+    /// ID: an email plus a password and/or an Xcode token. This is a
+    /// credential-presence check only — building a session additionally
+    /// needs a valid adsid + token pair (see
+    /// `getAuthenticatedSession()`, which silently re-authenticates with
+    /// the stored password when the tokens are gone, so a `true` here
+    /// does not promise a session can be built without a network round
+    /// trip).
     public var isAuthenticated: Bool {
         let hasEmail = Keychain.shared.appleIDEmailAddress != nil
         let hasPassword = Keychain.shared.appleIDPassword != nil
@@ -98,24 +106,69 @@ public final class AuthManager: @unchecked Sendable {
     @discardableResult
     public func getAuthenticatedSession() async throws -> ALTAppleAPISession {
         return try await TaskChainCoalescer.shared.coalesce(key: "apple_auth_session") {
-            guard let adsid = self.adsid,                           // directory services id
-                  let xcodeToken = self.xcodeToken else             // xcode token
+            if let adsid = self.adsid,
+               let xcodeToken = self.xcodeToken
             {
-                debugLog("[AuthManager] No stored tokens found.")
-                throw OperationError.notAuthenticated
+                return try await self.buildSession(adsid: adsid, xcodeToken: xcodeToken)
             }
-            let anisetteData = try await AnisetteProvider.fetch()   // one time pass
-            let xcodeVersion = await AnisetteConfigManager.shared.resolvedXcodeVersion()
-            
-            let session = ALTAppleAPISession(
-                dsid: adsid,
-                authToken: xcodeToken,
-                anisetteData: anisetteData,
-                xcodeVersion: xcodeVersion
-            )
-            self.session = session
-            return session
+
+            // Tokens are gone but the password survived (e.g. a partial
+            // Keychain wipe): `isAuthenticated` still reports signed-in,
+            // so try once to re-authenticate silently with the stored
+            // password instead of failing straight away. If Apple asks
+            // for a verification code there is no handler to answer it,
+            // so the attempt throws and the caller falls back to
+            // interactive sign-in. Needs proper testing: verify a
+            // token-less, password-present account recovers without
+            // prompting.
+            if let appleID = self.currentAppleID, let password = self.password {
+                debugLog("[AuthManager] Session tokens missing; attempting silent re-authentication with the stored password.")
+                do {
+                    return try await self.silentReauthenticate(appleID: appleID, password: password)
+                } catch {
+                    debugLog("[AuthManager] Silent re-authentication failed: \(error)")
+                }
+            }
+
+            debugLog("[AuthManager] No stored tokens found.")
+            throw OperationError.notAuthenticated
         }
+    }
+
+    private func buildSession(adsid: String, xcodeToken: String) async throws -> ALTAppleAPISession {
+        let anisetteData = try await AnisetteProvider.fetch()   // one time pass
+        let xcodeVersion = await AnisetteConfigManager.shared.resolvedXcodeVersion()
+
+        let session = ALTAppleAPISession(
+            dsid: adsid,
+            authToken: xcodeToken,
+            anisetteData: anisetteData,
+            xcodeVersion: xcodeVersion
+        )
+        self.session = session
+        return session
+    }
+
+    /// Re-authenticates with a stored Apple ID + password and persists
+    /// the fresh adsid/token pair, mirroring what SignInOperation stores
+    /// after an interactive sign-in. No verification handler: any 2FA or
+    /// account-repair challenge fails the attempt instead of prompting.
+    private func silentReauthenticate(appleID: String, password: String) async throws -> ALTAppleAPISession {
+        let anisetteData = try await AnisetteProvider.fetch()
+        let xcodeVersion = await AnisetteConfigManager.shared.resolvedXcodeVersion()
+
+        let (_, session) = try await self.portalProxy.signIn(
+            appleID: appleID,
+            password: password,
+            anisetteData: anisetteData,
+            xcodeVersion: xcodeVersion,
+            verificationHandler: nil
+        )
+
+        self.adsid = session.dsid
+        self.xcodeToken = session.authToken
+        self.session = session
+        return session
     }
 
     public func getAuthenticatedTeam() async throws -> ALTTeam {

@@ -925,8 +925,69 @@ public final class IdeviceGateway: BaseDeviceGateway, DeviceGatewayAPI, @uncheck
             active: connected && coordinates != nil,
             latitude: coordinates?.latitude,
             longitude: coordinates?.longitude,
-            connected: connected
+            connected: connected,
+            // A plain read never touches the device, so it can never
+            // confirm anything. See syncVerifyLocationSimulation().
+            confirmed: false
         )
+    }
+
+    /// Re-confirms an active simulation with the device. The DVT location
+    /// simulation API has no status query (the idevice FFI only exposes
+    /// new/set/clear/free), so the closest equivalent to a check is to
+    /// re-set the active coordinate: a successful set proves the DVT
+    /// session is alive (re-establishing it first when iOS suspended the
+    /// app and the session dropped) and the device is simulating again.
+    /// Never throws: a failed re-set means the device is not simulating,
+    /// which is a valid answer — the local session is torn down and the
+    /// state is reported inactive, mirroring refreshLocationSimulation().
+    /// When nothing is locally active this is a cheap local read.
+    private func syncVerifyLocationSimulation() -> LocationSimulationState {
+        locationStateLock.lock()
+        defer { locationStateLock.unlock() }
+        guard let coordinates = locationActiveCoordinates else {
+            return LocationSimulationState(
+                active: false,
+                latitude: nil,
+                longitude: nil,
+                connected: locationSimulationClient != nil,
+                confirmed: false
+            )
+        }
+        do {
+            try establishLocationSessionLocked()
+            guard let client = locationSimulationClient else {
+                throw IdeviceGatewayError(.serviceError, reason: "Location simulation session was nil after establishing")
+            }
+            if let err = location_simulation_set(client, coordinates.latitude, coordinates.longitude) {
+                let msg = getErrorMessage(from: err)
+                safeFreeError(err)
+                throw IdeviceGatewayError(.serviceError, reason: "Failed to re-set simulated location: \(msg)")
+            }
+            // The re-set succeeded: the device confirmed the simulation.
+            // Restart the periodic re-send timer so it keeps running from
+            // a known-good point.
+            startLocationRefreshTimerLocked()
+            debugLog("[IdeviceGateway] verifyLocationSimulation() confirmed active at \(coordinates.latitude), \(coordinates.longitude)")
+            return LocationSimulationState(
+                active: true,
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+                connected: true,
+                confirmed: true
+            )
+        } catch {
+            debugLog("[IdeviceGateway] verifyLocationSimulation() failed: \(error); simulation marked inactive")
+            teardownLocationSessionLocked()
+            locationActiveCoordinates = nil
+            return LocationSimulationState(
+                active: false,
+                latitude: nil,
+                longitude: nil,
+                connected: false,
+                confirmed: false
+            )
+        }
     }
 
     private func syncIsDeveloperModeEnabled() throws -> Bool {
@@ -2660,6 +2721,12 @@ extension IdeviceGateway {
     public func locationSimulationStatus() async throws -> LocationSimulationState {
         try await withFFIDispatch {
             self.syncLocationSimulationStatus()
+        }
+    }
+
+    public func verifyLocationSimulation() async throws -> LocationSimulationState {
+        try await withFFIDispatch {
+            self.syncVerifyLocationSimulation()
         }
     }
 

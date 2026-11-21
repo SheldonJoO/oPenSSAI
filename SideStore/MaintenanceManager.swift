@@ -18,26 +18,92 @@ public final class MaintenanceManager {
 
     public static let maintenanceCounterFileName = ".maintenance_counter"
 
-    private var maintenanceCounterFileURL: URL? {
-        FileManager.default.altstoreSharedDirectory?.appendingPathComponent(Self.maintenanceCounterFileName)
+    /// Candidate base directories for the maintenance counter file, in
+    /// priority order — the same fallback chain as
+    /// `PersistentContainer.defaultDirectoryURL()`: App Group →
+    /// Application Support → tmp. Sideloaded installs usually have no App
+    /// Group container; without the fallback the counter could never
+    /// persist, so every cold launch re-ran pass 1 (Keychain.clearAll +
+    /// signOut) and logged the user out.
+    private static var maintenanceCounterBaseDirectories: [URL] {
+        var directories: [URL] = []
+        if let sharedDirectory = FileManager.default.altstoreSharedDirectory {
+            directories.append(sharedDirectory)
+        }
+        if let appSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            directories.append(appSupportDirectory)
+        }
+        directories.append(FileManager.default.temporaryDirectory)
+        return directories
+    }
+
+    /// The counter file URL. Prefers the location where a counter file
+    /// already exists, so the counter survives an App Group availability
+    /// flip (e.g. re-signing with a different method); otherwise uses the
+    /// highest-priority available directory.
+    private var maintenanceCounterFileURL: URL {
+        for baseDirectory in Self.maintenanceCounterBaseDirectories {
+            let url = baseDirectory.appendingPathComponent(Self.maintenanceCounterFileName)
+            if FileManager.default.fileExists(atPath: url.path) {
+                return url
+            }
+        }
+        return Self.maintenanceCounterBaseDirectories[0].appendingPathComponent(Self.maintenanceCounterFileName)
     }
 
     private var completedCounter: Int {
         get {
-            guard let url = maintenanceCounterFileURL,
-                  let str = try? String(contentsOf: url, encoding: .utf8),
+            let url = maintenanceCounterFileURL
+            guard let str = try? String(contentsOf: url, encoding: .utf8),
                   let val = Int(str.trimmingCharacters(in: .whitespacesAndNewlines)) else { return 0 }
             return val
         }
         set {
-            guard let url = maintenanceCounterFileURL else { return }
-            try? "\(newValue)".write(to: url, atomically: true, encoding: .utf8)
+            let url = maintenanceCounterFileURL
+            do {
+                try "\(newValue)".write(to: url, atomically: true, encoding: .utf8)
+            } catch {
+                debugLog("[MaintenanceManager] Failed to write maintenance counter to '\(url.path)': \(error)")
+            }
         }
+    }
+
+    /// Whether the counter file can actually be persisted. The counter is
+    /// the only record of which passes already ran; if it cannot be
+    /// written, the destructive passes must not run — otherwise they
+    /// would re-run on every launch. Needs proper testing: verify on a
+    /// device without an App Group container that the counter lands in
+    /// Application Support and survives relaunches.
+    private var canPersistCounter: Bool {
+        let url = maintenanceCounterFileURL
+        let current = completedCounter
+        do {
+            try "\(current)".write(to: url, atomically: true, encoding: .utf8)
+            return (try? String(contentsOf: url, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == "\(current)"
+        } catch {
+            debugLog("[MaintenanceManager] Maintenance counter is not writable at '\(url.path)': \(error)")
+            return false
+        }
+    }
+
+    /// Whether the install already holds live sign-in state (Keychain
+    /// credentials or an active account/team in the database). When the
+    /// counter reads 0 but live state exists, this is an upgraded install
+    /// whose counter was lost — not a fresh install — so the destructive
+    /// passes must be skipped: re-running them would wipe a working login.
+    private func hasLiveSignInState() async -> Bool {
+        if AuthManager.shared.isAuthenticated { return true }
+        guard DatabaseManager.shared.isStarted else { return false }
+        return await DatabaseManager.shared.hasActiveAccountOrTeam()
     }
 
     private init() {}
 
     public func performDatabaseMigrationIfNeeded() async {
+        // Shares `completedCounter` with performMaintenanceIfNeeded, so
+        // the counter fallback above covers this too: once the counter
+        // persists, the guard below stops the migration re-running on
+        // every launch.
         let current = completedCounter
         guard current < Self.currentMaintenanceCounter else { return }
 
@@ -55,7 +121,32 @@ public final class MaintenanceManager {
         let current = completedCounter
         guard current < Self.currentMaintenanceCounter else { return }
 
+        // Defense in depth: the destructive passes (1: wipe Keychain +
+        // sign out, 2: sign out again, 6: reset anisette/SideSign
+        // config to defaults, wiping user-configured client-info
+        // overrides that may be load-bearing for sign-in) must never
+        // run when we cannot prove they have not run before. That is
+        // the case when the counter cannot be persisted, or when the
+        // counter reads 0 but the install already holds live sign-in
+        // state (an upgrade from a build whose counter never persisted).
+        // When in doubt, skip them and log it — never re-run a Keychain
+        // wipe or a config reset on a guess.
+        let skipDestructivePasses: Bool
+        if !canPersistCounter {
+            debugLog("[MaintenanceManager] Skipping destructive maintenance passes 1, 2, 6: maintenance counter is not writable.")
+            skipDestructivePasses = true
+        } else if current == 0 && await hasLiveSignInState() {
+            debugLog("[MaintenanceManager] Skipping destructive maintenance passes 1, 2, 6: counter reads 0 but live sign-in state exists (upgraded install with a lost counter).")
+            skipDestructivePasses = true
+        } else {
+            skipDestructivePasses = false
+        }
+
         for pass in (current + 1)...Self.currentMaintenanceCounter {
+            if skipDestructivePasses && (pass == 1 || pass == 2 || pass == 6) {
+                debugLog("[MaintenanceManager] Skipping destructive maintenance pass \(pass).")
+                continue
+            }
             debugLog("[MaintenanceManager] Running maintenance pass \(pass)...")
             switch pass {
             case 1:

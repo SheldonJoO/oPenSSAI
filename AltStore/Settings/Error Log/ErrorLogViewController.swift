@@ -45,6 +45,10 @@ final class ErrorLogViewController: UITableViewController
     {
         super.viewDidLoad()
         
+        // No Base.lproj: the storyboard's English title is baked in,
+        // so it is overridden in code.
+        self.navigationItem.title = NSLocalizedString("Error Log", comment: "")
+
         self.tableView.dataSource = self.dataSource
         self.dataSource.contentView = self.tableView
         self.tableView.prefetchDataSource = self.dataSource

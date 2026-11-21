@@ -36,6 +36,13 @@ public class DatabaseManager: @unchecked Sendable
     private let coordinator = NSFileCoordinator()
     private let coordinatorQueue = OperationQueue()
     
+    /// Set during `start()` when the current database location holds no
+    /// store yet but another location holds an older database file (left
+    /// behind after the App Group availability flipped, e.g. re-signing
+    /// with a different method). The old database is never moved or
+    /// deleted automatically — the launch UI only warns the user.
+    public private(set) var alternateDatabaseURL: URL?
+
     private var ignoreWillMigrateDatabaseNotification = false
 
     private init()
@@ -113,6 +120,13 @@ public class DatabaseManager: @unchecked Sendable
 
     private func performStart() async throws
     {
+        #if !os(tvOS)
+        // Must run before loadPersistentStores() creates a fresh store
+        // in the current location — afterwards the "current location is
+        // empty" check below could never trigger.
+        self.detectAlternateDatabase()
+        #endif
+
         if self.persistentContainer.isMigrationRequired
         {
             // Quit any other running AltStore processes to prevent concurrent database access during and after migration.
@@ -123,6 +137,22 @@ public class DatabaseManager: @unchecked Sendable
         try await self.persistentContainer.loadPersistentStores()
         try await self.prepareDatabase()
     }
+
+    #if !os(tvOS)
+    private func detectAlternateDatabase()
+    {
+        let currentDirectory = PersistentContainer.defaultDirectoryURL()
+        let currentStoreExists = [AppConstants.Database.fileName, AppConstants.Database.legacyFileName].contains {
+            FileManager.default.fileExists(atPath: currentDirectory.appendingPathComponent($0).path)
+        }
+        guard !currentStoreExists else { return }
+
+        if let alternateURL = PersistentContainer.alternateDatabaseFileURLs().first {
+            self.alternateDatabaseURL = alternateURL
+            debugLog("[DatabaseManager] Found an older database at '\(alternateURL.path)' while the current location is empty; the app will open a fresh database. The old database was left untouched.")
+        }
+    }
+    #endif
 
     public func purgeLoggedErrors(before date: Date? = nil) async throws
     {
@@ -197,6 +227,19 @@ public class DatabaseManager: @unchecked Sendable
         
         let activeTeam = Team.first(satisfying: predicate, in: context)
         return activeTeam
+    }
+
+    /// Whether the database holds an active account or team. Used by
+    /// MaintenanceManager to tell an upgraded install (live state, lost
+    /// counter) from a genuinely fresh install.
+    public func hasActiveAccountOrTeam() async -> Bool
+    {
+        guard self.isStarted else { return false }
+
+        let context = self.persistentContainer.newBackgroundContext()
+        return await context.performAsync {
+            self.activeAccount(in: context) != nil || self.activeTeam(in: context) != nil
+        }
     }
 
     private func prepareDatabase() async throws

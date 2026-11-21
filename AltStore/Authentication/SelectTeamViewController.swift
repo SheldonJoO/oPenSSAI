@@ -21,7 +21,16 @@ final class SelectTeamViewController: UITableViewController
         return .lightContent
     }
     #endif
-    
+
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+
+        // No Base.lproj: the storyboard's English title is baked in,
+        // so it is overridden in code.
+        self.navigationItem.title = NSLocalizedString("Select a Team", comment: "")
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -52,7 +61,7 @@ final class SelectTeamViewController: UITableViewController
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        "Teams"
+        NSLocalizedString("Teams", comment: "")
     }
     
 }

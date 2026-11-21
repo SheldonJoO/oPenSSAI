@@ -9,7 +9,10 @@
 //  out of the active Apple ID (the account stays listed so it can be
 //  switched back to later), or remove an Apple ID from this device.
 //  Removing an ID only deletes local records; it never revokes the signing
-//  certificate on Apple's servers.
+//  certificate on Apple's servers. The active team's action sheet also
+//  offers Complete Pending Actions, which runs the device-registration /
+//  certificate-provisioning steps skipped at sign-in (the sign-in flow's
+//  skip alerts point here).
 //
 //  After switching to another Apple ID, the user is offered to re-sign all
 //  installed apps with it. This deliberately goes through the resign
@@ -273,6 +276,17 @@ final class AppleIDsViewController: UIViewController
         }
         else
         {
+            // The sign-in flow's skip acknowledgments point here: device
+            // registration / certificate provisioning skipped at sign-in
+            // is completed from this screen (AccountVerificationRow's
+            // existing flows — nothing is reimplemented). Only the active
+            // team can be completed: the developer-portal session belongs
+            // to the signed-in Apple ID.
+            alert.addAction(UIAlertAction(
+                title: NSLocalizedString("Complete Pending Actions", comment: ""), style: .default
+            ) { [weak self] _ in
+                self?.completePendingActions(for: row)
+            })
             // Only offer re-signing when there is something to re-sign.
             if !Self.appsToResign().isEmpty
             {
@@ -300,6 +314,47 @@ final class AppleIDsViewController: UIViewController
         alert.popoverPresentationController?.sourceView = sourceView
         alert.popoverPresentationController?.sourceRect = sourceView.bounds
         present(alert, animated: true)
+    }
+
+    /// Completes the account setup skipped at sign-in (device registration
+    /// and/or signing-certificate provisioning) for the active team, using
+    /// the existing AccountVerificationRow flows — the same code the old
+    /// Settings screen used. When nothing is pending, this just confirms
+    /// the account is fully set up.
+    private func completePendingActions(for row: TeamRow)
+    {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do
+            {
+                let team = try await AuthManager.shared.getAuthenticatedTeam()
+                guard team.identifier == row.teamIdentifier else
+                {
+                    // The active team changed under us; refresh the list
+                    // instead of running flows against the wrong team.
+                    self.reload()
+                    return
+                }
+                let status = await AccountVerificationRow.verifyStatus(for: team)
+                switch status
+                {
+                case .completed:
+                    ToastView(
+                        text: NSLocalizedString("Account Setup Complete", comment: ""),
+                        detailText: NSLocalizedString("Device registration and signing certificate are ready.", comment: "")
+                    ).show(in: self)
+                case .checking:
+                    break
+                case .actionRequired:
+                    await AccountVerificationRow.resolvePendingActions(for: status, team: team, presentingViewController: self)
+                    self.reload()
+                }
+            }
+            catch
+            {
+                ToastView(error: error).show(in: self.view)
+            }
+        }
     }
 
     private func switchTo(row: TeamRow)

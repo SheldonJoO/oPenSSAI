@@ -696,7 +696,7 @@ class SignInFlowHandler: AnyObject, SignInHandler, AnisetteServerHandler {
         await withCheckedContinuation { continuation in
             let alertController = UIAlertController(
                 title: NSLocalizedString("Certificate Setup Skipped", comment: ""),
-                message: NSLocalizedString("Active signing certificate is not present and wasn't fetched/setup properly. You can complete the pending actions later or go into Settings -> Certificate Management and setup certificates manually.", comment: ""),
+                message: NSLocalizedString("Active signing certificate is not present and wasn't fetched/setup properly. You can complete this later from Me → Apple IDs: tap your Apple ID, then Complete Pending Actions.", comment: ""),
                 preferredStyle: .alert
             )
             alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default) { _ in
@@ -713,7 +713,7 @@ class SignInFlowHandler: AnyObject, SignInHandler, AnisetteServerHandler {
         await withCheckedContinuation { continuation in
             let alertController = UIAlertController(
                 title: NSLocalizedString("Device Registration Skipped", comment: ""),
-                message: NSLocalizedString("Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later in Settings.", comment: ""),
+                message: NSLocalizedString("Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later from Me → Apple IDs: tap your Apple ID, then Complete Pending Actions.", comment: ""),
                 preferredStyle: .alert
             )
             alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default) { _ in

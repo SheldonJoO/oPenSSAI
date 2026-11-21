@@ -79,6 +79,10 @@ class NewsViewController: UICollectionViewController
     {
         super.viewDidLoad()
         
+        // No Base.lproj: the storyboard's English title is baked in,
+        // so it is overridden in code.
+        self.navigationItem.title = NSLocalizedString("All News", comment: "")
+
         self.collectionView.backgroundColor = .altBackground
         
         self.prototypeCell = NewsCollectionViewCell.instantiate(with: NewsCollectionViewCell.nib)

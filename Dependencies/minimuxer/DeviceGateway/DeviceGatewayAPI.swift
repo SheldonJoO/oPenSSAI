@@ -26,18 +26,29 @@ public struct PairedDeviceRecord: Sendable {
 /// Snapshot of the on-device location simulation session, as held by the
 /// gateway. Mirrors the Mac helper's /status shape so the shell can treat
 /// both transports the same way.
+///
+/// `active` is the gateway's local belief (a session handle is held and a
+/// coordinate was set); it can go stale when iOS suspends the app and the
+/// DVT session drops without the gateway noticing. `confirmed` is only
+/// true when the device actually acknowledged a coordinate set — i.e. the
+/// state was verified with the device, not just read back locally.
 public struct LocationSimulationState: Sendable {
     public let active: Bool
     public let latitude: Double?
     public let longitude: Double?
     /// Whether the gateway currently holds a live DVT session to the device.
     public let connected: Bool
+    /// Whether the active state was confirmed by the device (a coordinate
+    /// set succeeded). False for plain status reads, which never touch
+    /// the device.
+    public let confirmed: Bool
 
-    public init(active: Bool, latitude: Double?, longitude: Double?, connected: Bool) {
+    public init(active: Bool, latitude: Double?, longitude: Double?, connected: Bool, confirmed: Bool = false) {
         self.active = active
         self.latitude = latitude
         self.longitude = longitude
         self.connected = connected
+        self.confirmed = confirmed
     }
 }
 
@@ -87,8 +98,22 @@ public protocol DeviceGatewayAPI: AnyObject, Sendable {
     /// Clears the simulated coordinate and tears the session down. Best
     /// effort: succeeds even when no session is currently held.
     func stopLocationSimulation() async throws
-    /// Snapshot of the current session state. Cheap — never touches the device.
+    /// Snapshot of the current session state. Cheap — never touches the
+    /// device, so `confirmed` is always false: this is the gateway's local
+    /// belief, which can go stale when iOS suspends the app and the DVT
+    /// session drops. Use verifyLocationSimulation() for a checked state.
     func locationSimulationStatus() async throws -> LocationSimulationState
+    /// Re-confirms an active simulation with the device and returns the
+    /// checked state (`confirmed` is true when the device acknowledged
+    /// the coordinate). The DVT location simulation API has no status
+    /// query (the idevice FFI only exposes new/set/clear/free), so
+    /// verification re-sets the active coordinate on the device —
+    /// re-establishing the DVT session first when it dropped while the
+    /// app was suspended — and reports the outcome. A failed re-set tears
+    /// the local session down and reports inactive. When nothing is
+    /// locally active this is a cheap local read, like
+    /// locationSimulationStatus().
+    func verifyLocationSimulation() async throws -> LocationSimulationState
     /// Whether Developer Mode is enabled on the device (lockdown
     /// DeveloperModeStatus in the com.apple.security.mac.amfi domain).
     func isDeveloperModeEnabled() async throws -> Bool

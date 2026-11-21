@@ -212,7 +212,26 @@ final class LaunchViewController: UIViewController {
         let remaining = elapsed >= 1 ? 0 : 1 - elapsed
         try? await Task.sleep(nanoseconds: UInt64(remaining * 500_000_000))
 
+        await self.presentAlternateDatabaseWarningIfNeeded()
+
         transitionToMainInterface()
+    }
+
+    /// Warns that an older database was found in another location while
+    /// this install opened a fresh, empty one (App Group availability
+    /// flipped, e.g. after re-signing). Lightweight by design: the old
+    /// database is never moved or deleted, the user is only told why the
+    /// app looks empty. Presented here — after the splash sequence, before
+    /// the main interface — so it cannot collide with the pairing prompt
+    /// shown after the transition.
+    @MainActor
+    private func presentAlternateDatabaseWarningIfNeeded() async {
+        guard let alternateURL = DatabaseManager.shared.alternateDatabaseURL else { return }
+        debugLog("[LaunchViewController] Presenting alternate-database warning for '\(alternateURL.path)'.")
+        await self.presentAlert(
+            title: NSLocalizedString("Older Database Found", comment: ""),
+            message: NSLocalizedString("openSSS found an older database in another location, so this install opened a fresh, empty database instead. Your installed apps and sign-in from the older database are untouched, but they are not visible here.\n\nThis usually happens after reinstalling with a different signing method. Sign in again to continue using this install.", comment: "")
+        )
     }
 
     @MainActor

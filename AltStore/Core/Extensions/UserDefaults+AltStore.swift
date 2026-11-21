@@ -101,6 +101,18 @@ public extension UserDefaults
         get { self.bool(forKey: #function) }
         set { self.set(newValue, forKey: #function) }
     }
+    /// Bundle IDs of apps whose last background refresh failed (P0-3).
+    /// nil means no retry is pending; the next foreground launch retries them.
+    @objc var pendingFailedRefreshBundleIDs: [String]? {
+        get { self.stringArray(forKey: #function) }
+        set { self.set(newValue, forKey: #function) }
+    }
+    /// Consecutive failed background-refresh attempts (P0-3). Drives the
+    /// exponential backoff of the retry reminder; reset on success.
+    @objc var failedRefreshAttemptCount: Int {
+        get { self.integer(forKey: #function) }
+        set { self.set(newValue, forKey: #function) }
+    }
     @objc var isBackgroundServiceEnabled: Bool {
         get { self.bool(forKey: #function) }
         set { self.set(newValue, forKey: #function) }

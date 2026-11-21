@@ -1541,6 +1541,10 @@ extension LibimobiledeviceGateway {
         throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "locationSimulationStatus (Location simulation is not supported on pure Lockdown gateway)")
     }
 
+    public func verifyLocationSimulation() async throws -> LocationSimulationState {
+        throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "verifyLocationSimulation (Location simulation is not supported on pure Lockdown gateway)")
+    }
+
     public func isDeveloperModeEnabled() async throws -> Bool {
         throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "isDeveloperModeEnabled (Location simulation is not supported on pure Lockdown gateway)")
     }
