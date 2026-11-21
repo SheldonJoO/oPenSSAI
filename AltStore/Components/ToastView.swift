@@ -49,10 +49,6 @@ class ToastView: UIControl
     var alignmentEdge: PresentationEdge = .none
     var edgeOffset = UIOffset(horizontal: 15, vertical: 15)
 
-    /// Extra bottom clearance, resolved in `show(in:duration:)` when the toast
-    /// is presented inside a shell tab, so it clears the floating pill tab bar.
-    private var presentationBottomInset: CGFloat = 0
-
     private(set) var isShown = false
     var preferredDuration: TimeInterval
     var opensErrorLog: Bool = false
@@ -272,7 +268,7 @@ class ToastView: UIControl
             axisConstraint = self.topAnchor.constraint(equalTo: superview.safeAreaLayoutGuide.topAnchor, constant: self.edgeOffset.vertical)
             hiddenAxisConstraint = superview.topAnchor.constraint(equalTo: self.bottomAnchor)
         case .bottom, .none:
-            axisConstraint = superview.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: self.edgeOffset.vertical + self.presentationBottomInset)
+            axisConstraint = superview.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: self.edgeOffset.vertical)
             hiddenAxisConstraint = self.topAnchor.constraint(equalTo: superview.bottomAnchor)
         }
 
@@ -346,8 +342,6 @@ class ToastView: UIControl
         textLabel.preferredMaxLayoutWidth = view.bounds.width
         detailTextLabel.preferredMaxLayoutWidth = view.bounds.width
 
-        self.resolveBottomInset(for: view)
-
         view.addSubview(self)
         view.layoutIfNeeded()
 
@@ -365,7 +359,7 @@ class ToastView: UIControl
         case .top:
             distance = self.bounds.height + self.edgeOffset.vertical + view.safeAreaInsets.top
         default:
-            distance = self.bounds.height + self.edgeOffset.vertical + self.presentationBottomInset + view.safeAreaInsets.bottom
+            distance = self.bounds.height + self.edgeOffset.vertical + view.safeAreaInsets.bottom
         }
 
         let percentOvershoot = overshoot / distance
@@ -428,38 +422,6 @@ class ToastView: UIControl
         animator.startAnimation()
 
         NotificationCenter.default.post(name: ToastView.willDismissNotification, object: self, userInfo: [ToastView.userInfoKeyPropertyAnimator: animator])
-    }
-
-    /// Lifts a bottom toast above the shell's floating pill tab bar when the
-    /// toast is presented inside one of the shell's tabs. Walks the
-    /// containment chain only: a modal presented over the shell (e.g. the
-    /// login sheet) has no pill over it, so it keeps the default offset.
-    /// Needs proper testing on-device — verify the toast clears the pill
-    /// on both tabs and on pushed screens, and stays put on the login sheet.
-    private func resolveBottomInset(for view: UIView)
-    {
-        presentationBottomInset = 0
-
-        guard presentationEdge == .bottom else { return }
-
-        var responder: UIResponder? = view.next
-        var viewController: UIViewController?
-        while let next = responder {
-            if let found = next as? UIViewController {
-                viewController = found
-                break
-            }
-            responder = next.next
-        }
-
-        var current = viewController
-        while let viewController = current {
-            if viewController is ShellTabBarController {
-                presentationBottomInset = ShellTheme.pillHeight + ShellTheme.pillBottomMargin + 8
-                return
-            }
-            current = viewController.parent
-        }
     }
 
     @objc private func toastViewWillShow(_ notification: Notification) {
