@@ -31,7 +31,12 @@ struct PairingTutorialView: View {
     @State private var isStartingConnection = false
 
     var body: some View {
-        ScrollView {
+        // Explicit showsIndicators: a bare ScrollView { } is ambiguous
+        // between SwiftUI's two inits here (isolated vs nonisolated
+        // overloads) under Xcode 16.4; passing the parameter pins the
+        // first overload. Other files' bare ScrollViews resolve fine,
+        // so this is specific to this view's content closure.
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 24) {
                 statusCard
                 introSection
