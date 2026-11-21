@@ -273,11 +273,11 @@ struct PairingTutorialView: View {
 /// Presents the pairing tutorial modally in its own navigation stack, for
 /// UIKit callers (pairing-required alerts, error toasts). The Done button
 /// is a UIKit bar button item here, not a SwiftUI .toolbar: a bare
-/// .toolbar { } in this view is ambiguous between SwiftUI's isolated and
-/// nonisolated overloads under Xcode 16.4 (its closure touches only
-/// nonisolated members; @MainActor on body does NOT disambiguate in
-/// Swift 5 mode — proven by build 6). Modal chrome belongs to the UIKit
-/// presentation anyway.
+/// .toolbar { } with an if-without-else in this view is ambiguous
+/// between SwiftUI's @ViewBuilder and @ToolbarContentBuilder overloads
+/// (both nonisolated) under Xcode 16.4 — @MainActor on body cannot
+/// disambiguate those, proven by build 6. Modal chrome belongs to the
+/// UIKit presentation anyway.
 extension UIViewController {
     func presentPairingTutorial(animated: Bool = true) {
         let tutorial = ShellHostingController(rootView: PairingTutorialView())
