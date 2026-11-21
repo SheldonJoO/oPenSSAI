@@ -91,6 +91,7 @@ protocol UserCustomizationHandler: AnyObject, Sendable {
     ) async throws -> [String: any Sendable]?
     func resolveAppGroupMismatch(originalGroup: String, correctedGroup: String) async throws -> AppGroupResolution
     func resolveAppIconCustomization(appName: String) async throws -> URL?
+    func resolveAppNameCustomization(currentName: String) async throws -> String?
     func resolveProvisioningProfileCustomization(appName: String, bundleID: String) async throws -> ProfileCustomizationChoice?
 }
 

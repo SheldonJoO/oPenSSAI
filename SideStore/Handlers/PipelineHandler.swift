@@ -8,6 +8,7 @@
 
 import UIKit
 import SideSign
+import UniformTypeIdentifiers
 
 final class PipelineHandler: PipelineExecutionHandler, 
                              PreflightChecksHandler, 
@@ -477,6 +478,46 @@ final class PipelineHandler: PipelineExecutionHandler,
     }
 
     @MainActor
+    func resolveAppNameCustomization(currentName: String) async throws -> String? {
+        guard let presenter = self.activePresenter else {
+            return nil
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let title = NSLocalizedString("Customize App Name", comment: "")
+            let message = String(format: NSLocalizedString("Enter a custom name for '%@', or keep the original name.", comment: ""), currentName)
+
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+
+            alert.addTextField { textField in
+                textField.text = currentName
+                textField.clearButtonMode = .whileEditing
+                textField.autocapitalizationType = .words
+            }
+
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Confirm", comment: ""), style: .default) { _ in
+                let customName = alert.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                // Empty or unchanged input keeps the original name.
+                guard !customName.isEmpty, customName != currentName else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: customName)
+            })
+
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Keep Original Name", comment: ""), style: .default) { _ in
+                continuation.resume(returning: nil)
+            })
+
+            alert.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: .cancel) { _ in
+                continuation.resume(throwing: OperationError.cancelled)
+            })
+
+            presenter.present(alert, animated: true)
+        }
+    }
+
+    @MainActor
     func resolveAppIconCustomization(appName: String) async throws -> URL? {
         guard let presenter = self.activePresenter else {
             return nil
@@ -491,16 +532,12 @@ final class PipelineHandler: PipelineExecutionHandler,
             alert.addAction(UIAlertAction(title: NSLocalizedString("Choose from Photos", comment: ""), style: .default) { _ in
                 #if !os(tvOS)
                 let pickerDelegate = ImagePickerDelegateHandler { image in
-                    guard let image = image,
-                          let icon = image.resizing(toFill: CGSize(width: 256, height: 256)),
-                          let iconData = icon.pngData() else {
+                    guard let image = image else {
                         continuation.resume(returning: nil)
                         return
                     }
-                    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("CustomIcon_\(UUID().uuidString).png")
                     do {
-                        try iconData.write(to: tempURL, options: .atomic)
-                        continuation.resume(returning: tempURL)
+                        continuation.resume(returning: try self.saveCustomIconImage(image))
                     } catch {
                         continuation.resume(throwing: error)
                     }
@@ -538,6 +575,29 @@ final class PipelineHandler: PipelineExecutionHandler,
                 #endif
             })
 
+            #if !os(tvOS)
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Choose from Files", comment: ""), style: .default) { _ in
+                let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.image], asCopy: true)
+                documentPicker.allowsMultipleSelection = false
+                let pickerDelegate = DocumentPickerHandler { url in
+                    guard let url = url,
+                          let data = try? Data(contentsOf: url),
+                          let image = UIImage(data: data) else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    do {
+                        continuation.resume(returning: try self.saveCustomIconImage(image))
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+                documentPicker.delegate = pickerDelegate
+                objc_setAssociatedObject(documentPicker, "pickerDelegate", pickerDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                presenter.present(documentPicker, animated: true)
+            })
+            #endif
+
             alert.addAction(UIAlertAction(title: NSLocalizedString("Keep Original Icon", comment: ""), style: .default) { _ in
                 continuation.resume(returning: nil)
             })
@@ -548,6 +608,20 @@ final class PipelineHandler: PipelineExecutionHandler,
 
             presenter.present(alert, animated: true)
         }
+    }
+
+    /// Resizes a picked image to the 256x256 custom-icon size and saves it as a
+    /// temp PNG. Shared by the Photos and Files pickers. Returns nil when the
+    /// image cannot be decoded or encoded (caller keeps the original icon);
+    /// throws only when writing the temp file fails.
+    private func saveCustomIconImage(_ image: UIImage) throws -> URL? {
+        guard let icon = image.resizing(toFill: CGSize(width: 256, height: 256)),
+              let iconData = icon.pngData() else {
+            return nil
+        }
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("CustomIcon_\(UUID().uuidString).png")
+        try iconData.write(to: tempURL, options: .atomic)
+        return tempURL
     }
 
     @MainActor
