@@ -51,7 +51,7 @@ let package = Package(
 //         ),
         .binaryTarget(
             name: "IDevice",
-            path: "../../../../local/idevice/swift/IDevice.xcframework"
+            path: "../../../local/idevice/swift/IDevice.xcframework"
         ),
         .binaryTarget(
             name: "libimobiledevice",
