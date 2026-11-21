@@ -241,6 +241,11 @@ final class LaunchViewController: UIViewController {
             
             Task.detached { @MainActor [weak self] in
                 guard let self = self else { return }
+                // The pairing prompt is only meaningful after the boot
+                // sequence has finished loading the pairing file: checking
+                // earlier reads a still-starting boot as "no pairing file"
+                // and the prompt is skipped entirely.
+                await AppBootManager.shared.waitForBootSequence()
                 if AppBootManager.shared.needsPairingPrompt {
                     await AppBootManager.shared.promptForPairing(on: self)
                 }

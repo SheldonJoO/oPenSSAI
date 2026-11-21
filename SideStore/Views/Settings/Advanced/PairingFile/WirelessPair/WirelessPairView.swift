@@ -251,7 +251,7 @@ struct WirelessPairPinDialog: View {
                             .font(.system(size: 30, weight: .bold, design: .monospaced))
                             .frame(width: 40, height: 54)
                             #if !os(tvOS)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.shellCard))
                             #else
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.1)))
                             #endif
@@ -273,6 +273,7 @@ struct WirelessPairPinDialog: View {
             }
             .padding([.top, .trailing], 16)
         }
+        .background(Color.shellBackground)
     }
 }
 
@@ -321,7 +322,7 @@ struct ConnectionDetailsCard: View {
                         }
                     }
                     #if !os(tvOS)
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.shellCard)
                     #else
                     .background(Color.white.opacity(0.1))
                     #endif

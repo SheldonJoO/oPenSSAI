@@ -29,7 +29,7 @@ struct WirelessPairTargetDialog: View {
                 viewModel.refreshDialog()
             }
             #if !os(tvOS)
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .background(Color.shellBackground.ignoresSafeArea())
             .navigationBarTitle(viewModel.dialogMode == .client ? NSLocalizedString("Select Device To Pair", comment: "") : NSLocalizedString("Select Server Interface", comment: ""), displayMode: .inline)
             #else
             .background(Color.black.ignoresSafeArea())
@@ -175,7 +175,7 @@ struct WirelessPairTargetDialog: View {
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     #if !os(tvOS)
-                    .fill(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
+                    .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.shellCard)
                     #else
                     .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.white.opacity(0.1))
                     #endif
@@ -306,7 +306,7 @@ struct WirelessPairTargetDialog: View {
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     #if !os(tvOS)
-                    .fill(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
+                    .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.shellCard)
                     #else
                     .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.white.opacity(0.1))
                     #endif
@@ -363,7 +363,7 @@ struct WirelessPairTargetDialog: View {
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     #if !os(tvOS)
-                    .fill(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
+                    .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.shellCard)
                     #else
                     .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.white.opacity(0.1))
                     #endif

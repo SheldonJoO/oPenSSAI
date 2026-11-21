@@ -766,19 +766,26 @@ extension AppManager: PipelineProgress, PipelineExecutionContext, PipelineErrorL
     
     func refreshProgress(for app: AppProtocol) -> Progress?
     {
+        return self.refreshProgress(forBundleID: app.bundleIdentifier)
+    }
+
+    /// In-flight refresh/re-sign progress for a bundle ID, for callers that
+    /// have no AppProtocol object (mirrors installationProgress(forBundleID:)).
+    /// Falls back to the install progress, so it covers refresh, re-sign,
+    /// reinstall, and install alike; cancelled progress is cleared.
+    func refreshProgress(forBundleID bundleID: String) -> Progress?
+    {
         return self.progressLock.withLock {
-            let bundleID = app.bundleIdentifier
-            
             guard let progress = self.refreshProgress[bundleID] ?? self.installationProgress[bundleID] else {
                 return nil
             }
-            
+
             guard !progress.isCancelled else {
                 self.refreshProgress[bundleID] = nil
                 self.installationProgress[bundleID] = nil
                 return nil
             }
-            
+
             return progress
         }
     }

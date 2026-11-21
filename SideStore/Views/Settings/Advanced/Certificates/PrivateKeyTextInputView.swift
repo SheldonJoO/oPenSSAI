@@ -42,7 +42,7 @@ struct PrivateKeyTextInputView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(4)
                     #if !os(tvOS)
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.shellCard)
                     #else
                     .background(Color.white.opacity(0.1))
                     #endif
@@ -102,6 +102,7 @@ struct PrivateKeyTextInputView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
             }
+            .background(Color.shellBackground)
             .navigationTitle("Add Private Key")
             #if !os(tvOS)
             .navigationBarTitleDisplayMode(.inline)

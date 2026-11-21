@@ -157,11 +157,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         
-        Task.detached {
-            debugLog("[AppDelegate] Boot sequence starting...")
-            await AppBootManager.shared.performBootSequence()
-            debugLog("[AppDelegate] Boot sequence completed.")
-        }
+        // The boot sequence loads the pairing file and starts minimuxer. It
+        // runs detached, but AppBootManager keeps the task so launch and
+        // operations can await it before first use instead of racing it.
+        AppBootManager.shared.startBootSequence()
         
         
         let isFirstLaunch = (UserDefaults.standard.firstLaunch == nil)

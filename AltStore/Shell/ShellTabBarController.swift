@@ -3,8 +3,9 @@
 //  ShellTabBarController.swift
 //  oPenSSAI
 //
-//  The shell's root container: two navigation stacks (Apps / Me) under a
-//  standard iOS tab bar, which stays visible on pushed screens too.
+//  The shell's root container: three navigation stacks (Apps / Location /
+//  Me) under a standard iOS tab bar, which stays visible on pushed screens
+//  too.
 //  Deep links are routed here: .ipa imports go to the Apps tab,
 //  add-source links present the Sources UI modally, error-log requests open
 //  the diagnostic log from the Me tab.
@@ -17,10 +18,15 @@ import UIKit
 final class ShellTabBarController: UITabBarController
 {
     private let appsViewController = AppsViewController()
+    private let locationViewController = LocationSimulationViewController()
     private let profileViewController = ProfileViewController()
 
     private lazy var appsNavigationController: UINavigationController = {
         makeNavigationController(rootViewController: appsViewController)
+    }()
+
+    private lazy var locationNavigationController: UINavigationController = {
+        makeNavigationController(rootViewController: locationViewController)
     }()
 
     private lazy var profileNavigationController: UINavigationController = {
@@ -39,11 +45,15 @@ final class ShellTabBarController: UITabBarController
             title: NSLocalizedString("Apps", comment: ""),
             image: UIImage(systemName: "square.grid.2x2.fill"),
             tag: 0)
+        locationNavigationController.tabBarItem = UITabBarItem(
+            title: NSLocalizedString("Location", comment: ""),
+            image: UIImage(systemName: "location.fill"),
+            tag: 1)
         profileNavigationController.tabBarItem = UITabBarItem(
             title: NSLocalizedString("Me", comment: ""),
             image: UIImage(systemName: "person.crop.circle.fill"),
-            tag: 1)
-        viewControllers = [appsNavigationController, profileNavigationController]
+            tag: 2)
+        viewControllers = [appsNavigationController, locationNavigationController, profileNavigationController]
 
         tabBar.tintColor = ShellTheme.accentColor
 
@@ -56,6 +66,9 @@ final class ShellTabBarController: UITabBarController
         NotificationCenter.default.addObserver(
             self, selector: #selector(openErrorLog(_:)),
             name: ToastView.openErrorLogNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(openPairingTutorial(_:)),
+            name: ToastView.openPairingTutorialNotification, object: nil)
         NotificationCenter.default.addObserver(
             self, selector: #selector(applyTheme),
             name: ShellTheme.accentDidChangeNotification, object: nil)
@@ -129,6 +142,7 @@ final class ShellTabBarController: UITabBarController
     @objc private func applyTheme()
     {
         appsNavigationController.navigationBar.tintColor = ShellTheme.accentColor
+        locationNavigationController.navigationBar.tintColor = ShellTheme.accentColor
         profileNavigationController.navigationBar.tintColor = ShellTheme.accentColor
         tabBar.tintColor = ShellTheme.accentColor
     }
@@ -183,10 +197,18 @@ final class ShellTabBarController: UITabBarController
 
     @objc private func openErrorLog(_ notification: Notification)
     {
-        selectTab(1)
+        selectTab(2)
         DispatchQueue.main.async { [weak self] in
             self?.profileViewController.openDiagnosticLog()
         }
+    }
+
+    /// Presents the pairing tutorial modally (the target of pairing-error
+    /// toasts). Skipped while another modal is already presented.
+    @objc private func openPairingTutorial(_ notification: Notification)
+    {
+        guard presentedViewController == nil else { return }
+        presentPairingTutorial()
     }
 }
 #endif

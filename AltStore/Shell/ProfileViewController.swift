@@ -15,6 +15,7 @@
 
 import UIKit
 import SwiftUI
+import Combine
 import UserNotifications
 
 final class ProfileViewController: UIViewController
@@ -22,7 +23,6 @@ final class ProfileViewController: UIViewController
     private enum Section: Int, CaseIterable
     {
         case signing
-        case location
         case reminder
         case manage
         case help
@@ -34,7 +34,6 @@ final class ProfileViewController: UIViewController
             switch self
             {
             case .signing: return NSLocalizedString("Signing", comment: "")
-            case .location: return NSLocalizedString("Virtual Location", comment: "")
             case .reminder: return NSLocalizedString("Expiry Reminder", comment: "")
             case .manage: return NSLocalizedString("Manage", comment: "")
             case .help: return NSLocalizedString("Help & Support", comment: "")
@@ -44,8 +43,7 @@ final class ProfileViewController: UIViewController
         }
     }
 
-    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette, connection }
-    private enum LocationRow: Int, CaseIterable { case virtualLocation }
+    private enum SigningRow: Int, CaseIterable { case device, appleID, appleIDs, certificate, anisette, connection }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
     private enum HelpRow: Int, CaseIterable { case guide, community, support }
@@ -53,6 +51,7 @@ final class ProfileViewController: UIViewController
     private enum AboutRow: Int, CaseIterable { case about }
 
     private var storageSizeText: String?
+    private var cancellables = Set<AnyCancellable>()
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -93,6 +92,21 @@ final class ProfileViewController: UIViewController
         NotificationCenter.default.addObserver(
             self, selector: #selector(applyTheme),
             name: ShellTheme.accentDidChangeNotification, object: nil)
+
+        // Keep the Connection row value (mode + reachability) live while
+        // this screen is visible: minimuxer pushes reachability into
+        // ConnectionConfig.shared as the network changes.
+        ConnectionConfig.shared.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.tableView.reloadRows(
+                        at: [IndexPath(row: SigningRow.connection.rawValue, section: Section.signing.rawValue)],
+                        with: .none)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     override func viewWillAppear(_ animated: Bool)
@@ -130,10 +144,36 @@ final class ProfileViewController: UIViewController
         DatabaseManager.shared.activeTeam(in: DatabaseManager.shared.viewContext)
     }
 
+    private var storedAppleIDCount: Int
+    {
+        let context = DatabaseManager.shared.viewContext
+        return (try? context.count(for: Account.fetchRequest())) ?? 0
+    }
+
     private var appVersionText: String
     {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
         return String(format: NSLocalizedString("Version %@", comment: ""), version)
+    }
+
+    /// Me → Signing connection row value: the current effective mode plus
+    /// endpoint reachability, e.g. "远程直连 · 可达". Reachability is
+    /// omitted while no endpoint is known yet (local mode before the
+    /// tunnel peer is discovered).
+    private var connectionRowValue: String
+    {
+        let config = ConnectionConfig.shared
+        let modeName = config.useLocalVPN
+            ? NSLocalizedString("Local VPN", comment: "")
+            : NSLocalizedString("Remote Direct", comment: "")
+        guard let reachable = config.effectiveEndpointReachable else
+        {
+            return modeName
+        }
+        let reachabilityText = reachable
+            ? NSLocalizedString("Connection Reachable", comment: "")
+            : NSLocalizedString("Connection Unreachable", comment: "")
+        return "\(modeName) · \(reachabilityText)"
     }
 
     /// The next expiry reminder fire date (earliest installed-app expiry
@@ -331,7 +371,7 @@ final class ProfileViewController: UIViewController
 
     private func pushSwiftUIView<Content: View>(_ view: Content, title: String? = nil)
     {
-        let hostingController = UIHostingController(rootView: view)
+        let hostingController = ShellHostingController(rootView: view)
         hostingController.title = title
         navigationController?.pushViewController(hostingController, animated: true)
     }
@@ -360,7 +400,6 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
         switch Section(rawValue: section)
         {
         case .signing: return SigningRow.allCases.count
-        case .location: return LocationRow.allCases.count
         case .reminder: return ReminderRow.allCases.count
         case .manage: return ManageRow.allCases.count
         case .help: return HelpRow.allCases.count
@@ -400,6 +439,14 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                     iconSystemName: "person.crop.circle", iconTint: accent,
                     title: "Apple ID",
                     value: activeAccount?.appleID)
+            case .appleIDs:
+                let count = storedAppleIDCount
+                cell.configure(
+                    iconSystemName: "person.2.circle", iconTint: accent,
+                    title: NSLocalizedString("Apple IDs", comment: ""),
+                    value: count > 0
+                        ? String(format: NSLocalizedString("%d Accounts", comment: ""), count)
+                        : nil)
             case .certificate:
                 cell.configure(
                     iconSystemName: "person.badge.key", iconTint: accent,
@@ -412,18 +459,10 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 cell.configure(
                     iconSystemName: "network", iconTint: accent,
                     title: NSLocalizedString("Connection Settings", comment: ""),
-                    value: ConnectionConfig.shared.useLocalVPN
-                        ? NSLocalizedString("Local VPN", comment: "")
-                        : NSLocalizedString("Remote Direct", comment: ""))
+                    value: connectionRowValue)
             case .none:
                 break
             }
-
-        case .location:
-            cell.configure(
-                iconSystemName: "mappin.and.ellipse", iconTint: accent,
-                title: NSLocalizedString("Virtual Location", comment: ""),
-                value: LocationSimulationManager.shared.statusSummary)
 
         case .reminder:
             switch ReminderRow(rawValue: indexPath.row)
@@ -514,6 +553,8 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                     title: NSLocalizedString("Device", comment: ""))
             case .appleID:
                 appleIDRowTapped()
+            case .appleIDs:
+                navigationController?.pushViewController(AppleIDsViewController(), animated: true)
             case .certificate:
                 pushSwiftUIView(
                     CertificatesView(presentingViewController: self),
@@ -525,9 +566,6 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .none:
                 break
             }
-
-        case .location:
-            navigationController?.pushViewController(LocationSimulationViewController(), animated: true)
 
         case .reminder:
             break // Toggle row handles itself; Next Reminder is info-only.

@@ -17,6 +17,7 @@ extension TimeInterval
 extension ToastView
 {
     static let openErrorLogNotification = Notification.Name("ALTOpenErrorLogNotification")
+    static let openPairingTutorialNotification = Notification.Name("ALTOpenPairingTutorialNotification")
     static let willShowNotification = Notification.Name("ToastViewWillShowNotification")
     static let didShowNotification = Notification.Name("ToastViewDidShowNotification")
     static let willDismissNotification = Notification.Name("ToastViewWillDismissNotification")
@@ -52,6 +53,7 @@ class ToastView: UIControl
     private(set) var isShown = false
     var preferredDuration: TimeInterval
     var opensErrorLog: Bool = false
+    var opensPairingTutorial: Bool = false
 
     private let dimmingView = UIView()
     private let stackView = UIStackView()
@@ -124,6 +126,27 @@ class ToastView: UIControl
 
     convenience init(error: Error, mode: InfoMode)
     {
+        // Pairing errors get a tap target: the pairing tutorial. Detection
+        // is on the error type, not the rendered text, so it keeps working
+        // with translated error messages. Set the flag on every path out
+        // of this initializer (including any early return) or the tap
+        // target silently disappears for those errors. A pairing toast
+        // that also opens the error log opens the tutorial instead — it
+        // is the actionable next step.
+        let isPairingError = Self.isPairingError(error)
+
+        // Known minimuxer readiness errors get a Chinese translation
+        // (cause + next step) at display time; the operation's own title
+        // (e.g. "Failed to Install X") is kept when the error carries one.
+        if let translation = MinimuxerErrorTranslator.translation(for: error)
+        {
+            let error = error as NSError
+            let text = error.localizedTitle ?? translation.title
+            self.init(text: text, detailText: translation.detail)
+            self.opensPairingTutorial = isPairingError
+            return
+        }
+
         let error = error as NSError
         let mode = mode == .fullError ? ErrorProcessing.InfoMode.fullError : ErrorProcessing.InfoMode.localizedDescription
 
@@ -131,6 +154,17 @@ class ToastView: UIControl
         let detailText = ErrorProcessing(mode).getDescription(error: error)
 
         self.init(text: text, detailText: detailText)
+        self.opensPairingTutorial = isPairingError
+    }
+
+    /// Errors that mean "pairing is not up" and are therefore answered by
+    /// the pairing tutorial: no pairing file loaded, or minimuxer never
+    /// started (which, after boot, also means no usable pairing).
+    static func isPairingError(_ error: Error) -> Bool
+    {
+        if case OperationError.pairingNotComplete = error { return true }
+        if case OperationError.minimuxerNotStarted = error { return true }
+        return false
     }
 
     required init(coder aDecoder: NSCoder) {
@@ -326,7 +360,7 @@ class ToastView: UIControl
 
         isShown = true
 
-        if opensErrorLog, case let configuration = UIImage.SymbolConfiguration(font: self.textLabel.font),
+        if opensErrorLog || opensPairingTutorial, case let configuration = UIImage.SymbolConfiguration(font: self.textLabel.font),
            let icon = UIImage(systemName: "chevron.right.circle", withConfiguration: configuration) {
             let tintedIcon = icon.withTintColor(.white, renderingMode: .alwaysOriginal)
             let moreIconImageView = UIImageView(image: tintedIcon)
@@ -452,6 +486,11 @@ private extension ToastView
 {
     @objc func showErrorLog()
     {
+        if self.opensPairingTutorial {
+            NotificationCenter.default.post(name: ToastView.openPairingTutorialNotification, object: self)
+            return
+        }
+
         guard self.opensErrorLog else { return }
 
         NotificationCenter.default.post(name: ToastView.openErrorLogNotification, object: self)

@@ -567,6 +567,8 @@ struct AnisetteServersView: View {
                 #else
                 .listStyle(.grouped)
                 #endif
+                .listRowBackground(Color.shellCard)
+                .shellListBackground()
                 .refreshable {
                     await viewModel.fetchServers(forceRemote: true)
                 }

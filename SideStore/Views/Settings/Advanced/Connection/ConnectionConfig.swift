@@ -75,6 +75,30 @@ final class ConnectionConfig: ObservableObject {
     var overrideTunnelPeerActive: ActiveState { overrideTunnelPeerReachable ? .yes : .no }
     var remoteActive: ActiveState { remoteReachable ? .yes : .no }
 
+    /// The endpoint IP the engine currently targets for the effective mode:
+    /// the override peer (if set) or the discovered tunnel peer in local
+    /// mode, the remote server IP in remote mode. Nil when no endpoint is
+    /// known yet (local mode before a tunnel peer is discovered).
+    var effectiveEndpointIp: String? {
+        if useLocalVPN {
+            if !overrideTunnelPeerIp.isEmpty { return overrideTunnelPeerIp }
+            guard let peerIp = tunnelPeerIp, !peerIp.isEmpty else { return nil }
+            return peerIp
+        }
+        return remoteServerIp.isEmpty ? nil : remoteServerIp
+    }
+
+    /// Reachability of the effective endpoint, or nil when the endpoint has
+    /// not been probed yet (local mode before a tunnel peer is discovered).
+    var effectiveEndpointReachable: Bool? {
+        if useLocalVPN {
+            if !overrideTunnelPeerIp.isEmpty { return overrideTunnelPeerReachable }
+            guard let peerIp = tunnelPeerIp, !peerIp.isEmpty else { return nil }
+            return tunnelPeerReachable
+        }
+        return remoteReachable
+    }
+
     var formattedTunnelIface: String? {
         guard let ip = tunnelIfaceIp, !ip.isEmpty else { return nil }
         if let mask = tunnelIfaceSubnetMask, let cidr = Self.cidrPrefix(from: mask) {

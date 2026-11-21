@@ -66,7 +66,7 @@ final class AboutViewController: UIViewController
     {
         let header = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 190))
 
-        let iconImageView = UIImageView(image: UIImage(named: "SideStore"))
+        let iconImageView = UIImageView(image: UIImage(named: "AppLogo"))
         iconImageView.contentMode = .scaleAspectFill
         iconImageView.layer.cornerRadius = 18
         iconImageView.layer.masksToBounds = true

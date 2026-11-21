@@ -142,7 +142,7 @@ final class AnisetteSettingsViewController: UIViewController
                     detailText: NSLocalizedString("You will need to log back into Apple ID in oPenSSAI.", comment: ""))
                 toastView.show(in: self)
             })
-        let hostingController = UIHostingController(rootView: serversView)
+        let hostingController = ShellHostingController(rootView: serversView)
         hostingController.title = NSLocalizedString("Anisette Servers", comment: "")
         navigationController?.pushViewController(hostingController, animated: true)
     }
@@ -156,7 +156,7 @@ final class AnisetteSettingsViewController: UIViewController
         // to UserDefaults; the next sign-in uses it (still sanitized by
         // edgeSafeClientInfo before it is sent to Apple).
         let configView = AnisetteDataView()
-        let hostingController = UIHostingController(rootView: configView)
+        let hostingController = ShellHostingController(rootView: configView)
         hostingController.title = NSLocalizedString("Anisette Client Configuration", comment: "")
         navigationController?.pushViewController(hostingController, animated: true)
     }

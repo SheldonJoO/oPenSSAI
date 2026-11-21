@@ -48,7 +48,14 @@ final class ErrorLogViewController: UITableViewController
         self.tableView.dataSource = self.dataSource
         self.dataSource.contentView = self.tableView
         self.tableView.prefetchDataSource = self.dataSource
-        
+
+        #if os(iOS)
+        // Shell styling (the storyboard leaves the table system-default).
+        self.tableView.backgroundColor = ShellTheme.background
+        self.tableView.separatorColor = ShellTheme.separator
+        self.tableView.sectionHeaderTopPadding = 0
+        #endif
+
         self.exportLogButton?.activityIndicatorView.color = .white
         
         if #unavailable(iOS 15)
@@ -131,6 +138,17 @@ private extension ErrorLogViewController
             cell.dateLabel.text = self.timeFormatter.string(from: loggedError.date)
             cell.errorFailureLabel.text = loggedError.localizedFailure ?? NSLocalizedString("Operation Failed", comment: "")
             cell.errorCodeLabel.text = loggedError.error.localizedErrorCode
+
+            #if os(iOS)
+            // Shell styling (the storyboard leaves the cells system-default,
+            // including fixed 0.66-white secondary labels that wash out in
+            // light mode).
+            cell.backgroundColor = ShellTheme.card
+            cell.dateLabel.textColor = ShellTheme.secondaryText
+            cell.errorFailureLabel.textColor = ShellTheme.primaryText
+            cell.errorCodeLabel.textColor = ShellTheme.secondaryText
+            cell.errorDescriptionTextView.textColor = ShellTheme.secondaryText
+            #endif
             
             let nsError = loggedError.error as NSError
             let errorDescription = [nsError.localizedDescription, nsError.localizedRecoverySuggestion].compactMap { $0 }.joined(separator: "\n\n")
@@ -180,6 +198,10 @@ private extension ErrorLogViewController
         let placeholderView = PlaceholderView()
         placeholderView.textLabel.text = NSLocalizedString("No Errors", comment: "")
         placeholderView.detailTextLabel.text = NSLocalizedString("Errors that occur when sideloading or refreshing apps will appear here.", comment: "")
+        #if os(iOS)
+        placeholderView.textLabel.textColor = ShellTheme.primaryText
+        placeholderView.detailTextLabel.textColor = ShellTheme.secondaryText
+        #endif
         dataSource.placeholderView = placeholderView
         
         return dataSource
@@ -222,9 +244,13 @@ private extension ErrorLogViewController
     @IBAction func showConsoleLogs(_ sender: UIBarButtonItem) {
         // Create the SwiftUI ConsoleLogView with the URL
         let consoleLogView = ConsoleLogView(logURL: (UIApplication.shared.delegate as! AppDelegate).consoleLog.logFileURL)
-        
+
         // Create the UIHostingController
+        #if os(iOS)
+        let consoleLogController = ShellHostingController(rootView: consoleLogView)
+        #else
         let consoleLogController = UIHostingController(rootView: consoleLogView)
+        #endif
         
         // Configure the bottom sheet presentation
         #if !os(tvOS)
@@ -369,9 +395,41 @@ extension ErrorLogViewController
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String?
     {
+        return self.headerTitle(forSection: section)
+    }
+
+    #if os(iOS)
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView?
+    {
+        guard let title = self.headerTitle(forSection: section) else { return nil }
+
+        let container = UIView()
+        let label = UILabel()
+        label.font = ShellTheme.sectionTitleFont
+        label.textColor = ShellTheme.secondaryText
+        label.text = title
+        label.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -6),
+        ])
+
+        return container
+    }
+
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat
+    {
+        return 40
+    }
+    #endif
+
+    private func headerTitle(forSection section: Int) -> String?
+    {
         let indexPath = IndexPath(row: 0, section: section)
         let loggedError = self.dataSource.item(at: indexPath)
-        
+
         if Calendar.current.isDateInToday(loggedError.date)
         {
             return NSLocalizedString("Today", comment: "")

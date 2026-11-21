@@ -8,11 +8,15 @@
 //  or a direct connection to a remote server IP (for example through a
 //  Shadowrocket 10.7.0.1/32 route), so sideloading works without LocalDev.
 //
-//  Mirrors ConnectionConfigView (SideStore/Views/Settings/Advanced/
-//  Connection): edits are drafts until Save, saving writes them to
-//  ConnectionConfig.shared and re-binds the config so minimuxer re-probes
-//  reachability. Reachability itself is live engine state, pushed by
-//  minimuxer via the binding callbacks — this screen only displays it.
+//  Changes apply IMMEDIATELY: flipping the mode writes
+//  ConnectionConfig.shared.useLocalVPN at once and re-binds the config so
+//  minimuxer re-probes reachability for the new mode. (0707 used
+//  draft+Save semantics; the engine stayed in localVPN mode when the user
+//  never tapped Save, so Shadowrocket sideloading kept failing with the
+//  localVPN "tunnel peer IP is not yet reachable" error.) The remote IP
+//  commits when its field ends editing. The status section shows the
+//  current effective mode + endpoint IP and its reachability, pushed live
+//  by minimuxer via the binding callbacks.
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
@@ -47,7 +51,7 @@ final class ConnectionSettingsViewController: UIViewController
             case .remote:
                 return NSLocalizedString("Add a 10.7.0.1/32 route in Shadowrocket (via the WireGuard configuration) to sideload without turning on LocalDev.", comment: "")
             case .status:
-                return NSLocalizedString("The status reflects the saved connection settings and updates automatically.", comment: "")
+                return NSLocalizedString("Changes apply immediately; the status updates automatically.", comment: "")
             }
         }
     }
@@ -55,16 +59,11 @@ final class ConnectionSettingsViewController: UIViewController
     private let config = ConnectionConfig.shared
     private var cancellables = Set<AnyCancellable>()
 
-    // Drafts, seeded from the shared config — mirroring the upstream
-    // ConnectionConfigView, nothing is written until Save is tapped.
-    private var draftUseLocalVPN: Bool = ConnectionConfig.shared.useLocalVPN
-    private var draftRemoteServerIp: String = ConnectionConfig.shared.remoteServerIp
-
     /// Sections currently visible: the Remote Endpoint section only shows
-    /// while the draft mode is Remote Direct.
+    /// while the effective mode is Remote Direct.
     private var visibleSections: [Section]
     {
-        draftUseLocalVPN ? [.mode, .status] : [.mode, .remote, .status]
+        config.useLocalVPN ? [.mode, .status] : [.mode, .remote, .status]
     }
 
     private lazy var tableView: UITableView = {
@@ -89,9 +88,8 @@ final class ConnectionSettingsViewController: UIViewController
         navigationItem.title = NSLocalizedString("Connection Settings", comment: "")
         navigationItem.largeTitleDisplayMode = .never
         navigationItem.backButtonDisplayMode = .minimal
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: NSLocalizedString("Save", comment: ""),
-            style: .done, target: self, action: #selector(saveTapped))
+        // No Save button: the mode applies on toggle and the IP commits on
+        // end-editing (see the header comment).
 
         view.addSubview(tableView)
 
@@ -125,20 +123,23 @@ final class ConnectionSettingsViewController: UIViewController
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 // objectWillChange fires before the new value lands; defer
-                // the reload so the status row reads the updated value.
-                // Only the status row reloads, so an in-progress IP edit
+                // the reload so the status rows read the updated values.
+                // Only the status rows reload, so an in-progress IP edit
                 // is never disturbed.
                 DispatchQueue.main.async { [weak self] in
-                    self?.reloadStatusRow()
+                    self?.reloadStatusRows()
                 }
             }
             .store(in: &cancellables)
     }
 
-    private func reloadStatusRow()
+    private func reloadStatusRows()
     {
         guard let sectionIndex = visibleSections.firstIndex(of: .status) else { return }
-        tableView.reloadRows(at: [IndexPath(row: 0, section: sectionIndex)], with: .none)
+        tableView.reloadRows(
+            at: [IndexPath(row: 0, section: sectionIndex),
+                 IndexPath(row: 1, section: sectionIndex)],
+            with: .none)
     }
 
     private func refreshReachability()
@@ -152,66 +153,107 @@ final class ConnectionSettingsViewController: UIViewController
         }
     }
 
-    /// The reachability row's text and color for the *saved* connection
-    /// mode — reachability is live engine state, so it follows the
-    /// committed settings, not the draft. Mirrors the upstream view: in
-    /// local mode with no discovered peer, the status is N/A.
+    /// The current effective mode + endpoint IP, e.g. "远程直连 · 10.7.0.1".
+    /// This is the mode the engine is actually using — not a draft.
+    private var currentModeText: String
+    {
+        let modeName = config.useLocalVPN
+            ? NSLocalizedString("Local VPN", comment: "")
+            : NSLocalizedString("Remote Direct", comment: "")
+        if let endpointIp = config.effectiveEndpointIp, !endpointIp.isEmpty
+        {
+            return "\(modeName) · \(endpointIp)"
+        }
+        return modeName
+    }
+
+    /// The reachability row's text and color for the effective mode.
+    /// Reachability is live engine state; in local mode with no discovered
+    /// peer yet, the status is N/A.
     private var reachableStatus: (text: String, color: UIColor)
     {
-        if config.useLocalVPN
+        guard let reachable = config.effectiveEndpointReachable else
         {
-            guard let peerIp = config.tunnelPeerIp, !peerIp.isEmpty else
-            {
-                return ("N/A", .systemGray)
-            }
-            return config.tunnelPeerReachable
-                ? (NSLocalizedString("Yes", comment: ""), .systemGreen)
-                : (NSLocalizedString("No", comment: ""), .systemRed)
+            return ("N/A", .systemGray)
         }
-        return config.remoteReachable
+        return reachable
             ? (NSLocalizedString("Yes", comment: ""), .systemGreen)
             : (NSLocalizedString("No", comment: ""), .systemRed)
     }
 
     // MARK: - Actions
 
-    private func modeChanged(_ useLocalVPN: Bool)
+    /// Re-binds the live config so minimuxer picks up the new mode/IP and
+    /// re-probes reachability. bindConnectionConfig already triggers a
+    /// refreshEndpoint inside the engine; the explicit second refresh is a
+    /// no-op once the state settles, and guarantees the status rows are
+    /// re-probed even if the bind path changes.
+    private func applyConnectionSettings()
     {
-        guard useLocalVPN != draftUseLocalVPN else { return }
-        draftUseLocalVPN = useLocalVPN
-        view.endEditing(true)
-        tableView.reloadData()
+        Task {
+            await bindConnectionConfig()
+            await minimuxer.network.refreshEndpoint()
+        }
     }
 
-    @objc private func saveTapped()
+    private func modeChanged(_ useLocalVPN: Bool)
     {
+        guard useLocalVPN != config.useLocalVPN else { return }
         view.endEditing(true)
 
-        let trimmedIp = draftRemoteServerIp.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !draftUseLocalVPN && trimmedIp.isEmpty
+        // Apply immediately: writing the shared config persists the mode
+        // (didSet -> UserDefaults) and the engine binding reads it live,
+        // so the next bind + probe runs in the new mode.
+        config.useLocalVPN = useLocalVPN
+        tableView.reloadData()
+        applyConnectionSettings()
+
+        if !useLocalVPN && config.remoteServerIp.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         {
-            // Mirrors the upstream validation: the remote IP is mandatory
-            // in remote mode.
-            let alertController = UIAlertController(
-                title: NSLocalizedString("Invalid Configuration", comment: ""),
-                message: NSLocalizedString("Remote server IP is required in Remote Direct mode.", comment: ""),
-                preferredStyle: .alert)
-            alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
-            present(alertController, animated: true)
+            // Remote mode needs an IP; the switch still takes effect and
+            // the IP field is now visible — prompt for the address instead
+            // of silently reverting the tap.
+            showEmptyRemoteIPAlert()
+        }
+        else
+        {
+            let modeName = useLocalVPN
+                ? NSLocalizedString("Local VPN", comment: "")
+                : NSLocalizedString("Remote Direct", comment: "")
+            ToastView(text: String(format: NSLocalizedString("Switched to %@", comment: ""), modeName), detailText: nil).show(in: self)
+        }
+    }
+
+    /// Commits the remote IP when its field ends editing. An empty value is
+    /// refused in remote mode (the field restores the previous value); the
+    /// mode switch stays available, so the user is never stuck.
+    private func remoteIPCommitted(_ text: String)
+    {
+        let trimmedIp = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedIp != config.remoteServerIp else { return }
+
+        if !config.useLocalVPN && trimmedIp.isEmpty
+        {
+            showEmptyRemoteIPAlert()
+            tableView.reloadData()
             return
         }
 
-        config.useLocalVPN = draftUseLocalVPN
         config.remoteServerIp = trimmedIp
+        tableView.reloadData()
+        applyConnectionSettings()
+    }
 
-        // Mirror the upstream Confirm: re-bind so minimuxer picks up the
-        // new mode/IP and re-probes reachability.
-        Task { @MainActor [weak self] in
-            await bindConnectionConfig()
-            guard let self else { return }
-            ToastView(text: NSLocalizedString("Changes saved", comment: ""), detailText: nil).show(in: self)
-            self.tableView.reloadData()
-        }
+    private func showEmptyRemoteIPAlert()
+    {
+        // Mirrors the upstream validation: the remote IP is mandatory in
+        // remote mode.
+        let alertController = UIAlertController(
+            title: NSLocalizedString("Invalid Configuration", comment: ""),
+            message: NSLocalizedString("Remote server IP is required in Remote Direct mode.", comment: ""),
+            preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+        present(alertController, animated: true)
     }
 }
 
@@ -226,7 +268,8 @@ extension ConnectionSettingsViewController: UITableViewDataSource, UITableViewDe
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     {
-        return 1
+        // The status section shows the current mode and its reachability.
+        return visibleSections[section] == .status ? 2 : 1
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
@@ -237,7 +280,7 @@ extension ConnectionSettingsViewController: UITableViewDataSource, UITableViewDe
             let cell = tableView.dequeueReusableCell(withIdentifier: ConnectionModeCell.reuseIdentifier, for: indexPath) as! ConnectionModeCell
             cell.configureCardBackground(position: .single)
             cell.configure(
-                useLocalVPN: draftUseLocalVPN,
+                useLocalVPN: config.useLocalVPN,
                 onModeChanged: { [weak self] useLocalVPN in
                     self?.modeChanged(useLocalVPN)
                 })
@@ -248,22 +291,32 @@ extension ConnectionSettingsViewController: UITableViewDataSource, UITableViewDe
             cell.configureCardBackground(position: .single)
             cell.configure(
                 title: NSLocalizedString("Remote Server IP", comment: ""),
-                text: draftRemoteServerIp,
+                text: config.remoteServerIp,
                 placeholder: AppConstants.Connection.defaultRemoteServerIP,
-                onTextChanged: { [weak self] text in
-                    self?.draftRemoteServerIp = text
+                onEditingEnded: { [weak self] text in
+                    self?.remoteIPCommitted(text)
                 })
             return cell
 
         case .status:
             let cell = tableView.dequeueReusableCell(withIdentifier: SettingRowCell.reuseIdentifier, for: indexPath) as! SettingRowCell
-            cell.configureCardBackground(position: .single)
-            let status = reachableStatus
-            cell.configureInfo(
-                iconSystemName: "network", iconTint: ShellTheme.accentColor,
-                title: NSLocalizedString("Reachable", comment: ""),
-                value: status.text,
-                valueColor: status.color)
+            cell.configureCardBackground(position: indexPath.row == 0 ? .top : .bottom)
+            if indexPath.row == 0
+            {
+                cell.configureInfo(
+                    iconSystemName: "arrow.left.arrow.right", iconTint: ShellTheme.accentColor,
+                    title: NSLocalizedString("Current Mode", comment: ""),
+                    value: currentModeText)
+            }
+            else
+            {
+                let status = reachableStatus
+                cell.configureInfo(
+                    iconSystemName: "network", iconTint: ShellTheme.accentColor,
+                    title: NSLocalizedString("Reachable", comment: ""),
+                    value: status.text,
+                    valueColor: status.color)
+            }
             return cell
         }
     }
@@ -302,7 +355,7 @@ extension ConnectionSettingsViewController: UITableViewDataSource, UITableViewDe
 // MARK: - Mode switch cell
 
 /// One mode row: a segmented control switching between Local VPN and
-/// Remote Direct.
+/// Remote Direct. The switch applies immediately (see the header comment).
 private final class ConnectionModeCell: ShellCardCell
 {
     static let reuseIdentifier = "ConnectionModeCell"
@@ -357,12 +410,14 @@ private final class ConnectionModeCell: ShellCardCell
 /// One IP row: a title on the left, an IP text field on the right, with a
 /// Done button above the keyboard. Mirrors CoordinateInputCell in
 /// LocationSimulationViewController; the character filter matches the
-/// upstream ConnectionConfigView (digits, letters, . : % _).
+/// upstream ConnectionConfigView (digits, letters, . : % _). The value
+/// commits when editing ends (Done, Return, or tapping elsewhere) — not on
+/// every keystroke, so a half-typed address never reaches the engine.
 private final class ConnectionTextFieldCell: ShellCardCell
 {
     static let reuseIdentifier = "ConnectionTextFieldCell"
 
-    private var onTextChanged: ((String) -> Void)?
+    private var onEditingEnded: ((String) -> Void)?
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -382,6 +437,8 @@ private final class ConnectionTextFieldCell: ShellCardCell
         textField.autocorrectionType = .no
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.addTarget(self, action: #selector(textChanged), for: .editingChanged)
+        textField.addTarget(self, action: #selector(editingEnded), for: .editingDidEnd)
+        textField.addTarget(self, action: #selector(editingEnded), for: .editingDidEndOnExit)
 
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
@@ -420,26 +477,31 @@ private final class ConnectionTextFieldCell: ShellCardCell
     override func prepareForReuse()
     {
         super.prepareForReuse()
-        onTextChanged = nil
+        onEditingEnded = nil
     }
 
-    func configure(title: String, text: String?, placeholder: String, onTextChanged: @escaping (String) -> Void)
+    func configure(title: String, text: String?, placeholder: String, onEditingEnded: @escaping (String) -> Void)
     {
         titleLabel.text = title
         textField.text = text
         textField.placeholder = placeholder
-        self.onTextChanged = onTextChanged
+        self.onEditingEnded = onEditingEnded
     }
 
     @objc private func textChanged()
     {
+        // Input filter only; the value commits on editing end.
         let raw = textField.text ?? ""
         let filtered = raw.filter { "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.:%_".contains($0) }
         if filtered != raw
         {
             textField.text = filtered
         }
-        onTextChanged?(filtered)
+    }
+
+    @objc private func editingEnded()
+    {
+        onEditingEnded?(textField.text ?? "")
     }
 
     @objc private func doneTapped()

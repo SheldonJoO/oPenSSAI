@@ -28,6 +28,37 @@ public final class AppBootManager {
     }
     
     private init() {}
+
+    /// The single boot-sequence task, created once at launch. Operations
+    /// await it through `waitForBootSequence()` so they never observe
+    /// "no pairing file" while boot is still loading it.
+    private var bootTask: Task<Void, Never>?
+
+    /// Starts the boot sequence exactly once (loading the pairing file and
+    /// starting minimuxer) and returns its task. Later calls return the
+    /// same task instead of starting a second boot.
+    @discardableResult
+    public nonisolated func startBootSequence() -> Task<Void, Never> {
+        lock.withLock {
+            if let bootTask { return bootTask }
+            let task = Task.detached {
+                debugLog("[AppDelegate] Boot sequence starting...")
+                await self.performBootSequence()
+                debugLog("[AppDelegate] Boot sequence completed.")
+            }
+            bootTask = task
+            return task
+        }
+    }
+
+    /// Awaits the boot sequence, starting it first if launch never did.
+    /// Every first use of minimuxer must go through this: without it, an
+    /// operation run right after launch sees minimuxer as "pairing not
+    /// loaded" even though the pairing file is on disk, and fails with a
+    /// transient "Pairing Required" error. Needs proper testing on device.
+    public nonisolated func waitForBootSequence() async {
+        await startBootSequence().value
+    }
     
 
     public nonisolated func startMinimuxer(pairingFile: String) async throws {

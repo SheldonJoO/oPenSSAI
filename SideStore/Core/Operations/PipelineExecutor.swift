@@ -59,6 +59,11 @@ final class PipelineExecutor: @unchecked Sendable {
         permissionsMode: PermissionReviewMode,
         progress: Progress?
     ) async throws -> InstalledApp? {
+        // Publish the current stage on the operation Progress so the
+        // install-progress popup can show what is happening (the pipeline
+        // otherwise exposes no stage text at all).
+        progress?.localizedDescription = step.localizedStageDescription
+
         var result: Any? = "()"
         var loggerType: any OperationLogging.Type
         
