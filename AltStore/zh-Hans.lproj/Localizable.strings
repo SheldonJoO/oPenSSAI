@@ -222,6 +222,7 @@
 "Cancel All" = "全部取消";
 "Cannot Activate More than 3 Apps" = "无法激活超过 3 个应用";
 "Cannot Activate More than 3 Apps and App Extensions" = "无法激活超过 3 个应用及应用扩展";
+"Cannot connect to the device. Make sure it is paired and on the same network." = "无法连接设备，请确认已配对且在同一网络";
 "Capabilities & Features (%lld)" = "功能与能力（%lld）";
 "CarPlay" = "CarPlay";
 "Catalog File" = "目录文件";
@@ -394,6 +395,8 @@
 "Developer" = "开发者";
 "Developer Account" = "开发者账户";
 "Developer Certificates (%lld)" = "开发者证书（%lld）";
+"Developer Mode" = "开发者模式";
+"Developer Mode is off. Turn it on in Settings > Privacy & Security > Developer Mode, then restart the device." = "开发者模式未开启。请在「设置 → 隐私与安全性 → 开发者模式」中开启并重启设备。";
 "Developer Options" = "开发者选项";
 "Developer Portal Error" = "开发者门户错误";
 "Developer Portal Info" = "开发者门户信息";
@@ -408,6 +411,7 @@
 "Device Registration Skipped" = "已跳过设备注册";
 "Device Type" = "设备类型";
 "Device UDID" = "设备 UDID";
+"Device connection is not started. Pair the device or restart the app." = "设备连接未启动，请先完成配对或重启应用";
 "Device registration pending" = "设备注册待处理";
 "Devices (%lld/%lld)" = "设备（%lld/%lld）";
 "Devices registered on your developer team can run development-signed apps. Tap any device to edit its name, disable, or delete it." = "注册在你开发者团队下的设备可以运行开发者签名的应用。点击任意设备可修改名称、停用或删除。";
@@ -548,6 +552,7 @@
 "Failed to stop EMProxy!" = "停止 EMProxy 失败！";
 "Failure" = "失败";
 "Failure Reason" = "失败原因";
+"Fallback route: run tools/location-helper on your Mac (see the repository README), keep the phone and the Mac on the same local network, and enter the Mac's local IP address and port here. On-device direct connection is preferred when available." = "备用路线：Mac 上运行 tools/location-helper（见仓库 README），手机与 Mac 在同一局域网，在此填 Mac 的局域网 IP 与端口。本机直连可用时优先本机直连。";
 "Fault" = "故障";
 "Featured" = "精选";
 "Featured Apps" = "精选应用";
@@ -580,6 +585,7 @@
 "Full Spectrum Color Wheel" = "全色域色轮";
 "GENERAL" = "通用";
 "Games" = "游戏";
+"Gateway Backend" = "网关后端";
 "General Info" = "常规信息";
 "General Metadata" = "常规元数据";
 "Generate" = "生成";
@@ -671,6 +677,7 @@
 "Keep SideSign headers" = "保留 SideSign 请求头";
 "Keep header customizations" = "保留请求头自定义";
 "Keep signing certificate" = "保留签名证书";
+"Keep the app in the foreground while simulating; the simulation may stop after the app has been in the background for a while." = "模拟期间请保持应用在前台；切到后台一段时间后模拟可能中断。";
 "Key Added" = "密钥已添加";
 "Key Name" = "键名";
 "Key was added to certificate %@ (SN: %@)." = "密钥已添加到证书 %@（序列号：%@）。";
@@ -710,6 +717,7 @@
 "MINIMUXER" = "MINIMUXER";
 "MINIMUXER BACKEND" = "MINIMUXER 后端";
 "Mac" = "Mac";
+"Mac Helper" = "Mac Helper";
 "Machine Name" = "设备名称";
 "Make sure LocalDevVPN is connected and running!" = "请确保 LocalDevVPN 已连接并正在运行！";
 "Make sure to only add sources that you trust." = "请务必只添加你信任的来源。";
@@ -762,6 +770,7 @@
 "No fetched headers found" = "未找到拉取的请求头";
 "No files or subfolders found in this directory." = "此目录中没有文件或子文件夹。";
 "No local certificates found." = "未找到本地证书。";
+"No location transport is available" = "本机直连不可用，也未设置 Helper 地址";
 "No matching keys found" = "未找到匹配的键名";
 "No pairing file installed." = "未安装配对文件。";
 "No pairing targets found via Bonjour." = "未通过 Bonjour 找到配对目标。";
@@ -788,7 +797,10 @@
 "OK" = "好";
 "ONBOARDING" = "使用引导";
 "Omit" = "省略";
+"On-Device" = "本机直连";
 "On-Device Sideloading" = "设备端侧载";
+"On-device location failed: %@" = "本机定位失败：%@";
+"On-device simulation needs Developer Mode on, a wireless pairing file, and the idevice gateway backend. When any of these is missing, the Mac helper is used instead (set its address below)." = "本机直连需要开发者模式已开启、无线配对已完成、网关后端为 idevice。任一条件不满足时自动使用 Mac Helper（需在下方设置地址）。";
 "Onboarding reset for next launch" = "引导流程将在下次启动时重来";
 "One or more apps in source “%@” are missing a marketplaceID. This most likely means they are not notarized, which is not supported by this version of SideStore." = "来源 “%@” 中有一个或多个应用缺少 marketplaceID，这很可能意味着它们未经公证，而当前版本的 openSSS 不支持此类应用。";
 "Open" = "打开";
@@ -855,6 +867,7 @@
 "Portal" = "开发者门户";
 "Preferred" = "首选";
 "Preferred Protocol" = "首选协议";
+"Prerequisites" = "前置条件";
 "Privacy Permission" = "隐私权限";
 "Privacy Permissions (%lld)" = "隐私权限（%lld）";
 "Private Key Data" = "私钥数据";
@@ -1129,7 +1142,9 @@
 "The bundle identifier is invalid." = "该 bundle identifier 无效。";
 "The cached permissions for %@ do not match the source." = "%@ 的缓存权限信息与来源不一致。";
 "The cached versions for %@ do not match the source." = "%@ 的缓存版本信息与来源不一致。";
+"The current gateway backend does not support on-device location. Switch to the idevice backend in Settings." = "当前网关后端不支持本机定位，请在设置中切换到 idevice 后端";
 "The database on disk was created with a newer version of SideStore. Downgrading the database schema is not supported. Please update SideStore or reset your database." = "磁盘上的数据库由更新版本的 openSSS 创建，不支持降级数据库结构。请更新 openSSS 或重置你的数据库。";
+
 "The default SideStore source cannot be removed." = "SideStore 默认来源无法移除。";
 "The dependency '%@' could not be downloaded." = "依赖 “%@” 下载失败。";
 "The downloaded version of %@ does not match the build number specified by the source.\nExpected version: %@\nFound version: %@" = "下载的 %@ 版本与来源指定的构建号不一致。\n期望版本：%@\n实际版本：%@";
@@ -1143,6 +1158,7 @@
 "The more you use SideStore, the more often iOS will allow it to refresh apps in the background." = "你使用 openSSS 越频繁，iOS 允许它在后台刷新应用的机会就越多。";
 "The operation returned an unknown result." = "操作返回了未知结果。";
 "The operation timed out." = "操作超时。";
+"The pairing file is invalid. Please pair again." = "配对文件无效，请重新配对";
 "The private key for the active signing certificate is missing from this device's keychain." = "此设备的钥匙串中缺少当前签名证书的私钥。";
 "The process" = "该进程";
 "The process '%@'" = "进程 “%@”";
@@ -1151,6 +1167,8 @@
 "The signing certificate could not be extracted from SideStore's binary." = "无法从 openSSS 的二进制文件中提取签名证书。";
 "The signing certificate used to install SideStore has expired." = "用于安装 openSSS 的签名证书已过期。";
 "The signing certificate used to install SideStore was revoked on the Apple Developer portal." = "用于安装 openSSS 的签名证书已在 Apple 开发者门户被吊销。";
+"The simulated location is delivered by the on-device direct connection (Apple's DVT developer service) or by the location-helper on your Mac, and applies system-wide. Stop and restore the real location when you are done." = "模拟位置由本机直连（Apple DVT 开发者服务）或 Mac 上的 location-helper 提供，全系统生效。用完请点「停止并恢复」，恢复真实位置。";
+
 "The source “%@” contains %@ for %@." = "来源 “%@” 中的 %@ 包含 %@。";
 "The source “%@” contains multiple apps with %@." = "来源 “%@” 中有多个应用使用了相同的 %@。";
 "The source “%@” contains notarized apps, which are not supported by this version of SideStore." = "来源 “%@” 包含已公证的应用，当前版本的 openSSS 不支持此类应用。";
@@ -1186,6 +1204,7 @@
 "Toggle Sensitive Information" = "切换敏感信息";
 "Total" = "总计";
 "Total Space:" = "总空间：";
+"Transport" = "传输方式";
 "Triggered Top Shelf refresh." = "已触发 Top Shelf 刷新。";
 "Triggered timeline refresh for all widgets." = "已触发所有小组件的时间线刷新。";
 "Try Again" = "重试";
@@ -1216,6 +1235,7 @@
 "Unable to find a valid migration path for the database." = "找不到有效的数据库迁移路径。";
 "Unable to locate oPenSSAI.conf in bundle resources." = "无法在应用资源中找到 oPenSSAI.conf。";
 "Unable to read app group backup." = "无法读取 App Group 备份。";
+"Unavailable" = "不可用";
 "Undefined" = "未定义";
 "Underlying Error" = "底层错误";
 "Underlying Errors" = "底层错误";
@@ -1533,9 +1553,8 @@
 "Not Set" = "未设置";
 "Not Started" = "未开始";
 "Not Tested" = "未测试";
-"On-device location simulation is not implemented yet" = "本机直连定位尚未实现";
 "Preset Locations" = "常用地点";
-"Run tools/location-helper on your Mac (see the repository README), keep the phone and the Mac on the same local network, and enter the Mac's local IP address and port here." = "在 Mac 上运行 tools/location-helper（见仓库 README），手机与 Mac 连同一局域网，在此输入 Mac 的局域网 IP 与端口。";
+
 "San Francisco" = "旧金山";
 "Shanghai" = "上海";
 "Shenzhen" = "深圳";
@@ -1543,7 +1562,7 @@
 "Start Simulation" = "开始模拟";
 "Stop & Restore Real Location" = "停止并恢复真实位置";
 "Test Connection" = "测试连接";
-"The simulated location is delivered to this device by the location-helper on your Mac (Apple's DVT developer service) and applies system-wide. Stop and restore the real location when you are done." = "模拟位置由 Mac 上的 location-helper 下发到本机（苹果 DVT 开发者服务），全系统生效。用完请停止并恢复真实位置。";
+
 "Tokyo" = "东京";
 "Virtual Location" = "虚拟定位";
 "Yantai" = "烟台";

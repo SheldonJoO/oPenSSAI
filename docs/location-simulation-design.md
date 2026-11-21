@@ -135,6 +135,8 @@ Rust CLI，依赖 `idevice`（`full` feature，与官方 tools 一致）+ `tokio
 - 字符串：key 英文、值中文，进 `AltStore/zh-Hans.lproj/Localizable.strings`。
 - Info.plist 无需改动：`NSAllowsArbitraryLoads` 已开（局域网明文 HTTP 可行），`NSLocalNetworkUsageDescription` 与远程配对 Bonjour 服务已声明。
 
+第二阶段（本机直连，2026-11-21）在此基础上加了 `OnDeviceLocationService` 与传输回退，见 §9；helper 代码未动，仍是回退路线。
+
 ---
 
 ## 4. RPPairing（iOS 18–26 一次性导入）
@@ -159,12 +161,12 @@ Rust CLI，依赖 `idevice`（`full` feature，与官方 tools 一致）+ `tokio
 3. **回环隧道已存在**：em_proxy + minimuxer 本机 VPN，App 已能访问本机设备服务（与 LocalDevVPN 同类机制）。
 4. **配对文件管理已存在**：`PairingFileManager`（0702 已修识别），无线配对已产出 RPPairing 文件。
 
-### 第二阶段待做（不在本轮）
+### 第二阶段待做（不在本轮）→ 已实现（2026-11-21，分支 `feature/location-ondevice`）
 
-- 在 `IdeviceGateway`（或新增的 Gateway API）里加**常驻会话**方法：现有 `performWithService` 是一次性的（用完即 free），而位置模拟需要长期持有 `LocationSimulationHandle` + 定时重发。需要新的生命周期管理（持有句柄、后台重发计时器、App 退后台时的会话保持策略）。
-- AltStore target 需能调用 IDevice 模块：经 DeviceGatewayAPI 暴露方法（推荐，不动 Dependencies 结构），或给 App target 加 IDevice 依赖。
-- 开发者模式检测与引导、RPPairing 可用性检测（复用已存文件 vs 引导导入）。
-- 会话恢复：App 被杀/手机重启后，模拟状态由系统持有还是随会话消失，需真机验证并在界面上如实呈现。
+- ~~在 `IdeviceGateway`（或新增的 Gateway API）里加**常驻会话**方法~~ ✅ 已实现：`DeviceGatewayAPI` 新增 `startLocationSimulation` / `stopLocationSimulation` / `locationSimulationStatus` / `isDeveloperModeEnabled`（+ `LocationSimulationState`）；`IdeviceGateway` 持有常驻 `RemoteServerHandle` + `LocationSimulationHandle`（NSLock 保护，5 秒 `DispatchSourceTimer` 重发，`invalidateConnection()` 时先拆会话再释隧道）。详见 §9。
+- ~~AltStore target 需能调用 IDevice 模块~~ ✅ 经 `DeviceGatewayAPI` 暴露，Shell 经 `Minimuxer.shared.gateway` 调用，未动 Dependencies 结构。
+- ~~开发者模式检测与引导、RPPairing 可用性检测~~ ✅ 已实现：开发者模式读 lockdown `DeveloperModeStatus`（`com.apple.security.mac.amfi` 域，布尔 plist，依据 idevice 官方 FFI 示例）；配对用 `PairingFileManager.hasPairingFile(for: .rppairing)`；界面新增「前置条件」区（开发者模式 / 配对文件 / 网关后端），缺条件时给中文指引，不静默失败。
+- ~~会话恢复：App 被杀/手机重启后，模拟状态由系统持有还是随会话消失~~ ⏳ 仍需真机验证（见 §6 风险 5 / §9 验证步骤）。已做的防护：`stopLocationSimulation` 无活会话时仍尝试建会话清一次，避免 App 重启后残留模拟无人能停；状态刷新会同时探另一条传输路线，另一路线的模拟不会被漏看。
 
 ---
 
@@ -172,11 +174,11 @@ Rust CLI，依赖 `idevice`（`full` feature，与官方 tools 一致）+ `tokio
 
 | # | 风险 / 未知 | 状态 | 下一步 |
 |---|---|---|---|
-| 1 | DVT 会话是否必须周期性重发坐标，还是保持连接即可 | 未验证 | helper 先按 5 秒重发；真机联调时试停重发看模拟是否掉 |
-| 2 | helper 的 USB 路径在用户 Mac 上是否直通（usbmuxd、信任关系） | 未验证 | Mac 上跑 helper + `POST /location` 实测 |
-| 3 | 已存的无线配对 RPPairing 文件能否直接驱动位置隧道 | 未验证 | 第二阶段真机验证；不行则走 `idevice_pair` 重新生成导入 |
-| 4 | 用户手机是否已开开发者模式 | 未知 | 告知用户检查：设置 → 隐私与安全性 → 开发者模式 |
-| 5 | App 退后台 / 被杀后模拟是否持续 | 未知 | helper 形态不受影响（会话在 Mac 侧）；本机形态需验证 |
+| 1 | DVT 会话是否必须周期性重发坐标，还是保持连接即可 | 未验证 | helper 与本机都按 5 秒重发（与 idevice 官方工具一致）；真机联调时试停重发看模拟是否掉 |
+| 2 | helper 的 USB 路径在用户 Mac 上是否直通（usbmuxd、信任关系） | ✅ 已验证 | 2026-11-21 伦敦模拟端到端通过，用户确认地图显示伦敦 |
+| 3 | 已存的无线配对 RPPairing 文件能否直接驱动位置隧道 | 未验证（本机形态） | 第二阶段真机验证（§9 步骤 2）；不行则走 `idevice_pair` 重新生成导入 |
+| 4 | 用户手机是否已开开发者模式 | ✅ 已开 | 伦敦模拟成功即证明开发者模式已开；界面「前置条件」区实时显示 |
+| 5 | App 退后台 / 被杀后模拟是否持续 | 未知（本机形态） | 本机形态只申请了 `UIApplication` 后台任务（几分钟）；需真机验证后台/被杀后的行为，见 §9 |
 | 5b | helper 退出 / Mac 休眠后，模拟状态是否残留、如何清除 | 未知 | 先重开 helper 再从 App 停止；重启手机可清除（已写进 helper README） |
 | 6 | idevice 0.1.x API 尚不稳定（官方声明 0.2.0 前每个小版本可 breaking） | 已知 | helper 锁死 0.1.68；升级时重对 API |
 | 7 | 模拟位置对需要真实位置的功能的影响（导航、急救、打车） | 已知 | 界面文案提醒：用完及时停止并恢复 |
@@ -187,6 +189,56 @@ Rust CLI，依赖 `idevice`（`full` feature，与官方 tools 一致）+ `tokio
 2. Mac 与手机连同一局域网（或 USB 连 Mac）；Mac 上跑 `location-helper`（见 `tools/location-helper/README.md`）。
 3. App 里 我的 → 虚拟定位 → Helper 地址填 Mac 的局域网 IP（如 `http://192.168.1.5:17878`），点连接测试，通了之后选坐标开始模拟。
 4. 在地图 App 里确认位置已变；用完点「停止并恢复」。
+
+## 9. 第二阶段架构：本机直连（2026-11-21，分支 `feature/location-ondevice`）
+
+运行时零 Mac 依赖：App 自己经已有的 RPPairing 隧道打开 DVT 位置模拟会话。
+
+```
+┌──────────────────────┐  DVT（本机回环隧道）  ┌─────────────────┐
+│  oPenSSAI App        │  RP tunnel → RSD    │  iPhone (本机)  │
+│  虚拟定位界面         │ ──────────────────► │  DVT Location   │
+│  IdeviceGateway 常驻  │  LocationSimulation │  Simulation     │
+│  会话 + 5s 重发       │  set / clear        │  → locationd    │
+└──────────────────────┘                     └─────────────────┘
+        │  回退：Helper 地址已设且本机不可用时，走第一阶段的
+        ▼  HTTP helper（代码未动，仍可用）
+┌──────────────────────┐
+│  location-helper     │
+│  (Mac, Rust)         │
+└──────────────────────┘
+```
+
+### 9.1 网关层（`Dependencies/minimuxer/DeviceGateway/`）
+
+- `DeviceGatewayAPI` 新增 `LocationSimulationState`（`active` / `latitude` / `longitude` / `connected`，与 helper `/status` 同形）与四个方法：`startLocationSimulation(latitude:longitude:)`、`stopLocationSimulation()`、`locationSimulationStatus()`、`isDeveloperModeEnabled()`。
+- `IdeviceGateway` 持有常驻会话：`RemoteServerHandle` + `LocationSimulationHandle`，`NSLock` 保护（`invalidateConnection()` 可在任意队列调用，也会拆会话）。`start` 幂等：已有会话时只改坐标。5 秒 `DispatchSourceTimer` 重发坐标；重发失败时重建会话重试一次，再失败则标记非激活。`invalidateConnection()` 先拆定位会话、再释 adapter/handshake（句柄建在隧道之上，不能先释隧道）。`stop` 是 best-effort：无活会话时仍尝试建会话清一次（覆盖 App 重启后残留模拟的情况），失败只记日志。
+- `isDeveloperModeEnabled`：lockdown `DeveloperModeStatus`（`com.apple.security.mac.amfi` 域）+ `plist_get_bool_val`，与 idevice 官方 FFI 示例 `ffi/examples/lockdownd.c` 一致；lockdown 模式先 `lockdownd_start_session`（复用 `syncGetLockdownValue` 的写法）。
+- `LibimobiledeviceGateway`：四个方法均为 `.unsupportedOperation` 桩（与已有的 `startWirelessPair` 桩同模式）。本机定位要求 idevice 后端 + RPPairing 模式；lockdown 模式到不了 DVT。
+- **重发决策**：保持 5 秒重发，与 helper 和 idevice 官方工具一致。依据：官方工具就是这么做的，且 helper 路线已用 5 秒重发验证通过。周期性重发是否严格必需仍未验证（§6 风险 1），真机联调时可试停重发看模拟是否掉，再决定能否放宽。
+
+### 9.2 App 层（`AltStore/Shell/`）
+
+- `OnDeviceLocationService`（单例）：经 `Minimuxer.shared.gateway` 调网关方法；网关错误按 `DeviceGatewayError.code` 映射成中文错误（未启动 / 配对无效 / 连不上 / 后端不支持 / 开发者模式未开 / `本机定位失败：<详情>`）。`setLocation` 失败时先查开发者模式——若未开，直接报开发者模式指引，不把原始 FFI 错误甩给用户。开始模拟时申请 `UIApplication` 后台任务，停止时结束。
+- `LocationSimulationManager`：传输解析——本机优先（idevice 后端 + RP 配对文件），失败时回退 helper（地址已设才回退）；`activeTransport` 持久化，停止时去同一条路线；状态刷新按优先级查两条路线，第一条激活的胜出（另一路线的模拟不会被漏看；次要路线的 helper 探测用 5 秒短超时，Mac 关机时不拖界面）。`makeHelperService()` 保留，供「测试连接」单独测 helper。
+- `LocationSimulationViewController`：新增「前置条件」区（开发者模式 / 配对文件 / 网关后端），状态区改显示传输方式（模拟中显示实际路线，否则显示将用路线），helper 区改为回退路线说明；控制区脚注提醒保持应用在前台。
+- 字符串：新增 18 条、删 3 条失效 key（`notImplemented` 情形已不存在），总数 1552 条，覆盖检查通过。
+
+### 9.3 已知限制
+
+- **后台**：`UIApplication` 后台任务只能争取几分钟；iOS 挂起 App 后 DVT 会话可能断、模拟可能停。界面脚注已提醒保持前台。helper 路线不受此限（会话在 Mac 侧），是长时间模拟的稳妥选择。
+- **iOS 版本**：DVT 位置模拟需 iOS 17+；更低版本会在建会话时失败并显示网关错误（未做版本预检）。
+- **开发者模式检测**：依赖网关已启动（启动时用配对文件初始化）；启动未完成时显示「未知」，刷新后更新。
+
+### 9.4 真机验证步骤（0705 包，Mac 构建排队中）
+
+1. 打开虚拟定位页：「前置条件」三项应为 开发者模式 已启用 / 配对文件 就绪 / 网关后端 idevice；传输方式显示「本机直连」。
+2. 选伦敦预设点开始模拟：提示应含坐标与「本机直连」；地图 App 确认位置是伦敦（与第一阶段同样的验收标准）。
+3. 保持模拟 1 分钟以上，确认不掉线（5 秒重发是否生效）。
+4. 点「停止并恢复」：地图恢复真实位置；状态显示未开始。
+5. 回退验证：Helper 地址已设时，把网关后端切到 libimobiledevice（设置 → 用户自定义），重进页面应显示传输方式「Mac Helper」，开始模拟走 helper；切回 idevice 后恢复本机。
+6. 残留模拟验证：在 helper 路线模拟中时切回本机路线，状态刷新应仍显示模拟中（另一路线的模拟不被漏看）；停止后两条路线都应停。
+7. 后台验证：模拟中切后台 3–5 分钟再回前台，记录模拟是否还在（§6 风险 5 的实测数据）。
 
 ## 8. 参考资料
 
