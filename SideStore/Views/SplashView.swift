@@ -49,7 +49,7 @@ struct SplashView: View {
                         isBreathing = true
                     }
 
-                Text(Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ?? "oPenSSAI")
+                Text(Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ?? "openSSS")
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.primary)
 

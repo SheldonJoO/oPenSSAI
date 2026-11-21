@@ -3,6 +3,6 @@
    此文件保证 zh-Hans 语言下系统权限弹窗始终显示中文。
 */
 
-"NSLocalNetworkUsageDescription" = "oPenSSAI 需要局域网权限来发现网络上的 Bonjour（mDNS）服务。核心功能不需要此权限。";
-"NSLocationAlwaysAndWhenInUseUsageDescription" = "oPenSSAI 使用定位更新来保持后台任务运行。";
-"NSLocationWhenInUseUsageDescription" = "oPenSSAI 使用定位更新来保持后台任务运行。";
+"NSLocalNetworkUsageDescription" = "openSSS 需要局域网权限来发现网络上的 Bonjour（mDNS）服务。核心功能不需要此权限。";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "openSSS 使用定位更新来保持后台任务运行。";
+"NSLocationWhenInUseUsageDescription" = "openSSS 使用定位更新来保持后台任务运行。";

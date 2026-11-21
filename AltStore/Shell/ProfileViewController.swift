@@ -197,7 +197,7 @@ final class ProfileViewController: UIViewController
                 || settings.authorizationStatus == .provisional else { return }
 
             let content = UNMutableNotificationContent()
-            content.title = "oPenSSAI"
+            content.title = "openSSS"
             content.body = NSLocalizedString("An app expires in 24 hours. Open oPenSSAI to renew it.", comment: "")
             content.sound = .default
 
