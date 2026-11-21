@@ -283,9 +283,10 @@ extension UIViewController {
         let tutorial = ShellHostingController(rootView: PairingTutorialView())
         let navigationController = UINavigationController(rootViewController: tutorial)
         tutorial.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: NSLocalizedString("Done", comment: ""),
-            style: .done,
-            primaryAction: UIAction { [weak navigationController] _ in
+            // Note: there is NO UIBarButtonItem(title:style:primaryAction:)
+            // initializer — build 7 failed on it. init(primaryAction:)
+            // with a titled UIAction is the overload that exists.
+            primaryAction: UIAction(title: NSLocalizedString("Done", comment: "")) { [weak navigationController] _ in
                 navigationController?.dismiss(animated: true)
             }
         )
