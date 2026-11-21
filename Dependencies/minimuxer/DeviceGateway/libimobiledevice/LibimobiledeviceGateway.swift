@@ -1525,6 +1525,26 @@ extension LibimobiledeviceGateway {
         throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "triggerWirelessPair (RemotePairing is not supported on pure Lockdown gateway)")
     }
 
+    // Location simulation needs the DVT channel over the RP tunnel, which
+    // only the idevice backend provides. The shell checks the backend
+    // before offering on-device simulation, so these should be unreachable
+    // in practice.
+    public func startLocationSimulation(latitude: Double, longitude: Double) async throws {
+        throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "startLocationSimulation (Location simulation is not supported on pure Lockdown gateway)")
+    }
+
+    public func stopLocationSimulation() async throws {
+        throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "stopLocationSimulation (Location simulation is not supported on pure Lockdown gateway)")
+    }
+
+    public func locationSimulationStatus() async throws -> LocationSimulationState {
+        throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "locationSimulationStatus (Location simulation is not supported on pure Lockdown gateway)")
+    }
+
+    public func isDeveloperModeEnabled() async throws -> Bool {
+        throw LibimobiledeviceGatewayError(.unsupportedOperation, reason: "isDeveloperModeEnabled (Location simulation is not supported on pure Lockdown gateway)")
+    }
+
     public func afcListDirectory(bundleId: String, path: String) async throws -> [String] {
         try await withFFIDispatch {
             try self.syncAfcListDirectory(bundleId: bundleId, path: path)

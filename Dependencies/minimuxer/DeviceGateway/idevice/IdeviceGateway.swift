@@ -76,6 +76,24 @@ public final class IdeviceGateway: BaseDeviceGateway, DeviceGatewayAPI, @uncheck
     private var adapter: OpaquePointer? = nil
     private var handshake: OpaquePointer? = nil
 
+    // MARK: - Location simulation (persistent DVT session)
+
+    /// Guards all location-session state below. The session is also torn
+    /// down from invalidateConnection(), which can run on any queue, so a
+    /// lock (not just the FFI dispatch queue) serializes access.
+    private let locationStateLock = NSLock()
+    private let locationRefreshQueue = DispatchQueue(label: "com.openssai.idevice.location-simulation")
+    private var locationRemoteServer: OpaquePointer? = nil
+    private var locationSimulationClient: OpaquePointer? = nil
+    private var locationActiveCoordinates: (latitude: Double, longitude: Double)? = nil
+    private var locationRefreshTimer: DispatchSourceTimer? = nil
+    /// Re-send interval, matching the Mac helper and the idevice reference
+    /// tools. Whether periodic re-sends are strictly required (vs. merely
+    /// holding the session open) is unverified — see
+    /// docs/location-simulation-design.md §1.2 — so the proven behaviour is
+    /// kept. Needs proper testing on device.
+    private static let locationRefreshInterval: TimeInterval = 5
+
     public override init() {
         try! super.init()
     }
@@ -109,6 +127,17 @@ public final class IdeviceGateway: BaseDeviceGateway, DeviceGatewayAPI, @uncheck
 
     public override func invalidateConnection() {
         debugLog("[IdeviceGateway] invalidateConnection() called - clearing stale adapter and handshake")
+        locationStateLock.lock()
+        // The location session was built on this tunnel; free its handles
+        // first so they never dangle after the adapter is gone.
+        teardownLocationSessionLocked()
+        invalidateRPConnectionLocked()
+        locationStateLock.unlock()
+    }
+
+    /// Frees the RP tunnel handles. Assumes locationStateLock is held (see
+    /// invalidateConnection() and the location-session paths).
+    private func invalidateRPConnectionLocked() {
         if let handshake = handshake {
             rsd_handshake_free(handshake)
             self.handshake = nil
@@ -712,6 +741,243 @@ public final class IdeviceGateway: BaseDeviceGateway, DeviceGatewayAPI, @uncheck
             }
             verboseLog("[IdeviceGateway] getLockdownValue returned: \(val)")
             return val
+        }
+    }
+
+    // MARK: - Location simulation (persistent DVT session)
+
+    /// Frees the location session handles and stops the refresh timer.
+    /// Assumes locationStateLock is held.
+    private func teardownLocationSessionLocked() {
+        if let timer = locationRefreshTimer {
+            timer.cancel()
+            locationRefreshTimer = nil
+        }
+        if let client = locationSimulationClient {
+            location_simulation_free(client)
+            locationSimulationClient = nil
+        }
+        if let server = locationRemoteServer {
+            remote_server_free(server)
+            locationRemoteServer = nil
+        }
+    }
+
+    /// (Re)starts the periodic re-send timer. Assumes locationStateLock is
+    /// held and locationActiveCoordinates is set.
+    private func startLocationRefreshTimerLocked() {
+        if let timer = locationRefreshTimer {
+            timer.cancel()
+            locationRefreshTimer = nil
+        }
+        let timer = DispatchSource.makeTimerSource(queue: locationRefreshQueue)
+        timer.schedule(deadline: .now() + Self.locationRefreshInterval, repeating: Self.locationRefreshInterval)
+        timer.setEventHandler { [weak self] in
+            self?.refreshLocationSimulation()
+        }
+        timer.resume()
+        locationRefreshTimer = timer
+    }
+
+    /// Timer callback: re-sends the active coordinate on the live session.
+    /// On failure, re-establishes the session once; if that fails too, the
+    /// session is torn down and the simulation is reported inactive until
+    /// the user starts it again.
+    private func refreshLocationSimulation() {
+        locationStateLock.lock()
+        defer { locationStateLock.unlock() }
+        guard let coordinates = locationActiveCoordinates,
+              let client = locationSimulationClient else { return }
+        if let err = location_simulation_set(client, coordinates.latitude, coordinates.longitude) {
+            let msg = getErrorMessage(from: err)
+            safeFreeError(err)
+            debugLog("[IdeviceGateway] location refresh failed: \(msg); re-establishing session")
+            teardownLocationSessionLocked()
+            do {
+                try establishLocationSessionLocked()
+                guard let newClient = locationSimulationClient else {
+                    throw IdeviceGatewayError(.serviceError, reason: "Location session was nil after re-establishing")
+                }
+                if let retryErr = location_simulation_set(newClient, coordinates.latitude, coordinates.longitude) {
+                    let retryMsg = getErrorMessage(from: retryErr)
+                    safeFreeError(retryErr)
+                    debugLog("[IdeviceGateway] location refresh retry failed: \(retryMsg)")
+                    throw IdeviceGatewayError(.serviceError, reason: retryMsg)
+                }
+                startLocationRefreshTimerLocked()
+            } catch {
+                debugLog("[IdeviceGateway] location session re-establish failed: \(error); simulation marked inactive")
+                teardownLocationSessionLocked()
+                locationActiveCoordinates = nil
+            }
+        }
+    }
+
+    /// Opens the DVT RemoteServer + LocationSimulation handles on the RP
+    /// tunnel. No-op when a session is already held. Assumes
+    /// locationStateLock is held. Throws when the gateway is not
+    /// initialized, the pairing mode is not remote pairing, or the device
+    /// cannot be reached (e.g. Developer Mode off, tunnel down).
+    private func establishLocationSessionLocked() throws {
+        if locationSimulationClient != nil {
+            return
+        }
+        try verifyInitialized()
+        guard pairingFileType == .rppairing else {
+            throw IdeviceGatewayError(.serviceError, reason: "Location simulation needs a remote pairing file")
+        }
+        try ensureRPConnection()
+        var server: OpaquePointer? = nil
+        if let err = remote_server_connect_rsd(adapter, handshake, &server) {
+            let msg = getErrorMessage(from: err)
+            safeFreeError(err)
+            debugLog("[IdeviceGateway] location remote_server_connect_rsd failed: \(msg); retrying with a fresh tunnel")
+            // Retry once with a fresh tunnel, mirroring performWithService.
+            invalidateRPConnectionLocked()
+            do {
+                try ensureRPConnection()
+            } catch {
+                throw IdeviceGatewayError(.connectionFailed, reason: "Failed to reconnect for location simulation: \(error.localizedDescription)")
+            }
+            if let retryErr = remote_server_connect_rsd(adapter, handshake, &server) {
+                let retryMsg = getErrorMessage(from: retryErr)
+                safeFreeError(retryErr)
+                invalidateRPConnectionLocked()
+                throw IdeviceGatewayError(.serviceError, reason: "Failed to open the developer location service: \(retryMsg)")
+            }
+        }
+        guard let server = server else {
+            throw IdeviceGatewayError(.serviceError, reason: "Remote server handle was nil")
+        }
+        var client: OpaquePointer? = nil
+        if let err = location_simulation_new(server, &client) {
+            let msg = getErrorMessage(from: err)
+            safeFreeError(err)
+            remote_server_free(server)
+            throw IdeviceGatewayError(.serviceError, reason: "Failed to open the location simulation channel: \(msg)")
+        }
+        guard let client = client else {
+            remote_server_free(server)
+            throw IdeviceGatewayError(.serviceError, reason: "Location simulation handle was nil")
+        }
+        locationRemoteServer = server
+        locationSimulationClient = client
+        debugLog("[IdeviceGateway] location simulation session established")
+    }
+
+    private func syncStartLocationSimulation(latitude: Double, longitude: Double) throws {
+        debugLog("[IdeviceGateway] startLocationSimulation() called")
+        locationStateLock.lock()
+        defer { locationStateLock.unlock() }
+        try establishLocationSessionLocked()
+        guard let client = locationSimulationClient else {
+            throw IdeviceGatewayError(.serviceError, reason: "Location simulation session was nil after establishing")
+        }
+        if let err = location_simulation_set(client, latitude, longitude) {
+            let msg = getErrorMessage(from: err)
+            safeFreeError(err)
+            debugLog("[IdeviceGateway] startLocationSimulation() location_simulation_set failed: \(msg)")
+            teardownLocationSessionLocked()
+            locationActiveCoordinates = nil
+            throw IdeviceGatewayError(.serviceError, reason: "Failed to set simulated location: \(msg)")
+        }
+        locationActiveCoordinates = (latitude: latitude, longitude: longitude)
+        startLocationRefreshTimerLocked()
+        debugLog("[IdeviceGateway] startLocationSimulation() set to \(latitude), \(longitude)")
+    }
+
+    private func syncStopLocationSimulation() throws {
+        debugLog("[IdeviceGateway] stopLocationSimulation() called")
+        locationStateLock.lock()
+        defer { locationStateLock.unlock() }
+        if let client = locationSimulationClient {
+            // Best effort: ignore clear errors, the session is going away.
+            if let err = location_simulation_clear(client) {
+                debugLog("[IdeviceGateway] stopLocationSimulation() location_simulation_clear failed: \(getErrorMessage(from: err))")
+                safeFreeError(err)
+            }
+        } else {
+            // No live session (e.g. the app relaunched while a simulation
+            // was active). Try once to open a session and clear, so a stale
+            // simulation does not survive unnoticed. Failures are logged,
+            // not thrown: from the caller's view the simulation is stopped.
+            do {
+                try establishLocationSessionLocked()
+                if let client = locationSimulationClient,
+                   let err = location_simulation_clear(client) {
+                    debugLog("[IdeviceGateway] stopLocationSimulation() clear on fresh session failed: \(getErrorMessage(from: err))")
+                    safeFreeError(err)
+                }
+            } catch {
+                debugLog("[IdeviceGateway] stopLocationSimulation() no live session and re-connect failed: \(error)")
+            }
+        }
+        teardownLocationSessionLocked()
+        locationActiveCoordinates = nil
+    }
+
+    private func syncLocationSimulationStatus() -> LocationSimulationState {
+        locationStateLock.lock()
+        defer { locationStateLock.unlock() }
+        let connected = locationSimulationClient != nil
+        let coordinates = locationActiveCoordinates
+        return LocationSimulationState(
+            active: connected && coordinates != nil,
+            latitude: coordinates?.latitude,
+            longitude: coordinates?.longitude,
+            connected: connected
+        )
+    }
+
+    private func syncIsDeveloperModeEnabled() throws -> Bool {
+        debugLog("[IdeviceGateway] isDeveloperModeEnabled() started, mode = .\(pairingFileType)")
+        try verifyInitialized()
+        return try performWithEitherService(
+            connectRP: lockdownd_connect_rsd,
+            connectLockdown: lockdownd_connect,
+            cleanup: lockdownd_client_free,
+            serviceName: "lockdownd"
+        ) { client in
+            // Lockdown mode needs an explicit session first (mirrors
+            // syncGetLockdownValue); the RP path does not.
+            if self.pairingFileType == .lockdown, let pairingFileData = self.pairingFileData {
+                var pf: OpaquePointer? = nil
+                let parseErr = pairingFileData.withUnsafeBytes { buf in
+                    idevice_pairing_file_from_bytes(buf.baseAddress?.assumingMemoryBound(to: UInt8.self), UInt(pairingFileData.count), &pf)
+                }
+                if let parseErr = parseErr {
+                    defer { safeFreeError(parseErr) }
+                    let msg = self.getErrorMessage(from: parseErr)
+                    throw IdeviceGatewayError(.invalidPairingFile, reason: "Failed to parse pairing file: \(msg)")
+                }
+                if let pf = pf {
+                    defer { idevice_pairing_file_free(pf) }
+                    let sessionErr = lockdownd_start_session(client, pf)
+                    if let sessionErr = sessionErr {
+                        defer { safeFreeError(sessionErr) }
+                        let msg = self.getErrorMessage(from: sessionErr)
+                        throw IdeviceGatewayError(.connectionFailed, reason: "Lockdown session failed: \(msg)")
+                    }
+                }
+            }
+
+            // DeveloperModeStatus lives in the AMFI domain and is a boolean
+            // plist (see the idevice ffi lockdownd example).
+            var plistVal: plist_t? = nil
+            let valErr = lockdownd_get_value(client, "DeveloperModeStatus", "com.apple.security.mac.amfi", &plistVal)
+            if let valErr = valErr {
+                let msg = self.getErrorMessage(from: valErr)
+                debugLog("[IdeviceGateway] isDeveloperModeEnabled() lockdownd_get_value failed: \(msg)")
+                defer { safeFreeError(valErr) }
+                throw IdeviceGatewayError(.serviceError, reason: "Failed to read DeveloperModeStatus: \(msg)")
+            }
+            guard let plistVal = plistVal else {
+                throw IdeviceGatewayError(.serviceError, reason: "DeveloperModeStatus value is missing")
+            }
+            defer { safeFreePlist(plistVal) }
+            var enabled: UInt8 = 0
+            plist_get_bool_val(plistVal, &enabled)
+            return enabled != 0
         }
     }
 
@@ -2376,6 +2642,30 @@ extension IdeviceGateway {
             var newInterval: UInt64 = 0
             try self.syncPerformHeartbeat(interval: interval, newInterval: &newInterval)
             return newInterval > 0 ? newInterval : 1000
+        }
+    }
+
+    public func startLocationSimulation(latitude: Double, longitude: Double) async throws {
+        try await withFFIDispatch {
+            try self.syncStartLocationSimulation(latitude: latitude, longitude: longitude)
+        }
+    }
+
+    public func stopLocationSimulation() async throws {
+        try await withFFIDispatch {
+            try self.syncStopLocationSimulation()
+        }
+    }
+
+    public func locationSimulationStatus() async throws -> LocationSimulationState {
+        try await withFFIDispatch {
+            self.syncLocationSimulationStatus()
+        }
+    }
+
+    public func isDeveloperModeEnabled() async throws -> Bool {
+        try await withFFIDispatch {
+            try self.syncIsDeveloperModeEnabled()
         }
     }
 
