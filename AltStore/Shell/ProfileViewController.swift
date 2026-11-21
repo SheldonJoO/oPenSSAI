@@ -119,7 +119,7 @@ final class ProfileViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     @objc private func applyTheme()

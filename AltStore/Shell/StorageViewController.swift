@@ -173,7 +173,7 @@ final class StorageViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     private func refreshSizes()

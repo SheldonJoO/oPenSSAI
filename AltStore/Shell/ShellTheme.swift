@@ -47,9 +47,11 @@ enum ShellAccent: String, CaseIterable, Sendable
 }
 
 /// Appearance choices offered by the Appearance & Theme screen.
+/// Three modes: follow the system, forced light, forced dark.
 enum ShellAppearance: String, CaseIterable, Sendable
 {
     case system
+    case light
     case dark
 
     var displayName: String
@@ -57,6 +59,7 @@ enum ShellAppearance: String, CaseIterable, Sendable
         switch self
         {
         case .system: return NSLocalizedString("Follow System", comment: "")
+        case .light: return NSLocalizedString("Light", comment: "")
         case .dark: return NSLocalizedString("Dark", comment: "")
         }
     }
@@ -122,6 +125,7 @@ enum ShellTheme
         switch appearance
         {
         case .system: window?.overrideUserInterfaceStyle = .unspecified
+        case .light: window?.overrideUserInterfaceStyle = .light
         case .dark: window?.overrideUserInterfaceStyle = .dark
         }
     }
@@ -262,6 +266,21 @@ extension UIColor
         let green = CGFloat((hex >> 8) & 0xFF) / 255
         let blue = CGFloat(hex & 0xFF) / 255
         self.init(red: red, green: green, blue: blue, alpha: alpha)
+    }
+}
+
+extension UIViewController
+{
+    /// Status bar style that follows the current trait: dark text on light
+    /// backgrounds, light text on dark ones. Every shell screen's
+    /// `preferredStatusBarStyle` should return this; the old unconditional
+    /// `.lightContent` made the status bar invisible in light mode (0710).
+    /// Note the tab bar controller overrides this for the whole shell via
+    /// `childForStatusBarStyle == nil`, so the per-screen overrides only
+    /// matter for screens presented outside the tab bar.
+    var shellPreferredStatusBarStyle: UIStatusBarStyle
+    {
+        traitCollection.userInterfaceStyle == .light ? .darkContent : .lightContent
     }
 }
 #endif

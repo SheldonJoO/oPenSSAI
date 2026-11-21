@@ -140,7 +140,7 @@ final class LocationSimulationViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     // MARK: - Values
@@ -914,7 +914,7 @@ private final class LocationSearchViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     private func updateEmptyState()

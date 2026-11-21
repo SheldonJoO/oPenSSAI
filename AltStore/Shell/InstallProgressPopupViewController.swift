@@ -261,6 +261,8 @@ final class InstallProgressPopupViewController: UIViewController
         stageObservation?.invalidate()
     }
 
+    /// The popup sits over a dark dimming scrim, so the status bar stays
+    /// light even in light mode (unlike the other shell screens, 0710).
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
         return .lightContent

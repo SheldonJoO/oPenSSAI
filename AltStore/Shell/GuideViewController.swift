@@ -92,7 +92,7 @@ final class GuideViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 }
 #endif

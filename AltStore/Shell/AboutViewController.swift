@@ -51,7 +51,7 @@ final class AboutViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     private var versionText: String

@@ -3,8 +3,9 @@
 //  ThemePickerViewController.swift
 //  oPenSSAI
 //
-//  Appearance & Theme: follow-system / dark appearance, and the accent color
-//  (Violet is the default, matching the reference design).
+//  Appearance & Theme: three appearance modes (follow system / light /
+//  dark) and the accent color (Violet is the default, matching the
+//  reference design).
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
@@ -57,7 +58,7 @@ final class ThemePickerViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 }
 

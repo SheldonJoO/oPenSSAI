@@ -172,7 +172,7 @@ final class ComponentLicensesViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 }
 
@@ -263,7 +263,7 @@ final class LicenseComponentsViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 }
 
@@ -404,7 +404,7 @@ final class LicenseDetailViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     @objc private func linkButtonTapped()

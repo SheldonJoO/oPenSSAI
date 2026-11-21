@@ -701,6 +701,7 @@
 "Leave empty to automatically discover SideJITServer on your local network via Bonjour." = "留空则通过 Bonjour 在本地网络中自动发现 SideJITServer。";
 "Less" = "收起";
 "Lifestyle" = "生活";
+"Light" = "浅色";
 "Link & Save" = "关联并保存";
 "Link Signing Certificate?" = "关联签名证书？";
 "Linked Libraries (%lld)" = "链接的库（%lld）";

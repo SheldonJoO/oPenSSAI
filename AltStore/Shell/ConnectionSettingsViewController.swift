@@ -112,7 +112,7 @@ final class ConnectionSettingsViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     // MARK: - Reachability

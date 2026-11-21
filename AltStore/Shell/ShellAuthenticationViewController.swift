@@ -80,7 +80,7 @@ final class ShellAuthenticationViewController: UIViewController
 
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        return shellPreferredStatusBarStyle
     }
 
     override var keyCommands: [UIKeyCommand]?
