@@ -1669,3 +1669,10 @@
 "Updating signing certificate…" = "正在更新签名证书…";
 "Verifying app…" = "正在验证应用…";
 "Verifying certificate…" = "正在验证证书…";
+// oPenSSAI 0709 install progress steps (five-phase checklist)
+"Progress Step Done" = "完成";
+"Progress Step Download" = "下载";
+"Progress Step Install" = "安装";
+"Progress Step Sign" = "签名";
+"Progress Step Skipped" = "已跳过";
+"Progress Step Unpack" = "解包";

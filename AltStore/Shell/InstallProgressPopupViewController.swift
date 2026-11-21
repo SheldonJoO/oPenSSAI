@@ -3,15 +3,27 @@
 //  InstallProgressPopupViewController.swift
 //  oPenSSAI
 //
-//  Modal popup for install/refresh progress: app icon + name, progress bar,
-//  percentage, and a stage description line. The stage comes from the
-//  pipeline, which publishes each step on the operation Progress's
-//  localizedDescription (see PipelineExecutor); before the first step
-//  starts, a generic Installing…/Refreshing… fallback is shown.
+//  Modal popup for install/refresh progress: app icon + name, overall
+//  progress bar + percentage, a five-phase checklist (Download → Unpack
+//  → Sign → Install → Done), and the engine's current stage text.
+//  Completed phases show a checkmark, the current phase is highlighted
+//  with its within-phase percentage, and phases the pipeline never runs
+//  (refresh has no download/unpack; a local .ipa import's download
+//  flashes by unobserved) read as skipped instead of stuck. See
+//  InstallProgressSteps for the stage-to-phase mapping.
+//
+//  The stage comes from the pipeline, which publishes each step on the
+//  operation Progress's localizedDescription (see PipelineExecutor);
+//  before the first step starts, a generic Installing…/Refreshing…
+//  fallback is shown. The overall bar and percentage are the operation
+//  Progress's fractionCompleted, which is already the weighted
+//  cumulative total — it never jumps back to 0 at a phase boundary.
 //
 //  Presented by AppsViewController while an operation is in flight and
 //  dismissed by it when the operation ends. Cancel cancels the underlying
 //  Progress (the engine picks cancellation up at the next step boundary).
+//  Failures surface as a translated ToastView from AppsViewController's
+//  completion handlers (MinimuxerErrorTranslator), not here.
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
@@ -21,7 +33,8 @@ import UIKit
 final class InstallProgressPopupViewController: UIViewController
 {
     /// Which family the shown operation belongs to; only used for the
-    /// fallback stage text while the pipeline has not published a stage yet.
+    /// fallback stage text while the pipeline has not published a stage
+    /// yet, and for the checklist's default weight table.
     enum OperationKind
     {
         case install
@@ -40,10 +53,12 @@ final class InstallProgressPopupViewController: UIViewController
 
     private var progress: Progress
     private var operationKind: OperationKind
+    private var stepModel: InstallProgressStepModel
 
     private var fractionObservation: NSKeyValueObservation?
     private var stageObservation: NSKeyValueObservation?
     private var hasCompleted = false
+    private var lastStepStates: [InstallProgressPhaseState] = []
 
     // MARK: - Views
 
@@ -109,6 +124,18 @@ final class InstallProgressPopupViewController: UIViewController
         return label
     }()
 
+    private lazy var stepRows: [InstallProgressStepRowView] = {
+        InstallProgressPhase.allCases.map { InstallProgressStepRowView(phase: $0) }
+    }()
+
+    private lazy var stepsStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: stepRows)
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
     private let stageLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
@@ -144,6 +171,7 @@ final class InstallProgressPopupViewController: UIViewController
         self.bundleID = bundleID
         self.progress = progress
         self.operationKind = kind
+        self.stepModel = InstallProgressStepModel(kind: kind)
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen
         modalTransitionStyle = .crossDissolve
@@ -189,7 +217,7 @@ final class InstallProgressPopupViewController: UIViewController
         progressStack.spacing = 8
         progressStack.alignment = .center
 
-        let contentStack = UIStackView(arrangedSubviews: [headerStack, progressStack, stageLabel, cancelButton])
+        let contentStack = UIStackView(arrangedSubviews: [headerStack, progressStack, stepsStackView, stageLabel, cancelButton])
         contentStack.axis = .vertical
         contentStack.spacing = 16
         contentStack.translatesAutoresizingMaskIntoConstraints = false
@@ -265,17 +293,25 @@ final class InstallProgressPopupViewController: UIViewController
         fractionObservation?.invalidate()
         stageObservation?.invalidate()
         hasCompleted = false
+        lastStepStates = []
+
+        // A fresh model per operation: a refresh-all hop must not inherit
+        // the previous app's observed stages.
+        stepModel = InstallProgressStepModel(kind: operationKind)
+        stepModel.observeStageDescription(progress.localizedDescription)
 
         self.progress = progress
         progressView.progress = Float(progress.fractionCompleted)
         progressView.observedProgress = progress
         updatePercentage()
         updateStage()
+        updateSteps()
 
         fractionObservation = progress.observe(\.fractionCompleted, options: [.new]) { [weak self] progress, _ in
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.updatePercentage()
+                self.updateSteps()
                 if progress.fractionCompleted >= 1.0, !self.hasCompleted
                 {
                     self.hasCompleted = true
@@ -283,9 +319,12 @@ final class InstallProgressPopupViewController: UIViewController
                 }
             }
         }
-        stageObservation = progress.observe(\.localizedDescription, options: [.new]) { [weak self] _, _ in
+        stageObservation = progress.observe(\.localizedDescription, options: [.new]) { [weak self] progress, _ in
             DispatchQueue.main.async {
-                self?.updateStage()
+                guard let self else { return }
+                self.stepModel.observeStageDescription(progress.localizedDescription)
+                self.updateStage()
+                self.updateSteps()
             }
         }
     }
@@ -293,6 +332,28 @@ final class InstallProgressPopupViewController: UIViewController
     private func updatePercentage()
     {
         percentageLabel.text = String(format: "%d%%", Int(progress.fractionCompleted * 100))
+    }
+
+    /// Refreshes the checklist from the observed stages and the weighted
+    /// fraction. Only rows whose state changed are reconfigured, so the
+    /// frequent fraction updates during a download do not churn labels.
+    ///
+    /// Needs proper testing: on-device install/refresh runs to confirm
+    /// the checklist tracks the real stages — especially the local-import
+    /// download flash-by and the refresh skip states — since this cannot
+    /// be verified without a Mac build.
+    private func updateSteps()
+    {
+        let states = stepModel.states(fractionCompleted: progress.fractionCompleted, totalUnitCount: progress.totalUnitCount)
+        for (index, state) in states.enumerated()
+        {
+            guard index < stepRows.count else { continue }
+            if index >= lastStepStates.count || lastStepStates[index] != state
+            {
+                stepRows[index].configure(state: state)
+            }
+        }
+        lastStepStates = states
     }
 
     /// The pipeline's current stage, or a generic fallback while no step
@@ -330,6 +391,97 @@ final class InstallProgressPopupViewController: UIViewController
     {
         cancelButton.isEnabled = true
         cancelButton.setTitle(NSLocalizedString("Cancel", comment: ""), for: .normal)
+    }
+}
+
+/// One row of the install-progress checklist: a status icon, the phase
+/// title, and the current phase's within-phase percentage (or "Skipped").
+private final class InstallProgressStepRowView: UIView
+{
+    private let iconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let statusLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .semibold)
+        label.textAlignment = .right
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    init(phase: InstallProgressPhase)
+    {
+        super.init(frame: .zero)
+        titleLabel.text = phase.title
+
+        let stack = UIStackView(arrangedSubviews: [iconImageView, titleLabel, statusLabel])
+        stack.axis = .horizontal
+        stack.spacing = 10
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: topAnchor),
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 22),
+            iconImageView.heightAnchor.constraint(equalToConstant: 22),
+        ])
+
+        configure(state: .pending)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder)
+    {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(state: InstallProgressPhaseState)
+    {
+        switch state
+        {
+        case .pending:
+            iconImageView.image = UIImage(systemName: "circle")
+            iconImageView.tintColor = ShellTheme.secondaryText
+            titleLabel.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+            titleLabel.textColor = ShellTheme.secondaryText
+            statusLabel.text = nil
+        case .current(let fraction):
+            iconImageView.image = UIImage(systemName: "largecircle.fill.circle")
+            iconImageView.tintColor = ShellTheme.accentColor
+            titleLabel.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+            titleLabel.textColor = ShellTheme.primaryText
+            statusLabel.text = String(format: "%d%%", Int(fraction * 100))
+            statusLabel.textColor = ShellTheme.accentColor
+        case .completed:
+            iconImageView.image = UIImage(systemName: "checkmark.circle.fill")
+            iconImageView.tintColor = ShellTheme.accentColor
+            titleLabel.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+            titleLabel.textColor = ShellTheme.primaryText
+            statusLabel.text = nil
+        case .skipped:
+            iconImageView.image = UIImage(systemName: "minus.circle")
+            iconImageView.tintColor = ShellTheme.secondaryText
+            titleLabel.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+            titleLabel.textColor = ShellTheme.secondaryText
+            statusLabel.text = NSLocalizedString("Progress Step Skipped", comment: "")
+            statusLabel.textColor = ShellTheme.secondaryText
+        }
     }
 }
 #endif
