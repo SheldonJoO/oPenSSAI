@@ -117,6 +117,7 @@
 "Advanced / Custom Keys" = "高级 / 自定义键名";
 "All Certificates" = "全部证书";
 "All apps have been refreshed." = "所有应用均已刷新。";
+"All apps have been resigned." = "所有应用均已重签。";
 "All pairing files have been reset. Please restart SideStore." = "所有配对文件已重置，请重新启动 openSSS。";
 "All permitted account entitlements have been added." = "已添加账户允许的全部授权项。";
 "Allows Files app to edit documents directly" = "允许“文件”应用直接编辑文稿";
@@ -945,9 +946,12 @@
 "Resign" = "重签";
 "Resign %@ Failed" = "重签 %@ 失败";
 "Resign (or) Active %@ in SideStore to continue using it." = "在 openSSS 中重签或激活 %@ 后才能继续使用它。";
+"Resign All Apps" = "重签全部应用";
 "Resign Later" = "稍后重签";
 "Resign Now" = "立即重签";
+"Resign all installed apps with %@? Free developer accounts are limited to 1 active signing certificate, so signing may create a new certificate and automatically revoke the existing one, which may disable installations on other devices or made by Xcode." = "用 %@ 重签全部已安装应用？免费开发者账户最多只能有 1 个生效的签名证书，签名时可能创建新证书并自动吊销现有证书，这可能导致其他设备上或通过 Xcode 安装的应用失效。";
 "Resigned: %@" = "已重签：%@";
+"Resigning %d apps…" = "正在重签 %d 个应用…";
 "Resolution Failed" = "解析失败";
 "Resolution Mode" = "解析模式";
 "Resolved Address" = "已解析的地址";
@@ -1348,6 +1352,7 @@
 "%d Day" = "%d 天";
 "%d Days" = "%d 天";
 "%d apps failed to refresh" = "%d 个应用续签失败";
+"%d apps failed to resign" = "%d 个应用重签失败";
 "A copyleft license like GPL-3.0, extended to network use: users interacting with the software over a network are entitled to its source code." = "与 GPL-3.0 类似的著佐权许可证，并扩展到网络使用：通过网络与软件交互的用户有权获得其源代码。";
 "A copyleft license: distributed modifications must also be released under GPL-3.0." = "著佐权许可证：分发的修改版本也必须以 GPL-3.0 发布。";
 "A permissive license with an express patent grant. Modified files must carry prominent notices of the changes." = "宽松许可证，附带明确的专利授权；修改过的文件必须附有醒目的修改声明。";

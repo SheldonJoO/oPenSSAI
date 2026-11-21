@@ -5,9 +5,24 @@
 //
 //  Manage the stored Apple IDs (teams): list every signed-in Apple ID with
 //  its team and certificate status, switch the active team used for signing
-//  and refreshing, add a new Apple ID through the normal sign-in flow, or
-//  remove an Apple ID from this device. Removing an ID only deletes local
-//  records; it never revokes the signing certificate on Apple's servers.
+//  and refreshing, add a new Apple ID through the normal sign-in flow, sign
+//  out of the active Apple ID (the account stays listed so it can be
+//  switched back to later), or remove an Apple ID from this device.
+//  Removing an ID only deletes local records; it never revokes the signing
+//  certificate on Apple's servers.
+//
+//  After switching to another Apple ID, the user is offered to re-sign all
+//  installed apps with it. This deliberately goes through the resign
+//  pipeline (AppManager.resign, one app at a time), NOT the refresh
+//  pipeline: refresh only fetches and installs provisioning profiles for
+//  the active team and never touches the app binary, so a refreshed app
+//  would stay signed by the old team and stop launching once the old
+//  team's profile expires. Re-signing is never automatic: the
+//  confirmation alert warns that signing may create a new certificate and
+//  revoke the existing one (free accounts are limited to 1 active
+//  certificate), and the resign only runs after the user confirms.
+//  openSSS itself is excluded — it has its own dedicated resign flow, and
+//  the per-app menu excludes it too.
 //
 //  Note: the Keychain holds credentials for a single Apple ID, so switching
 //  to a team whose Apple ID has no stored credentials asks the user to sign
@@ -74,6 +89,9 @@ final class AppleIDsViewController: UIViewController
     }()
 
     private var teams: [TeamRow] = []
+
+    /// Guards against starting a second re-sign-all while one is running.
+    private var isResigningAll = false
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -253,6 +271,26 @@ final class AppleIDsViewController: UIViewController
                 self?.switchTo(row: row)
             })
         }
+        else
+        {
+            // Only offer re-signing when there is something to re-sign.
+            if !Self.appsToResign().isEmpty
+            {
+                alert.addAction(UIAlertAction(
+                    title: NSLocalizedString("Resign All Apps", comment: ""), style: .default
+                ) { [weak self] _ in
+                    self?.confirmResignAll(for: row, afterSwitch: false)
+                })
+            }
+            // Sign-out lives here now that the Me tab has a single Apple ID
+            // entry: it clears the stored sign-in but keeps the account
+            // listed, unlike Remove which deletes the local records.
+            alert.addAction(UIAlertAction(
+                title: NSLocalizedString("Sign Out", comment: ""), style: .destructive
+            ) { [weak self] _ in
+                self?.confirmSignOut()
+            })
+        }
         alert.addAction(UIAlertAction(
             title: NSLocalizedString("Remove Apple ID", comment: ""), style: .destructive
         ) { [weak self] _ in
@@ -280,11 +318,23 @@ final class AppleIDsViewController: UIViewController
                     try await AuthManager.shared.switchActiveTeam(to: row.teamIdentifier)
                     let foundCertificate = Self.activateMatchingCertificate(forTeamIdentifier: row.teamIdentifier)
                     self.reload()
-                    ToastView(
-                        text: String(format: NSLocalizedString("Switched to %@", comment: ""), row.appleID),
-                        detailText: foundCertificate ? nil : NSLocalizedString(
-                            "No local certificate was found for this team. Sign in again to provision one.", comment: "")
-                    ).show(in: self)
+                    if foundCertificate
+                    {
+                        // A cached certificate for the new team is active,
+                        // so the installed apps can be re-signed with it
+                        // right away. Offer — never force — the re-sign;
+                        // the certificate-revocation warning is part of
+                        // the confirmation alert.
+                        self.offerResignAfterSwitch(for: row)
+                    }
+                    else
+                    {
+                        ToastView(
+                            text: String(format: NSLocalizedString("Switched to %@", comment: ""), row.appleID),
+                            detailText: NSLocalizedString(
+                                "No local certificate was found for this team. Sign in again to provision one.", comment: "")
+                        ).show(in: self)
+                    }
                 }
                 catch
                 {
@@ -303,7 +353,7 @@ final class AppleIDsViewController: UIViewController
             alert.addAction(UIAlertAction(
                 title: NSLocalizedString("Sign In & Switch", comment: ""), style: .default
             ) { [weak self] _ in
-                self?.signIn()
+                self?.signIn(offerResignAfterSwitch: true)
             })
             alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
             present(alert, animated: true)
@@ -372,17 +422,65 @@ final class AppleIDsViewController: UIViewController
         }
     }
 
+    /// Signs out of the active Apple ID (moved here from the Me tab when
+    /// its two Apple ID rows were merged into one). The account and its
+    /// teams stay listed, so the user can switch back to them later;
+    /// only the stored sign-in is cleared. The checkboxes decide what
+    /// survives the sign-out — by default the certificate is kept, so
+    /// sign-out never revokes anything on Apple's servers.
+    private func confirmSignOut()
+    {
+        let contentVC = SignOutAlertViewController()
+
+        let alertController = UIAlertController(
+            title: NSLocalizedString("Sign Out", comment: ""),
+            message: NSLocalizedString("Are you sure you want to sign out? You will no longer be able to install or refresh apps once you sign out.", comment: ""),
+            preferredStyle: .alert
+        )
+        alertController.setValue(contentVC, forKey: "contentViewController")
+
+        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel, handler: nil)
+        let signOutAction = UIAlertAction(title: NSLocalizedString("Sign Out", comment: ""), style: .destructive) { [weak self] _ in
+            let keepCert = contentVC.isChecked
+            let keepAnisette = contentVC.isKeepAnisetteChecked
+            let keepAnisetteHeaders = contentVC.isKeepAnisetteHeadersChecked
+            let keepSideSignHeaders = contentVC.isKeepSideSignHeadersChecked
+            Task.detached { [weak self] in
+                await AuthManager.shared.signOut(
+                    keepCertificate: keepCert,
+                    keepAnisetteData: keepAnisette,
+                    keepAnisetteHeaders: keepAnisetteHeaders,
+                    keepSideSignHeaders: keepSideSignHeaders
+                )
+                await MainActor.run {
+                    self?.reload()
+                }
+            }
+        }
+
+        alertController.addAction(cancelAction)
+        alertController.addAction(signOutAction)
+        present(alertController, animated: true)
+    }
+
     /// Runs the normal sign-in flow. Signing in with a new Apple ID adds it
     /// (and makes it active); signing in with an already stored ID
     /// re-activates that team and provisions its certificate.
-    private func signIn()
+    ///
+    /// When `offerResignAfterSwitch` is set (sign-in-driven switch only),
+    /// a successful sign-in offers to re-sign the installed apps with the
+    /// newly active team. A failed or cancelled sign-in never offers it:
+    /// the previously active team must not be re-signed by mistake.
+    private func signIn(offerResignAfterSwitch: Bool = false)
     {
         Task { @MainActor [weak self] in
             guard let self else { return }
+            var didSignIn = false
             do
             {
                 let result = try await AuthManager.shared.signIn(presentingViewController: self)
                 debugLog("[AppleIDsVC] Signed in for team: \(result.team.name) (\(result.team.identifier))")
+                didSignIn = true
             }
             catch is CancellationError
             {
@@ -394,6 +492,163 @@ final class AppleIDsViewController: UIViewController
                 ToastView(error: error).show(in: self.view)
             }
             self.reload()
+            // Sign-in provisions the new team's certificate, so no local
+            // certificate check is needed here (unlike the flag-flip
+            // switch path, which only offers re-signing when a cached
+            // certificate for the team was found).
+            if offerResignAfterSwitch,
+               didSignIn,
+               let activeRow = self.teams.first(where: \.isActive)
+            {
+                self.offerResignAfterSwitch(for: activeRow)
+            }
+        }
+    }
+
+    // MARK: - Re-sign after switching
+
+    /// The installed apps re-signing covers: the same set Renew All
+    /// refreshes, minus openSSS itself (it has its own dedicated resign
+    /// flow, and the per-app menu excludes it too).
+    private static func appsToResign() -> [InstalledApp]
+    {
+        InstalledApp.fetchAppsForRefreshingAll(in: DatabaseManager.shared.viewContext)
+            .filter { $0.bundleIdentifier != StoreApp.altstoreAppID }
+    }
+
+    /// After a successful switch, offers to re-sign the installed apps
+    /// with the new team. With nothing installed there is nothing to
+    /// re-sign, so this just confirms the switch with a toast.
+    private func offerResignAfterSwitch(for row: TeamRow)
+    {
+        guard !Self.appsToResign().isEmpty else
+        {
+            ToastView(
+                text: String(format: NSLocalizedString("Switched to %@", comment: ""), row.appleID),
+                detailText: nil
+            ).show(in: self)
+            return
+        }
+        confirmResignAll(for: row, afterSwitch: true)
+    }
+
+    /// The certificate-risk warning, shown before anything that could
+    /// revoke a certificate: the re-sign in `resignAllApps` only runs
+    /// after the user taps Resign here. The wording mirrors the resign
+    /// screen's free-account warning (1 active certificate; creating a
+    /// new one automatically revokes the existing one).
+    private func confirmResignAll(for row: TeamRow, afterSwitch: Bool)
+    {
+        let title = afterSwitch
+            ? String(format: NSLocalizedString("Switched to %@", comment: ""), row.appleID)
+            : NSLocalizedString("Resign All Apps", comment: "")
+        let alert = UIAlertController(
+            title: title,
+            message: String(format: NSLocalizedString("Resign all installed apps with %@? Free developer accounts are limited to 1 active signing certificate, so signing may create a new certificate and automatically revoke the existing one, which may disable installations on other devices or made by Xcode.", comment: ""), row.appleID),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Resign", comment: ""), style: .default) { [weak self] _ in
+            self?.resignAllApps()
+        })
+        if afterSwitch
+        {
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Resign Later", comment: ""), style: .cancel))
+        }
+        else
+        {
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
+        }
+        present(alert, animated: true)
+    }
+
+    /// Re-signs every installed app with the active team by running the
+    /// existing per-app resign pipeline (`AppManager.resign`, the same
+    /// call the Apps tab's Re-sign action makes) one app at a time, in
+    /// expiry order. The resign pipeline resolves the team via
+    /// `getAuthenticatedTeam()`, which reads the team just switched to,
+    /// so no signing logic is duplicated here.
+    ///
+    /// This must NOT go through `AppManager.refresh`: the refresh step
+    /// list (`PipelineStepDefinition.refresh`) has no `.resignApp` step —
+    /// it only fetches and installs provisioning profiles for the active
+    /// team. A profile only authorizes binaries signed with a certificate
+    /// it contains, so a refreshed app would stay signed by the old team
+    /// and stop launching once the old team's profile expires, while
+    /// refresh still reported success. Needs proper testing on a real
+    /// device: the pipeline presents its own UI through this view
+    /// controller, and an app whose cached bundle is gone fails with an
+    /// error asking for the original IPA.
+    private func resignAllApps()
+    {
+        guard !isResigningAll else { return }
+
+        let installedApps = Self.appsToResign()
+        guard !installedApps.isEmpty else
+        {
+            ToastView(error: OperationError.noInstalledApps).show(in: self)
+            return
+        }
+
+        isResigningAll = true
+        ToastView(
+            text: String(format: NSLocalizedString("Resigning %d apps…", comment: ""), installedApps.count),
+            detailText: nil
+        ).show(in: self)
+
+        resignNext(remaining: installedApps, failures: [], attempted: 0)
+    }
+
+    /// Resigns the remaining apps one at a time (the resign pipeline is
+    /// per-app; there is no batch resign). Apps already mid-operation are
+    /// skipped, not failed. When the queue drains, reports the outcome:
+    /// a success toast (this screen shows no per-app progress, so it is
+    /// the only completion signal), the single error, or a count with a
+    /// link to the diagnostic log.
+    private func resignNext(remaining: [InstalledApp], failures: [Error], attempted: Int)
+    {
+        guard let next = remaining.first else
+        {
+            isResigningAll = false
+            if failures.isEmpty
+            {
+                if attempted > 0
+                {
+                    ToastView(text: NSLocalizedString("All apps have been resigned.", comment: ""), detailText: nil).show(in: self)
+                }
+            }
+            else if failures.count == 1, let failure = failures.first
+            {
+                ToastView(error: failure).show(in: self)
+            }
+            else
+            {
+                let text = String(format: NSLocalizedString("%d apps failed to resign", comment: ""), failures.count)
+                ToastView(text: text, detailText: nil, opensLog: true).show(in: self)
+            }
+            reload()
+            return
+        }
+
+        let rest = Array(remaining.dropFirst())
+
+        // Already mid-operation (e.g. Renew All is running): leave it to
+        // that operation instead of queueing a conflicting resign.
+        guard AppManager.shared.refreshProgress(for: next) == nil else
+        {
+            resignNext(remaining: rest, failures: failures, attempted: attempted)
+            return
+        }
+
+        AppManager.shared.resign(next, alternateIconMode: .preserve, presentingViewController: self) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                var failures = failures
+                if case .failure(let error) = result, !(error is CancellationError)
+                {
+                    failures.append(error)
+                }
+                self.resignNext(remaining: rest, failures: failures, attempted: attempted + 1)
+            }
         }
     }
 
@@ -515,10 +770,12 @@ extension AppleIDsViewController: UITableViewDataSource, UITableViewDelegate
             {
                 let cell = tableView.dequeueReusableCell(withIdentifier: SettingRowCell.reuseIdentifier, for: indexPath) as! SettingRowCell
                 cell.configureCardBackground(position: .single)
+                // No dead end while signed out: tapping this row signs in,
+                // just like the Add Apple ID row below.
                 cell.configureInfo(
                     iconSystemName: "person.crop.circle", iconTint: ShellTheme.accentColor,
                     title: NSLocalizedString("No Apple IDs Yet", comment: ""),
-                    value: nil)
+                    value: NSLocalizedString("Sign In", comment: ""))
                 return cell
             }
             let cell = tableView.dequeueReusableCell(withIdentifier: AppleIDCell.reuseIdentifier, for: indexPath) as! AppleIDCell
@@ -551,8 +808,12 @@ extension AppleIDsViewController: UITableViewDataSource, UITableViewDelegate
         switch Section(rawValue: indexPath.section)
         {
         case .teams:
-            guard !teams.isEmpty,
-                  let cell = tableView.cellForRow(at: indexPath) else { return }
+            if teams.isEmpty
+            {
+                signIn()
+                return
+            }
+            guard let cell = tableView.cellForRow(at: indexPath) else { return }
             showActions(for: teams[indexPath.row], sourceView: cell)
         case .add:
             signIn()

@@ -43,7 +43,7 @@ final class ProfileViewController: UIViewController
         }
     }
 
-    private enum SigningRow: Int, CaseIterable { case device, appleID, appleIDs, certificate, anisette, connection }
+    private enum SigningRow: Int, CaseIterable { case device, appleIDs, certificate, anisette, connection }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
     private enum HelpRow: Int, CaseIterable { case guide, community, support }
@@ -137,17 +137,6 @@ final class ProfileViewController: UIViewController
     private var activeAccount: Account?
     {
         DatabaseManager.shared.activeAccount(in: DatabaseManager.shared.viewContext)
-    }
-
-    private var activeTeam: Team?
-    {
-        DatabaseManager.shared.activeTeam(in: DatabaseManager.shared.viewContext)
-    }
-
-    private var storedAppleIDCount: Int
-    {
-        let context = DatabaseManager.shared.viewContext
-        return (try? context.count(for: Account.fetchRequest())) ?? 0
     }
 
     private var appVersionText: String
@@ -280,93 +269,6 @@ final class ProfileViewController: UIViewController
         tableView.reloadData()
     }
 
-    // MARK: - Apple ID sign in / out
-
-    private func appleIDRowTapped()
-    {
-        if let account = activeAccount
-        {
-            let team = activeTeam
-            let message: String?
-            if let team
-            {
-                message = "\(team.name) · \(team.identifier)"
-            }
-            else
-            {
-                message = nil
-            }
-
-            let alert = UIAlertController(title: account.appleID, message: message, preferredStyle: .actionSheet)
-            alert.addAction(UIAlertAction(title: NSLocalizedString("Sign Out", comment: ""), style: .destructive) { [weak self] _ in
-                self?.signOut()
-            })
-            alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
-            present(alert, animated: true)
-        }
-        else
-        {
-            signIn()
-        }
-    }
-
-    private func signIn()
-    {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do
-            {
-                let result = try await AuthManager.shared.signIn(presentingViewController: self)
-                debugLog("[ProfileVC] Signed in for team: \(result.team.name) (\(result.team.identifier))")
-            }
-            catch is CancellationError
-            {
-                debugLog("[ProfileVC] Sign-in cancelled by user")
-            }
-            catch
-            {
-                debugLog("[ProfileVC] Sign-in failed: \(error)")
-                ToastView(error: error).show(in: self.view)
-            }
-            self.tableView.reloadData()
-        }
-    }
-
-    private func signOut()
-    {
-        let contentVC = SignOutAlertViewController()
-
-        let alertController = UIAlertController(
-            title: NSLocalizedString("Sign Out", comment: ""),
-            message: NSLocalizedString("Are you sure you want to sign out? You will no longer be able to install or refresh apps once you sign out.", comment: ""),
-            preferredStyle: .alert
-        )
-        alertController.setValue(contentVC, forKey: "contentViewController")
-
-        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel, handler: nil)
-        let signOutAction = UIAlertAction(title: NSLocalizedString("Sign Out", comment: ""), style: .destructive) { [weak self] _ in
-            let keepCert = contentVC.isChecked
-            let keepAnisette = contentVC.isKeepAnisetteChecked
-            let keepAnisetteHeaders = contentVC.isKeepAnisetteHeadersChecked
-            let keepSideSignHeaders = contentVC.isKeepSideSignHeadersChecked
-            Task.detached { [weak self] in
-                await AuthManager.shared.signOut(
-                    keepCertificate: keepCert,
-                    keepAnisetteData: keepAnisette,
-                    keepAnisetteHeaders: keepAnisetteHeaders,
-                    keepSideSignHeaders: keepSideSignHeaders
-                )
-                await MainActor.run {
-                    self?.tableView.reloadData()
-                }
-            }
-        }
-
-        alertController.addAction(cancelAction)
-        alertController.addAction(signOutAction)
-        present(alertController, animated: true)
-    }
-
     // MARK: - Navigation
 
     private func pushSwiftUIView<Content: View>(_ view: Content, title: String? = nil)
@@ -434,19 +336,15 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                     value: isPaired
                         ? NSLocalizedString("Paired", comment: "")
                         : NSLocalizedString("Not Paired", comment: ""))
-            case .appleID:
-                cell.configure(
-                    iconSystemName: "person.crop.circle", iconTint: accent,
-                    title: "Apple ID",
-                    value: activeAccount?.appleID)
             case .appleIDs:
-                let count = storedAppleIDCount
+                // Single Apple ID entry: the account list handles sign-in,
+                // switching, sign-out, and removal. The value shows the
+                // currently active account (nil while signed out) and
+                // refreshes on every appearance via viewWillAppear.
                 cell.configure(
                     iconSystemName: "person.2.circle", iconTint: accent,
-                    title: NSLocalizedString("Apple IDs", comment: ""),
-                    value: count > 0
-                        ? String(format: NSLocalizedString("%d Accounts", comment: ""), count)
-                        : nil)
+                    title: "Apple ID",
+                    value: activeAccount?.appleID)
             case .certificate:
                 cell.configure(
                     iconSystemName: "person.badge.key", iconTint: accent,
@@ -551,8 +449,6 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 pushSwiftUIView(
                     PairingFileManagementView(),
                     title: NSLocalizedString("Device", comment: ""))
-            case .appleID:
-                appleIDRowTapped()
             case .appleIDs:
                 navigationController?.pushViewController(AppleIDsViewController(), animated: true)
             case .certificate:
