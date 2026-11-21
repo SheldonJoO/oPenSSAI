@@ -445,8 +445,8 @@ class ToastView: UIControl
         var responder: UIResponder? = view.next
         var viewController: UIViewController?
         while let next = responder {
-            if let viewController = next as? UIViewController {
-                viewController = viewController
+            if let found = next as? UIViewController {
+                viewController = found
                 break
             }
             responder = next.next
