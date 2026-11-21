@@ -174,11 +174,11 @@ final class ConnectionSettingsViewController: UIViewController
     {
         guard let reachable = config.effectiveEndpointReachable else
         {
-            return ("N/A", .systemGray)
+            return ("N/A", ShellTheme.secondaryText)
         }
         return reachable
             ? (NSLocalizedString("Yes", comment: ""), .systemGreen)
-            : (NSLocalizedString("No", comment: ""), .systemRed)
+            : (NSLocalizedString("No", comment: ""), ShellTheme.expiredRed)
     }
 
     // MARK: - Actions

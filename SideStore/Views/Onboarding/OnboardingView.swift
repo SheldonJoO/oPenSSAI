@@ -104,7 +104,10 @@ private struct WelcomeStep: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(uiImage: UIImage(named: "AppIcon") ?? UIImage(named: "AppIcon60x60") ?? UIImage(systemName: "app.fill")!)
+            // The app icon is not loadable by name (AppIcon.appiconset is
+            // not an image asset); "AppLogo" is the same artwork as an
+            // imageset, and "app.fill" is only a last resort.
+            Image(uiImage: UIImage(named: "AppLogo") ?? UIImage(systemName: "app.fill")!)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 96, height: 96)
@@ -506,18 +509,13 @@ private struct LocalDevVPNStep: View {
             return
         }
 
-        if isInstalled {
-            errorMessage = nil
-            UIApplication.shared.open(vpnConnectURL, options: [:]) { success in
-                if !success {
-                    errorMessage = NSLocalizedString("LocalDevVPN is not installed on this device.", comment: "")
-                }
-            }
-        } else {
-            UIApplication.shared.open(vpnConnectURL, options: [:]) { success in
-                if !success {
-                    errorMessage = NSLocalizedString("LocalDevVPN is not installed on this device.", comment: "")
-                }
+        // Opening the enable URL both enables the VPN (when installed) and
+        // reports failure (when it is not); no separate installed/not
+        // installed branch is needed.
+        errorMessage = nil
+        UIApplication.shared.open(vpnConnectURL, options: [:]) { success in
+            if !success {
+                errorMessage = NSLocalizedString("LocalDevVPN is not installed on this device.", comment: "")
             }
         }
     }

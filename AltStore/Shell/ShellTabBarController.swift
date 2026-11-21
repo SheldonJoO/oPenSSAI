@@ -90,9 +90,14 @@ final class ShellTabBarController: UITabBarController
         ShellTheme.applyAppearance()
     }
 
+    /// Light status-bar text on the dark shell, dark text when the system
+    /// is in light mode (a fixed .lightContent is invisible on the light
+    /// shell background). This is the effective style for the whole shell:
+    /// childForStatusBarStyle below returns nil, so the per-screen
+    /// overrides in the tab roots never take effect.
     override var preferredStatusBarStyle: UIStatusBarStyle
     {
-        return .lightContent
+        traitCollection.userInterfaceStyle == .light ? .darkContent : .lightContent
     }
 
     /// Keep the shell's own status bar style instead of deferring to the
@@ -157,6 +162,7 @@ final class ShellTabBarController: UITabBarController
     @objc private func applyAppearance()
     {
         ShellTheme.applyAppearance()
+        setNeedsStatusBarAppearanceUpdate()
     }
 
     // MARK: - Deep links

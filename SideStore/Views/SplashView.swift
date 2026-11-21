@@ -34,7 +34,10 @@ struct SplashView: View {
             VStack(spacing: 16) {
                 Spacer()
 
-                Image(uiImage: UIImage(named: "AppIcon") ?? UIImage(named: "AppIcon60x60") ?? UIImage(systemName: "app.fill")!)
+                // The app icon is not loadable by name (AppIcon.appiconset
+                // is not an image asset); "AppLogo" is the same artwork as
+                // an imageset, and "app.fill" is only a last resort.
+                Image(uiImage: UIImage(named: "AppLogo") ?? UIImage(systemName: "app.fill")!)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 104, height: 104)

@@ -3,10 +3,10 @@
 //  LocationSimulationViewController.swift
 //  oPenSSAI
 //
-//  The Virtual Location screen, reachable from Me → Virtual Location.
-//  Coordinates are sent to the Mac helper (tools/location-helper), which
-//  drives the device's DVT location simulation service; the simulated
-//  position is system-wide (Maps and every app read it from locationd).
+//  The Virtual Location tab. Coordinates are sent to the Mac helper
+//  (tools/location-helper), which drives the device's DVT location
+//  simulation service; the simulated position is system-wide (Maps and
+//  every app read it from locationd).
 //  Coordinates can be typed in, picked from presets, dropped as a pin on
 //  the embedded map, or found through address search; every path fills
 //  the same coordinate fields and starts through the same helper flow.

@@ -123,36 +123,49 @@ final class PendingIPAStore
 
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
 
-        // Copy (or download) + parse off the main actor.
-        let parsed: ParsedIPA = try await Task.detached(priority: .userInitiated) {
-            if sourceURL.isFileURL
-            {
-                let isScoped = sourceURL.startAccessingSecurityScopedResource()
-                defer { if isScoped { sourceURL.stopAccessingSecurityScopedResource() } }
-                do
+        // Copy (or download) + parse off the main actor. A failed import
+        // (bad .ipa, failed download) removes the copied file again: an
+        // orphaned .ipa would otherwise linger in Documents/PendingIPAs
+        // forever, inflating the storage breakdown with no queue entry
+        // that could ever delete it.
+        let parsed: ParsedIPA
+        do
+        {
+            parsed = try await Task.detached(priority: .userInitiated) {
+                if sourceURL.isFileURL
                 {
-                    try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+                    let isScoped = sourceURL.startAccessingSecurityScopedResource()
+                    defer { if isScoped { sourceURL.stopAccessingSecurityScopedResource() } }
+                    do
+                    {
+                        try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+                    }
+                    catch
+                    {
+                        throw PendingIPAError.copyFailed
+                    }
                 }
-                catch
+                else
                 {
-                    throw PendingIPAError.copyFailed
+                    let (tempURL, _) = try await URLSession.shared.download(from: sourceURL)
+                    do
+                    {
+                        try FileManager.default.copyItem(at: tempURL, to: destinationURL)
+                    }
+                    catch
+                    {
+                        throw PendingIPAError.copyFailed
+                    }
                 }
-            }
-            else
-            {
-                let (tempURL, _) = try await URLSession.shared.download(from: sourceURL)
-                do
-                {
-                    try FileManager.default.copyItem(at: tempURL, to: destinationURL)
-                }
-                catch
-                {
-                    throw PendingIPAError.copyFailed
-                }
-            }
 
-            return try Self.parseIPA(at: destinationURL)
-        }.value
+                return try Self.parseIPA(at: destinationURL)
+            }.value
+        }
+        catch
+        {
+            try? FileManager.default.removeItem(at: destinationURL)
+            throw error
+        }
 
         // Persist the icon, if any.
         var hasIcon = false

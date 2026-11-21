@@ -32,7 +32,7 @@ final class DonationViewController: UIViewController
         qrImageView.translatesAutoresizingMaskIntoConstraints = false
 
         let hintLabel = UILabel()
-        hintLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        hintLabel.font = ShellTheme.rowValueFont
         hintLabel.textColor = ShellTheme.secondaryText
         hintLabel.textAlignment = .center
         hintLabel.numberOfLines = 0

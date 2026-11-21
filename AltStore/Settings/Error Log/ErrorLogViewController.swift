@@ -54,54 +54,19 @@ final class ErrorLogViewController: UITableViewController
         self.tableView.backgroundColor = ShellTheme.background
         self.tableView.separatorColor = ShellTheme.separator
         self.tableView.sectionHeaderTopPadding = 0
-        #endif
-
+        // The export spinner was white for the old dark nav bar; the shell
+        // bar is light in light mode, where white is invisible.
+        self.exportLogButton?.activityIndicatorView.color = ShellTheme.accentColor
+        #else
         self.exportLogButton?.activityIndicatorView.color = .white
+        #endif
         
         if #unavailable(iOS 15)
         {
             // Assign just clearLogButton to hide export button.
             self.navigationItem.rightBarButtonItems = [self.clearLogButton]
         }
-        
-//        // Adjust the width of the right bar button items
-//        adjustRightBarButtonWidth()
     }
-    
-    
-//    func adjustRightBarButtonWidth() {
-//        // Access the current rightBarButtonItems
-//        if let rightBarButtonItems = self.navigationItem.rightBarButtonItems {
-//            for barButtonItem in rightBarButtonItems {
-//                // Check if the button is a system button, and if so, replace it with a custom button
-//                if barButtonItem.customView == nil {
-//                    // Replace with a custom UIButton for each bar button item
-//                    let customButton = UIButton(type: .custom)
-//                    if let image = barButtonItem.image {
-//                        customButton.setImage(image, for: .normal)
-//                    }
-//                    if let action = barButtonItem.action{
-//                        customButton.addTarget(barButtonItem.target, action: action, for: .touchUpInside)
-//                    }
-//                    
-//                    // Calculate the original size based on the system button
-//                    let originalSize = customButton.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude))
-//                    
-//                    let scaleFactor = 0.7
-//                    
-//                    // Scale the size by 0.7 (70%)
-//                    let scaledSize = CGSize(width: originalSize.width * scaleFactor, height: originalSize.height * scaleFactor)
-//                    
-//                    // Adjust the custom button's width
-////                    customButton.frame.size = CGSize(width: 22, height: 22) // Adjust width as needed
-//                    customButton.frame.size = scaledSize // Adjust width as needed
-//                    
-//                    // Set the custom button as the custom view for the UIBarButtonItem
-//                    barButtonItem.customView = customButton
-//                }
-//            }
-//        }
-//    }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?)
     {
@@ -318,7 +283,11 @@ private extension ErrorLogViewController
     func searchFAQ(for loggedError: LoggedError)
     {
         let staticURL = AppConstants.URLs.errorCodesDocumentation
+        #if os(iOS)
+        self.openWebURL(staticURL, preferredTintColor: ShellTheme.accentColor)
+        #else
         self.openWebURL(staticURL, preferredTintColor: .altPrimary)
+        #endif
     }
 
     func viewMoreDetails(for loggedError: LoggedError) {

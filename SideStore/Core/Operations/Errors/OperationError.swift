@@ -70,9 +70,9 @@ public enum OperationError: LocalizedError, CustomNSError, Sendable, Equatable {
         case .certificateRevoked(let appName):
             return "The signing certificate used to install “\(appName)” was revoked on the Apple Developer portal. Please re-sign or reinstall the app."
         case .customCertificateExpired(_, let activeTeam):
-            return "Your active custom/third-party signing certificate (Team: \(activeTeam)) has expired.\n\nIf you did not intend to use a custom certificate, please reset it in Settings -> Advanced -> Certificates."
+            return "Your active custom/third-party signing certificate (Team: \(activeTeam)) has expired.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate."
         case .customCertificateRevoked(_, let activeTeam):
-            return "Your active custom/third-party signing certificate (Team: \(activeTeam)) was revoked on the Developer Portal.\n\nIf you did not intend to use a custom certificate, please reset it in Settings -> Advanced -> Certificates."
+            return "Your active custom/third-party signing certificate (Team: \(activeTeam)) was revoked on the Developer Portal.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate."
         case .forbidden(let reason, _, _):
             return reason
         case .invalidApp(let reason):
@@ -100,7 +100,7 @@ public enum OperationError: LocalizedError, CustomNSError, Sendable, Equatable {
         case .noConnection(let reason):
             return "Network Connection Error:\n\(reason)\n\nPlease connect to Wi-Fi before attempting further operations."
         case .noDevice(let reason):
-            return "openSSS is unable to reach the device endpoint:\n\(reason)\n\nPlease check your Connection Configuration in Settings."
+            return "openSSS is unable to reach the device endpoint:\n\(reason)\n\nPlease check Connection Settings on the Me tab."
         case .noVPN(let reason):
             return "VPN Connection Error:\n\(reason)\n\nPlease make sure LocalDevVPN is connected and running properly."
         case .notReachable(let reason):
@@ -122,8 +122,80 @@ public enum OperationError: LocalizedError, CustomNSError, Sendable, Equatable {
         return self.failureReason
     }
 
+    /// Localized display form. Each case looks up its own format string so
+    /// interpolated values (app names, engine reasons) survive translation:
+    /// looking up the fully-interpolated rawDescription as one key can only
+    /// ever match the parameter-less cases, and every dynamic error used to
+    /// fall back to English. The engine reason is interpolated verbatim, so
+    /// MinimuxerErrorTranslator's substring matching on localizedDescription
+    /// keeps working.
     public var failureReason: String? {
-        return NSLocalizedString(self.rawDescription, comment: "")
+        switch self {
+        case .noInstalledApps:
+            return NSLocalizedString("There are no active sideloaded apps to refresh.", comment: "")
+        case .noSources:
+            return NSLocalizedString("There are no oPenSSAI sources.", comment: "")
+        case .notAuthenticated:
+            return NSLocalizedString("You are not signed in.", comment: "")
+        case .timedOut:
+            return NSLocalizedString("The operation timed out.", comment: "")
+        case .unableToConnectSideJIT:
+            return NSLocalizedString("Unable to connect to SideJITServer. Please check that you are on the same Wi-Fi of and your Firewall has been set correctly on your server.", comment: "")
+        case .unableToRespondSideJITDevice:
+            return NSLocalizedString("SideJITServer is unable to connect to your iDevice. Please make sure you have paired your iDevice by running 'SideJITServer -y', or try refreshing SideJITServer from Settings.", comment: "")
+        case .unknownResult:
+            return NSLocalizedString("The operation returned an unknown result.", comment: "")
+        case .cacheClearError(let errors):
+            return String(format: NSLocalizedString("An error occurred while clearing the cache: %@", comment: ""), errors.joined(separator: "\n"))
+        case .certificateExpired(let appName):
+            return String(format: NSLocalizedString("The signing certificate used to install “%@” has expired. Please re-sign or reinstall the app.", comment: ""), appName)
+        case .certificateRevoked(let appName):
+            return String(format: NSLocalizedString("The signing certificate used to install “%@” was revoked on the Apple Developer portal. Please re-sign or reinstall the app.", comment: ""), appName)
+        case .customCertificateExpired(_, let activeTeam):
+            return String(format: NSLocalizedString("Your active custom/third-party signing certificate (Team: %@) has expired.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate.", comment: ""), activeTeam)
+        case .customCertificateRevoked(_, let activeTeam):
+            return String(format: NSLocalizedString("Your active custom/third-party signing certificate (Team: %@) was revoked on the Developer Portal.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate.", comment: ""), activeTeam)
+        case .forbidden(let reason, _, _):
+            return reason
+        case .invalidApp(let reason):
+            return String(format: NSLocalizedString("The app is in an invalid format: %@", comment: ""), reason)
+        case .invalidPairingFile(let reason):
+            return String(format: NSLocalizedString("The current pairing file is invalid. Reason: %@\n\nPlease make sure to input a valid pairing file! If the issue persists, replace your pairing with iloader or idevice_pair.", comment: ""), reason)
+        case .invalidParameters(let msg):
+            return String(format: NSLocalizedString("Invalid parameters: \n%@", comment: ""), msg)
+        case .invalidResponse(let reason):
+            return String(format: NSLocalizedString("Invalid server response: %@", comment: ""), reason)
+        case .invalidVPN(let reason), .noVPN(let reason):
+            return String(format: NSLocalizedString("VPN Connection Error:\n%@\n\nPlease make sure LocalDevVPN is connected and running properly.", comment: ""), reason)
+        case .minimuxerNotStarted(let reason):
+            return String(format: NSLocalizedString("Minimuxer has not been started yet: %@\n\nPlease complete pairing or start minimuxer before performing operations.", comment: ""), reason)
+        case .missingAppBundle(let reason):
+            return String(format: NSLocalizedString("The app bundle could not be found: %@", comment: ""), reason)
+        case .missingAppGroup(let name):
+            return String(format: NSLocalizedString("openSSS's shared app group “%@” could not be accessed.", comment: ""), name)
+        case .missingInfoPlist(let reason):
+            return String(format: NSLocalizedString("The app's Info.plist could not be found: %@", comment: ""), reason)
+        case .missingProvisioningProfile(let reason):
+            return String(format: NSLocalizedString("A provisioning profile for the app could not be found: %@", comment: ""), reason)
+        case .missingUpdate(let appName):
+            return String(format: NSLocalizedString("No supported update could be found for “%@”.", comment: ""), appName)
+        case .noConnection(let reason):
+            return String(format: NSLocalizedString("Network Connection Error:\n%@\n\nPlease connect to Wi-Fi before attempting further operations.", comment: ""), reason)
+        case .noDevice(let reason):
+            return String(format: NSLocalizedString("openSSS is unable to reach the device endpoint:\n%@\n\nPlease check Connection Settings on the Me tab.", comment: ""), reason)
+        case .notReachable(let reason):
+            return reason.isEmpty ? NSLocalizedString("Device is not reachable at the specified IP or Endpoint.", comment: "") : reason
+        case .openAppFailed(let name):
+            return String(format: NSLocalizedString("openSSS was denied permission to launch %@.", comment: ""), name)
+        case .pairingNotComplete(let reason):
+            return String(format: NSLocalizedString("Pairing Required: %@\n\nWithout a valid pairing file, openSSS operations cannot connect to your device. Please pair your device or import a valid pairing file.", comment: ""), reason)
+        case .pledgeInactive(let appName):
+            return String(format: NSLocalizedString("Your pledge is no longer active. Please renew it to continue using %@ normally.", comment: ""), appName)
+        case .SideJITIssue(let error):
+            return String(format: NSLocalizedString("An error occurred while using SideJIT: %@", comment: ""), error)
+        case .unknownUDID(let reason):
+            return String(format: NSLocalizedString("openSSS could not determine this device's UDID: %@\n\nPlease replace your pairing using iloader or idevice_pair.", comment: ""), reason)
+        }
     }
 
     public var recoverySuggestion: String? {

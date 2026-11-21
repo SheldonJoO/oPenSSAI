@@ -89,10 +89,6 @@ class ToastView: UIControl
         self.textLabel.text = text
         self.detailTextLabel.text = detailedText
 
-        self.backgroundColor = .altPrimary
-        self.textLabel.textColor = .white
-        self.detailTextLabel.textColor = .white
-
         self.isAccessibilityElement = true
 
         self.layoutMargins = UIEdgeInsets(top: 8, left: 16, bottom: 10, right: 16)
@@ -190,12 +186,24 @@ class ToastView: UIControl
         let textLabelFontDescriptor = detailTextLabelFontDescriptor.withSymbolicTraits(.traitBold) ?? detailTextLabelFontDescriptor
 
         textLabel.font = UIFont(descriptor: textLabelFontDescriptor, size: 0)
+        detailTextLabel.font = UIFont(descriptor: detailTextLabelFontDescriptor, size: 0)
+
+        #if os(iOS)
+        // Shell styling: a dark card pill with the shell's primary text, in
+        // both appearances (the old blue pill + white text was AltStore's
+        // palette, and the two initializers disagreed about the background
+        // — .altPrimary here, a hardcoded blue in init(frame:)).
+        self.backgroundColor = ShellTheme.card
+        textLabel.textColor = ShellTheme.primaryText
+        detailTextLabel.textColor = ShellTheme.primaryText
+        #else
+        self.backgroundColor = UIColor(red: 61.0/255.0, green: 172.0/255.0, blue: 247.0/255.0, alpha: 1)
         textLabel.textColor = .white
+        detailTextLabel.textColor = .white
+        #endif
         textLabel.minimumScaleFactor = 0.75
         textLabel.numberOfLines = 0
 
-        detailTextLabel.font = UIFont(descriptor: detailTextLabelFontDescriptor, size: 0)
-        detailTextLabel.textColor = .white
         detailTextLabel.minimumScaleFactor = 0.75
         detailTextLabel.numberOfLines = 0
 
@@ -241,8 +249,6 @@ class ToastView: UIControl
         self.layoutMargins = UIEdgeInsets(top: 5, left: 10, bottom: 5, right: 10)
         self.preservesSuperviewLayoutMargins = false
         self.insetsLayoutMarginsFromSafeArea = false
-
-        self.backgroundColor = UIColor(red: 61.0/255.0, green: 172.0/255.0, blue: 247.0/255.0, alpha: 1)
 
         NotificationCenter.default.addObserver(self, selector: #selector(toastViewWillShow(_:)), name: ToastView.willShowNotification, object: nil)
 
@@ -362,7 +368,12 @@ class ToastView: UIControl
 
         if opensErrorLog || opensPairingTutorial, case let configuration = UIImage.SymbolConfiguration(font: self.textLabel.font),
            let icon = UIImage(systemName: "chevron.right.circle", withConfiguration: configuration) {
-            let tintedIcon = icon.withTintColor(.white, renderingMode: .alwaysOriginal)
+            #if os(iOS)
+            let iconTint = ShellTheme.primaryText
+            #else
+            let iconTint = UIColor.white
+            #endif
+            let tintedIcon = icon.withTintColor(iconTint, renderingMode: .alwaysOriginal)
             let moreIconImageView = UIImageView(image: tintedIcon)
             moreIconImageView.translatesAutoresizingMaskIntoConstraints = false
             self.addSubview(moreIconImageView)

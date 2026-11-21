@@ -36,6 +36,7 @@
 "%@ returned unexpected output." = "%@ 返回了意外的输出。";
 "%@ timed out." = "%@ 超时。";
 "%@ unexpectedly quit." = "%@ 意外退出。";
+"%@/%@" = "%@/%@";
 "%@: %@" = "%@：%@";
 "%@ms" = "%@ 毫秒";
 "%d Pending Actions" = "%d 个待处理操作";
@@ -67,6 +68,7 @@
 "7+" = "7+";
 "A one-time pairing file connects openSSS to %@ device services." = "一次性配对文件用于将 openSSS 连接到 %@ 的设备服务。";
 "A permission for %@ is missing a usage description." = "%@ 对应的权限缺少用途说明。";
+"A provisioning profile for the app could not be found: %@" = "找不到该应用的描述文件：%@";
 "A random error occurred." = "发生了一个随机错误。";
 "A source cannot change its identifier once added. This source can no longer be updated." = "来源添加后不可更改标识符，此来源已无法继续更新。";
 "A source with the identifier '%@' already exists" = "已存在标识符为 “%@” 的来源";
@@ -106,6 +108,7 @@
 "Add Custom Entitlement Key" = "添加自定义授权项键名";
 "Add More Sources!" = "添加更多来源！";
 "Add PEM Key" = "添加 PEM 密钥";
+"Add Private Key" = "添加私钥";
 "Add Provisioning Profile" = "添加描述文件";
 "Add Source" = "添加来源";
 "Add item (e.g. group.id)" = "添加项目（例如 group.id）";
@@ -123,6 +126,8 @@
 "Allows Files app to edit documents directly" = "允许“文件”应用直接编辑文稿";
 "Almost there…" = "马上就好…";
 "An account configuration file was found. Enter password to import." = "已找到账户配置文件，请输入密码以导入。";
+"An error occurred while clearing the cache: %@" = "清除缓存时出错：%@";
+"An error occurred while using SideJIT: %@" = "使用 SideJIT 时出错：%@";
 "An iPad screenshot for %@ does not specify its size" = "%@ 的 iPad 截图未指定尺寸";
 "An item named “%@” already exists in this folder. Enter a new name to copy:" = "此文件夹中已存在名为 “%@” 的项目，请输入新名称以复制：";
 "An unknown error occured." = "发生未知错误。";
@@ -271,6 +276,7 @@
 "Clear local Anisette provisioning data from Keychain" = "清除钥匙串中本地的 Anisette 配置数据";
 "Clear pKey" = "清除私钥";
 "Cleared adi.pb!" = "已清除 adi.pb！";
+"Client Config" = "客户端配置";
 "Close" = "关闭";
 "Code Signature Seal" = "代码签名封印";
 "Configured" = "已配置";
@@ -410,6 +416,7 @@
 "Device Registration Skipped" = "已跳过设备注册";
 "Device Type" = "设备类型";
 "Device UDID" = "设备 UDID";
+"Device is not reachable at the specified IP or Endpoint." = "无法连接指定 IP 或端点上的设备。";
 "Device registration pending" = "设备注册待处理";
 "Devices (%lld/%lld)" = "设备（%lld/%lld）";
 "Devices registered on your developer team can run development-signed apps. Tap any device to edit its name, disable, or delete it." = "注册在你开发者团队下的设备可以运行开发者签名的应用。点击任意设备可修改名称、停用或删除。";
@@ -659,6 +666,8 @@
 "Invalid Property List" = "无效的属性列表";
 "Invalid Provisioning Profile" = "无效的描述文件";
 "Invalid URL" = "无效的 URL";
+"Invalid parameters: \n%@" = "参数无效：\n%@";
+"Invalid server response: %@" = "服务器响应无效：%@";
 "Items (comma-separated)" = "项目（以逗号分隔）";
 "JIT Enabled For %@" = "已为 %@ 启用 JIT";
 "JIT Requirements" = "JIT 要求";
@@ -721,6 +730,7 @@
 "Manual Configuration" = "手动配置";
 "Matches installed app \"%@\" — will update existing app" = "与已安装的应用 “%@” 匹配 — 将更新现有应用";
 "Minimum iOS Version" = "最低 iOS 版本";
+"Minimuxer has not been started yet: %@\n\nPlease complete pairing or start minimuxer before performing operations." = "Minimuxer 尚未启动：%@\n\n请先完成配对或启动 minimuxer，再执行操作。";
 "Missing" = "缺失";
 "Missing .p12" = "缺少 .p12";
 "Missing Cert" = "缺少证书";
@@ -737,6 +747,7 @@
 "Name (e.g. Shared Storage)" = "名称（例如：共享存储）";
 "Name: " = "名称：";
 "Nested Extensions (%lld)" = "嵌套扩展（%lld）";
+"Network Connection Error:\n%@\n\nPlease connect to Wi-Fi before attempting further operations." = "网络连接错误：\n%@\n\n请先连接 Wi-Fi，再继续操作。";
 "Network Discovery" = "网络发现";
 "Never" = "从不";
 "New & Updated" = "新增与更新";
@@ -773,6 +784,7 @@
 "No registered devices found on this team." = "该团队下未找到已注册的设备。";
 "No rules matching '%@'" = "没有匹配 “%@” 的规则";
 "No special features enabled for this App ID." = "此 App ID 没有启用特殊功能。";
+"No supported update could be found for “%@”." = "找不到“%@”的受支持更新。";
 "No unexpired provisioning profiles matching '%@' with an imported signing certificate (.p12) were found locally.\n\nPlease go to Settings -> Profiles Management to import and configure a profile with its matching certificate." = "本地找不到与 “%@” 匹配且带有已导入签名证书（.p12）的未过期描述文件。\n\n请前往“设置 -> 描述文件管理”导入并配置描述文件及其匹配证书。";
 "No valid migration path exists to downgrade this database. Please update SideStore or reset your database." = "不存在可用于降级此数据库的有效迁移路径。请更新 openSSS 或重置你的数据库。";
 "No valid signing certificates with private keys were found locally. Please import or create a certificate in Settings -> Certificates first." = "本地找不到带私钥的有效签名证书。请先在“设置 -> 证书”中导入或创建证书。";
@@ -829,6 +841,7 @@
 "Pairing File Required" = "需要配对文件";
 "Pairing Files Reset" = "配对文件已重置";
 "Pairing Required" = "需要配对";
+"Pairing Required: %@\n\nWithout a valid pairing file, openSSS operations cannot connect to your device. Please pair your device or import a valid pairing file." = "需要配对：%@\n\n没有有效的配对文件，openSSS 操作无法连接你的设备。请配对设备或导入有效的配对文件。";
 "Pairing file detected and loaded." = "已检测到并加载配对文件。";
 "Parse Error" = "解析错误";
 "Parsing Mach-O..." = "正在解析 Mach-O...";
@@ -1126,14 +1139,18 @@
 "The SHA-256 hash of %@ does not match the hash specified by the source." = "%@ 的 SHA-256 校验值与来源指定的不一致。";
 "The active developer team has changed." = "当前开发者团队已变更。";
 "The app" = "该应用";
+"The app bundle could not be found: %@" = "找不到应用包：%@";
 "The app group '%@' does not match the app's bundle ID casing. Would you like to correct it to '%@'?" = "App Group “%@” 与应用 bundle ID 的大小写不一致，是否将其更正为 “%@”？";
 "The app group “%@” could not be found." = "找不到 App Group “%@”。";
+"The app is in an invalid format: %@" = "应用格式无效：%@";
 "The app you are installing has a bundle ID (%@) that does not match the active app (%@). Would you like to proceed?" = "你正在安装的应用 bundle ID（%@）与当前生效的应用（%@）不一致，是否继续？";
+"The app's Info.plist could not be found: %@" = "找不到应用的 Info.plist：%@";
 "The bundle ID does not match the one specified by the source." = "该 bundle ID 与来源指定的不一致。";
 "The bundle ID “%@” does not match the one specified by the source (“%@”)." = "bundle ID “%@” 与来源指定的 “%@” 不一致。";
 "The bundle identifier is invalid." = "该 bundle identifier 无效。";
 "The cached permissions for %@ do not match the source." = "%@ 的缓存权限信息与来源不一致。";
 "The cached versions for %@ do not match the source." = "%@ 的缓存版本信息与来源不一致。";
+"The current pairing file is invalid. Reason: %@\n\nPlease make sure to input a valid pairing file! If the issue persists, replace your pairing with iloader or idevice_pair." = "当前配对文件无效。原因：%@\n\n请确认输入了有效的配对文件！如果问题仍然存在，请用 iloader 或 idevice_pair 重新配对。";
 "The database on disk was created with a newer version of SideStore. Downgrading the database schema is not supported. Please update SideStore or reset your database." = "磁盘上的数据库由更新版本的 openSSS 创建，不支持降级数据库结构。请更新 openSSS 或重置你的数据库。";
 "The default SideStore source cannot be removed." = "默认来源无法移除。";
 "The dependency '%@' could not be downloaded." = "依赖 “%@” 下载失败。";
@@ -1156,6 +1173,8 @@
 "The signing certificate could not be extracted from SideStore's binary." = "无法从 openSSS 的二进制文件中提取签名证书。";
 "The signing certificate used to install SideStore has expired." = "用于安装 openSSS 的签名证书已过期。";
 "The signing certificate used to install SideStore was revoked on the Apple Developer portal." = "用于安装 openSSS 的签名证书已在 Apple 开发者门户被吊销。";
+"The signing certificate used to install “%@” has expired. Please re-sign or reinstall the app." = "用于安装“%@”的签名证书已过期。请重新签名或重新安装该应用。";
+"The signing certificate used to install “%@” was revoked on the Apple Developer portal. Please re-sign or reinstall the app." = "用于安装“%@”的签名证书已在 Apple Developer 门户上被吊销。请重新签名或重新安装该应用。";
 "The source “%@” contains %@ for %@." = "来源 “%@” 中的 %@ 包含 %@。";
 "The source “%@” contains multiple apps with %@." = "来源 “%@” 中有多个应用使用了相同的 %@。";
 "The source “%@” contains notarized apps, which are not supported by this version of SideStore." = "来源 “%@” 包含已公证的应用，当前版本的 openSSS 不支持此类应用。";
@@ -1246,6 +1265,7 @@
 "User Configuration" = "用户配置";
 "User Customizations" = "用户自定义";
 "Utilities" = "实用工具";
+"VPN Connection Error:\n%@\n\nPlease make sure LocalDevVPN is connected and running properly." = "VPN 连接错误：\n%@\n\n请确保 LocalDevVPN 已连接并正常运行。";
 "Validity Period" = "有效期";
 "Validity Progress" = "有效期进度";
 "Validity: " = "有效期：";
@@ -1679,3 +1699,11 @@
 "Progress Step Sign" = "签名";
 "Progress Step Skipped" = "已跳过";
 "Progress Step Unpack" = "解包";
+"Your active custom/third-party signing certificate (Team: %@) has expired.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate." = "你正在使用的自定义/第三方签名证书（团队：%@）已过期。\n\n如果你无意使用自定义证书，请在「我的 → 签名证书」里重置。";
+"Your active custom/third-party signing certificate (Team: %@) was revoked on the Developer Portal.\n\nIf you did not intend to use a custom certificate, please reset it in Me → Signing Certificate." = "你正在使用的自定义/第三方签名证书（团队：%@）已在开发者门户被吊销。\n\n如果你无意使用自定义证书，请在「我的 → 签名证书」里重置。";
+"Your pledge is no longer active. Please renew it to continue using %@ normally." = "你的赞助已不再有效。请续费以继续正常使用 %@。";
+"^[%lld app](inflect: true)" = "^[%lld 个应用](inflect: true)";
+"openSSS could not determine this device's UDID: %@\n\nPlease replace your pairing using iloader or idevice_pair." = "openSSS 无法确定此设备的 UDID：%@\n\n请用 iloader 或 idevice_pair 重新配对。";
+"openSSS is unable to reach the device endpoint:\n%@\n\nPlease check Connection Settings on the Me tab." = "openSSS 无法连接设备端点：\n%@\n\n请检查「我的」里的连接设置。";
+"openSSS was denied permission to launch %@." = "openSSS 没有权限启动 %@。";
+"openSSS's shared app group “%@” could not be accessed." = "无法访问 openSSS 的共享 App Group“%@”。";
