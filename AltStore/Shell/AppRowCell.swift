@@ -73,6 +73,41 @@ final class AppRowCell: ShellCardCell
         return indicator
     }()
 
+    private let progressView: UIProgressView = {
+        let progressView = UIProgressView(progressViewStyle: .default)
+        progressView.progressTintColor = ShellTheme.accentColor
+        progressView.trackTintColor = ShellTheme.separator
+        progressView.translatesAutoresizingMaskIntoConstraints = false
+        return progressView
+    }()
+
+    private let progressLabel: UILabel = {
+        let label = UILabel()
+        label.font = ShellTheme.bundleIDFont
+        label.textColor = ShellTheme.secondaryText
+        label.textAlignment = .right
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    /// Bar + percentage, shown under the bundle ID while an install/refresh
+    /// is in flight. A hidden arranged subview collapses in the stack, so
+    /// the row is its normal height when idle.
+    private lazy var progressStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [progressView, progressLabel])
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.isHidden = true
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
+    /// KVO on the in-flight Progress's fractionCompleted, driving the %
+    /// label. (The bar itself tracks the Progress via observedProgress.)
+    private var progressObservation: NSKeyValueObservation?
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?)
     {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -90,7 +125,7 @@ final class AppRowCell: ShellCardCell
         nameStack.alignment = .firstBaseline
         nameStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let textStack = UIStackView(arrangedSubviews: [nameStack, bundleIDLabel])
+        let textStack = UIStackView(arrangedSubviews: [nameStack, bundleIDLabel, progressStack])
         textStack.axis = .vertical
         textStack.spacing = 4
         textStack.translatesAutoresizingMaskIntoConstraints = false
@@ -128,6 +163,7 @@ final class AppRowCell: ShellCardCell
         iconImageView.image = nil
         statusLabel.isHidden = false
         activityIndicator.stopAnimating()
+        setProgress(nil)
     }
 
     /// Configures the row. `statusColor` overrides the default gray (e.g.
@@ -166,6 +202,38 @@ final class AppRowCell: ShellCardCell
         {
             activityIndicator.stopAnimating()
         }
+    }
+
+    /// Shows the install/refresh progress bar + percentage for an in-flight
+    /// operation, or hides them when `progress` is nil (idle). The bar
+    /// tracks the Progress via UIProgressView.observedProgress (as upstream
+    /// PillButton does); the % label is driven by KVO on fractionCompleted.
+    func setProgress(_ progress: Progress?)
+    {
+        progressObservation?.invalidate()
+        progressObservation = nil
+        progressView.progress = Float(progress?.fractionCompleted ?? 0)
+        progressView.observedProgress = progress
+
+        guard let progress else
+        {
+            progressStack.isHidden = true
+            return
+        }
+
+        progressStack.isHidden = false
+        progressLabel.text = Self.percentageText(for: progress.fractionCompleted)
+        progressObservation = progress.observe(\.fractionCompleted, options: [.new]) { [weak self] progress, _ in
+            // Progress updates arrive on background threads; update UI on main.
+            DispatchQueue.main.async {
+                self?.progressLabel.text = Self.percentageText(for: progress.fractionCompleted)
+            }
+        }
+    }
+
+    private static func percentageText(for fractionCompleted: Double) -> String
+    {
+        return String(format: "%d%%", Int(fractionCompleted * 100))
     }
 }
 #endif
