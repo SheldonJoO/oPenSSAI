@@ -316,6 +316,11 @@ class InstallAppOperationContext: PipelineOperationContext
 
     var alternateIconMode: AlternateIconMode = .preserve
 
+    // Custom display name chosen at install time (via the .userCustomization step).
+    // Written to the staged bundle's CFBundleDisplayName by ChangeAppIconOperation
+    // before resigning, so the resigned bundle — and InstalledApp.name — carry it.
+    var customDisplayName: String?
+
     var alternateIconURL: URL? {
         switch self.alternateIconMode {
         case .set(let url):

@@ -26,6 +26,7 @@ struct UserCustomizationsView: View {
     @State private var preferSheetForEntitlementsCustomization: Bool = UserDefaults.standard.preferSheetForEntitlementsCustomization
     @State private var customizeAppId: Bool = UserDefaults.standard.customizeAppId
     @State private var customizeAppIcon: Bool = UserDefaults.standard.customizeAppIcon
+    @State private var customizeAppName: Bool = UserDefaults.standard.customizeAppName
     @State private var customizeProvisioningProfile: Bool = UserDefaults.standard.customizeProvisioningProfile
     @State private var customizeAppExtensions: AppExtensionCustomization = UserDefaults.standard.customizeAppExtensions
     @State private var appImportSourceMode: AppImportSourceMode = UserDefaults.standard.appImportSourceMode
@@ -922,6 +923,20 @@ struct UserCustomizationsView: View {
                         set: { newValue in
                             customizeAppIcon = newValue
                             UserDefaults.standard.customizeAppIcon = newValue
+                        }
+                    )
+                )
+
+                divider
+
+                toggleRow(
+                    title: "Customize App Name",
+                    subtitle: "Prompt to enter a custom name before installing",
+                    isOn: Binding(
+                        get: { customizeAppName },
+                        set: { newValue in
+                            customizeAppName = newValue
+                            UserDefaults.standard.customizeAppName = newValue
                         }
                     )
                 )

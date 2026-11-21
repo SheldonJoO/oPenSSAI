@@ -216,6 +216,10 @@ public extension UserDefaults
         get { self.bool(forKey: #function) }
         set { self.set(newValue, forKey: #function) }
     }
+    @objc var customizeAppName: Bool {
+        get { self.bool(forKey: #function) }
+        set { self.set(newValue, forKey: #function) }
+    }
     @objc var customizeProvisioningProfile: Bool {
         get { self.bool(forKey: #function) }
         set { self.set(newValue, forKey: #function) }
@@ -565,7 +569,8 @@ public extension UserDefaults
             #keyPath(UserDefaults.customizeEntitlements): false,
             #keyPath(UserDefaults.preferSheetForEntitlementsCustomization): true,
             #keyPath(UserDefaults.customizeAppId): false,
-            #keyPath(UserDefaults.customizeAppIcon): false,
+            #keyPath(UserDefaults.customizeAppIcon): true,
+            #keyPath(UserDefaults.customizeAppName): true,
             #keyPath(UserDefaults.customizeProvisioningProfile): false,
             #keyPath(UserDefaults._customizeAppExtensions): AppExtensionCustomization.promptUser.rawValue,
             #keyPath(UserDefaults._appImportSourceMode): AppImportSourceMode.prompt.rawValue,

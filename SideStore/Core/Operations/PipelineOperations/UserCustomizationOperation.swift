@@ -210,6 +210,16 @@ final class UserCustomizationOperation: BasePipelineOperation<InstallAppOperatio
             }
         }
 
+        if UserDefaults.standard.customizeAppName {
+            self.setProgress(80)
+            // Prefill with the installed name when reinstalling, so a previously
+            // customized name survives a reinstall instead of resetting to the IPA name.
+            let currentName = context.installedApp?.name ?? targetAppBundle.name
+            if let customName = try await handler.resolveAppNameCustomization(currentName: currentName) {
+                context.customDisplayName = customName
+            }
+        }
+
         if UserDefaults.standard.customizeAppIcon {
             self.setProgress(85)
             if let iconURL = try await handler.resolveAppIconCustomization(appName: targetAppBundle.name) {
@@ -234,7 +244,7 @@ final class UserCustomizationOperation: BasePipelineOperation<InstallAppOperatio
         }
 
         self.setProgress(100)
-        if UserDefaults.standard.customizeInfoPlist || UserDefaults.standard.customizeAppId || UserDefaults.standard.customizeAppIcon || UserDefaults.standard.customizeProvisioningProfile {
+        if UserDefaults.standard.customizeInfoPlist || UserDefaults.standard.customizeAppId || UserDefaults.standard.customizeAppIcon || UserDefaults.standard.customizeAppName || UserDefaults.standard.customizeProvisioningProfile {
             return context.targetBundleIdentifier
         } else {
             return nil

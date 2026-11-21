@@ -343,6 +343,7 @@
 "Custom third-party certificate (different team)" = "自定义第三方证书（不同团队）";
 "Customization" = "自定义";
 "Customize App Icon" = "自定义应用图标";
+"Customize App Name" = "自定义应用名称";
 "Customize Entitlements" = "自定义授权项";
 "Customize Extensions" = "自定义扩展";
 "Customize Info.plist" = "自定义 Info.plist";
@@ -468,6 +469,7 @@
 "Ensure **Local Network Access** is provided otherwise this function may not work as intended since it is based on L N A..." = "请务必授予**本地网络访问权限**，否则该功能基于本地网络访问（L N A）可能无法正常工作...";
 "Ensure both devices are on the same Wi-Fi network." = "请确保两台设备连接到同一个 Wi-Fi 网络。";
 "Enter Pairing PIN" = "输入配对 PIN";
+"Enter a custom name for '%@', or keep the original name." = "为“%@”输入自定义名称，或保留原名称。";
 "Enter a new name for this item:" = "为该项目输入新名称：";
 "Enter a source's URL below, or add one of the recommended sources." = "在下方输入来源的 URL，或添加一个推荐的来源。";
 "Enter the 6-digit code displayed on your Apple TV / device screen." = "输入 Apple TV / 设备屏幕上显示的 6 位验证码。";
@@ -680,6 +682,7 @@
 "Keep Local Certificate" = "保留本地证书";
 "Keep Original" = "保留原始内容";
 "Keep Original Icon" = "保留原始图标";
+"Keep Original Name" = "保留原名称";
 "Keep SideSign headers" = "保留 SideSign 请求头";
 "Keep header customizations" = "保留请求头自定义";
 "Keep signing certificate" = "保留签名证书";
@@ -881,6 +884,8 @@
 "Profile Metadata" = "描述文件元数据";
 "Profile Name" = "描述文件名称";
 "Profile Type" = "描述文件类型";
+"Prompt to choose a custom icon before installing" = "安装前提示选择自定义图标";
+"Prompt to enter a custom name before installing" = "安装前提示输入自定义名称";
 "Protocol Mismatch" = "协议不匹配";
 "Provision Signing Certificate" = "配置签名证书";
 "Provisioned Devices (%lld)" = "已配置设备（%lld）";
