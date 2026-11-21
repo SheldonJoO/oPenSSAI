@@ -11,12 +11,22 @@ import SideSign
 
 enum AnisetteProvider {
     static func fetch(handler: AnisetteServerHandler? = nil) async throws -> ALTAnisetteData {
-        if UserDefaults.standard.useOnDeviceAnisette {
-            debugLog("[AnisetteProvider] Fetching anisette via On-Device Anisette (ODA)...")
-            return try await OnDeviceAnisetteManager.shared.fetchAnisetteData()
-        } else {
-            debugLog("[AnisetteProvider] Fetching anisette via remote server...")
-            return try await fetchRemote(handler: handler)
+        do {
+            if UserDefaults.standard.useOnDeviceAnisette {
+                debugLog("[AnisetteProvider] Fetching anisette via On-Device Anisette (ODA)...")
+                return try await OnDeviceAnisetteManager.shared.fetchAnisetteData()
+            } else {
+                debugLog("[AnisetteProvider] Fetching anisette via remote server...")
+                return try await fetchRemote(handler: handler)
+            }
+        } catch {
+            // Record which anisette mode/server was in use so a failed sign-in can be
+            // diagnosed from the Diagnostics log instead of guessing.
+            let mode = UserDefaults.standard.useOnDeviceAnisette
+                ? "ODA"
+                : "remote (\(UserDefaults.standard.menuAnisetteURL))"
+            debugLog("[AnisetteProvider] Anisette fetch failed (mode: \(mode)): \(error)")
+            throw error
         }
     }
 

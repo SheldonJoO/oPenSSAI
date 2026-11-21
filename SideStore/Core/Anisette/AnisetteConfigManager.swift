@@ -130,7 +130,10 @@ public actor AnisetteConfigManager {
             return config
         }()
 
-        let resolvedClientInfo   = (udClientInfo?.isEmpty == false ? udClientInfo : fileConfig?.clientInfo) ?? AppConstants.Anisette.defaultClientInfo
+        // GSA's edge rejects `macOS;` in X-Mme-Client-Info with HTTP 503 since 2026-11-20
+        // (SideStore #1745), so the resolved value is sanitized no matter where it came from
+        // (user override, imported file, or the built-in default).
+        let resolvedClientInfo   = AnisetteDataManager.edgeSafeClientInfo((udClientInfo?.isEmpty == false ? udClientInfo : fileConfig?.clientInfo) ?? AppConstants.Anisette.defaultClientInfo)
         let resolvedUserAgent    = (udUserAgent?.isEmpty == false ? udUserAgent : fileConfig?.userAgent) ?? AppConstants.Anisette.defaultUserAgent
         let resolvedDeviceID     = (udDeviceID?.isEmpty == false ? udDeviceID : fileConfig?.customDeviceID)
         let resolvedLocalUserID  = (udLocalUserID?.isEmpty == false ? udLocalUserID : fileConfig?.customLocalUserID)
@@ -156,7 +159,7 @@ public actor AnisetteConfigManager {
     public func makeRequestHeaders() -> AnisetteRequestHeaders {
         let config = loadConfig()
         return AnisetteRequestHeaders().with {
-            $0.clientInfo = config.clientInfo.isEmpty ? AppConstants.Anisette.defaultClientInfo : config.clientInfo
+            $0.clientInfo = AnisetteDataManager.edgeSafeClientInfo(config.clientInfo.isEmpty ? AppConstants.Anisette.defaultClientInfo : config.clientInfo)
             $0.userAgent  = config.userAgent.isEmpty ? AppConstants.Anisette.defaultUserAgent : config.userAgent
             if let customLU = config.customLocalUserID, !customLU.isEmpty { $0.localUserID = customLU }
             if let customDev = config.customDeviceID, !customDev.isEmpty { $0.deviceID = customDev }
