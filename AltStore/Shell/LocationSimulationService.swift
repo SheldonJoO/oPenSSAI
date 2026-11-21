@@ -16,6 +16,7 @@
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
 
+import DeviceGatewayAPI
 import Foundation
 import Minimuxer
 import UIKit
