@@ -3,13 +3,14 @@
 //  AnisetteSettingsViewController.swift
 //  oPenSSAI
 //
-//  The Anisette screen, reachable from Me → Signing. It exposes the three
-//  levers that decide whether Apple ID sign-in works: the on-device anisette
+//  The Anisette screen, reachable from Me → Signing. It exposes the levers
+//  that decide whether Apple ID sign-in works: the on-device anisette
 //  (ODA) toggle, the remote server list (AnisetteServersView, previously only
-//  reachable from the old Settings screen), and the adi.pb reset. The ODA
-//  toggle and the reset reuse the exact behavior of UserCustomizationsView
-//  (sign out + restart for the toggle, sign out + Keychain clear for the
-//  reset); this screen only re-homes them in the shell.
+//  reachable from the old Settings screen), the client configuration editor
+//  (AnisetteDataView — Client Info / User-Agent overrides), and the adi.pb
+//  reset. The ODA toggle and the reset reuse the exact behavior of
+//  UserCustomizationsView (sign out + restart for the toggle, sign out +
+//  Keychain clear for the reset); this screen only re-homes them in the shell.
 //
 //  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
 //
@@ -45,7 +46,7 @@ final class AnisetteSettingsViewController: UIViewController
         }
     }
 
-    private enum AnisetteRow: Int, CaseIterable { case onDevice, servers }
+    private enum AnisetteRow: Int, CaseIterable { case onDevice, servers, clientConfig }
     private enum ResetRow: Int, CaseIterable { case resetAdiPb }
 
     private lazy var tableView: UITableView = {
@@ -146,6 +147,20 @@ final class AnisetteSettingsViewController: UIViewController
         navigationController?.pushViewController(hostingController, animated: true)
     }
 
+    private func clientConfigRowTapped()
+    {
+        // The Client Info / User-Agent override editor (AnisetteDataView).
+        // Previously only reachable from the old Settings screen, which the
+        // shell does not expose — so a manual client-info override was
+        // impossible in 0704. Saving here writes customAnisetteClientInfo
+        // to UserDefaults; the next sign-in uses it (still sanitized by
+        // edgeSafeClientInfo before it is sent to Apple).
+        let configView = AnisetteDataView()
+        let hostingController = UIHostingController(rootView: configView)
+        hostingController.title = NSLocalizedString("Anisette Client Configuration", comment: "")
+        navigationController?.pushViewController(hostingController, animated: true)
+    }
+
     private func resetAdiPbTapped()
     {
         // Same flow as UserCustomizationsView.presentResetAdiDialog.
@@ -231,6 +246,10 @@ extension AnisetteSettingsViewController: UITableViewDataSource, UITableViewDele
                     iconSystemName: "server.rack", iconTint: accent,
                     title: NSLocalizedString("Anisette Servers", comment: ""),
                     value: selectedServerText)
+            case .clientConfig:
+                cell.configure(
+                    iconSystemName: "slider.horizontal.3", iconTint: accent,
+                    title: NSLocalizedString("Anisette Client Configuration", comment: ""))
             case .none:
                 break
             }
@@ -254,8 +273,14 @@ extension AnisetteSettingsViewController: UITableViewDataSource, UITableViewDele
         switch Section(rawValue: indexPath.section)
         {
         case .anisette:
-            if AnisetteRow(rawValue: indexPath.row) == .servers {
+            switch AnisetteRow(rawValue: indexPath.row)
+            {
+            case .servers:
                 serversRowTapped()
+            case .clientConfig:
+                clientConfigRowTapped()
+            case .onDevice, .none:
+                break
             }
         case .reset:
             resetAdiPbTapped()

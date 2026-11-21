@@ -348,6 +348,20 @@ public final class AnisetteDataManager: @unchecked Sendable {
         return false
     }
 
+    /// GSA edge-safe client info.
+    ///
+    /// Since 2026-11-20, Apple's GrandSlam edge answers any request whose
+    /// `X-Mme-Client-Info` names its OS `macOS;` with a 190-byte HTML 503
+    /// before reading any credential; the same model, version and build
+    /// written `Mac OS X;` reaches the service (SideStore #1745; Poki
+    /// #549, verified end-to-end with a real Apple Account + 2FA).
+    /// Every source of client info — the built-in default, a remote
+    /// anisette server's own headers, and ODA-generated headers — can
+    /// carry the `macOS;` label, so all of them are passed through here.
+    public static func edgeSafeClientInfo(_ clientInfo: String) -> String {
+        clientInfo.replacingOccurrences(of: "<macOS;", with: "<Mac OS X;")
+    }
+
     public static func validateAndCreateAnisetteData(from headers: AnisetteRequestHeaders) throws -> AnisetteData {
         let dict = AnisetteHeadersDTO.toDictionary(from: headers)
         return try validateAndCreateAnisetteData(from: dict)
@@ -389,7 +403,7 @@ public final class AnisetteDataManager: @unchecked Sendable {
             routingInfo: dictionary[Constants.Anisette.Headers.routingInfo]!,
             deviceID: dictionary[Constants.Anisette.Headers.deviceID]!,
             serialNumber: dictionary[Constants.Anisette.Headers.serialNumber]!,
-            clientInfo: dictionary[Constants.Anisette.Headers.clientInfo]!,
+            clientInfo: edgeSafeClientInfo(dictionary[Constants.Anisette.Headers.clientInfo]!),
             userAgent: dictionary[Constants.Anisette.Headers.userAgent]!,
             clientTime: dictionary[Constants.Anisette.Headers.clientTime]!,
             locale: dictionary[Constants.Anisette.Headers.locale]!,
