@@ -108,6 +108,14 @@ device UDIDs.
 
 Requires macOS with Xcode 15+.
 
+### Versioning
+
+`MARKETING_VERSION` in `Build.xcconfig` tracks the build number: build
+0710 ships as version 0.7.710, so every build is distinguishable in iOS
+Settings and the About screen ("Version 0.7.710 (0710)"). Bump
+`MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` together on every
+release build.
+
 ### Setup and Dependencies
 
 Clone with submodules (the vendored directories are plain copies in this
