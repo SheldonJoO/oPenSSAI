@@ -1130,7 +1130,7 @@
 "The cached permissions for %@ do not match the source." = "%@ 的缓存权限信息与来源不一致。";
 "The cached versions for %@ do not match the source." = "%@ 的缓存版本信息与来源不一致。";
 "The database on disk was created with a newer version of SideStore. Downgrading the database schema is not supported. Please update SideStore or reset your database." = "磁盘上的数据库由更新版本的 openSSS 创建，不支持降级数据库结构。请更新 openSSS 或重置你的数据库。";
-"The default SideStore source cannot be removed." = "SideStore 默认来源无法移除。";
+"The default SideStore source cannot be removed." = "默认来源无法移除。";
 "The dependency '%@' could not be downloaded." = "依赖 “%@” 下载失败。";
 "The downloaded version of %@ does not match the build number specified by the source.\nExpected version: %@\nFound version: %@" = "下载的 %@ 版本与来源指定的构建号不一致。\n期望版本：%@\n实际版本：%@";
 "The downloaded version of %@ does not match the version specified by the source.\nExpected version: %@\nFound version: %@" = "下载的 %@ 版本与来源指定的版本不一致。\n期望版本：%@\n实际版本：%@";

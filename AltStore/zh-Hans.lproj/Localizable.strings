@@ -567,6 +567,7 @@
 "Fill Current Device Name" = "填入当前设备名称";
 "Filter & Sort" = "筛选与排序";
 "Filter keys..." = "筛选键名...";
+"Finish Refresh" = "完成刷新";
 "First Letter" = "按首字母";
 "Folders (%lld)" = "文件夹（%lld）";
 "Folders First" = "文件夹优先";
@@ -950,6 +951,7 @@
 "Resign Later" = "稍后重签";
 "Resign Now" = "立即重签";
 "Resign all installed apps with %@? Free developer accounts are limited to 1 active signing certificate, so signing may create a new certificate and automatically revoke the existing one, which may disable installations on other devices or made by Xcode." = "用 %@ 重签全部已安装应用？免费开发者账户最多只能有 1 个生效的签名证书，签名时可能创建新证书并自动吊销现有证书，这可能导致其他设备上或通过 Xcode 安装的应用失效。";
+"Resign openSSS" = "重签 openSSS";
 "Resigned: %@" = "已重签：%@";
 "Resigning %d apps…" = "正在重签 %d 个应用…";
 "Resolution Failed" = "解析失败";
@@ -1133,7 +1135,7 @@
 "The cached permissions for %@ do not match the source." = "%@ 的缓存权限信息与来源不一致。";
 "The cached versions for %@ do not match the source." = "%@ 的缓存版本信息与来源不一致。";
 "The database on disk was created with a newer version of SideStore. Downgrading the database schema is not supported. Please update SideStore or reset your database." = "磁盘上的数据库由更新版本的 openSSS 创建，不支持降级数据库结构。请更新 openSSS 或重置你的数据库。";
-"The default SideStore source cannot be removed." = "SideStore 默认来源无法移除。";
+"The default SideStore source cannot be removed." = "默认来源无法移除。";
 "The dependency '%@' could not be downloaded." = "依赖 “%@” 下载失败。";
 "The downloaded version of %@ does not match the build number specified by the source.\nExpected version: %@\nFound version: %@" = "下载的 %@ 版本与来源指定的构建号不一致。\n期望版本：%@\n实际版本：%@";
 "The downloaded version of %@ does not match the version specified by the source.\nExpected version: %@\nFound version: %@" = "下载的 %@ 版本与来源指定的版本不一致。\n期望版本：%@\n实际版本：%@";
@@ -1184,6 +1186,7 @@
 "Timeout (ms)" = "超时（毫秒）";
 "Title" = "标题";
 "To ensure you can continue using SideStore, \nthe app must be reinstalled now using the new certificate. Otherwise, you will be unable to refresh or open SideStore once the old certificate expires." = "为确保你能继续使用 openSSS，\n现在必须使用新证书重新安装本应用。否则，旧证书过期后你将无法刷新或打开 openSSS。";
+"To finish refreshing, SideStore must be moved to the background. To do this, you can either go to the Home Screen manually or by hitting Continue. Please reopen SideStore after doing this." = "要完成刷新，需要将 openSSS 切换到后台。您可以手动返回主屏幕，或点击“继续”自动切换，之后请重新打开 openSSS。";
 "Today" = "今天";
 "Toggle Hide Sensitive Information" = "切换隐藏敏感信息";
 "Toggle Sensitive Information" = "切换敏感信息";
@@ -1618,7 +1621,7 @@
 // oPenSSAI 0708 pairing tutorial
 "Pairing Tutorial" = "配对教程";
 "What Is Pairing?" = "什么是配对？";
-"oPenSSAI signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer." = "oPenSSAI 在本机上签名应用，而 iOS 只允许通过受信任的配对连接完成这一步。配对一次之后，安装与续签无需电脑即可直达本机。";
+"oPenSSAI signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer." = "openSSS 在本机上签名应用，而 iOS 只允许通过受信任的配对连接完成这一步。配对一次之后，安装与续签无需电脑即可直达本机。";
 "Step 1: Turn On Developer Mode" = "第一步：开启开发者模式";
 "Open Settings → Privacy & Security → Developer Mode, turn it on, and restart your device when asked. Wireless pairing and on-device signing need Developer Mode." = "打开「设置 → 隐私与安全性 → 开发者模式」，开启后按提示重启设备。无线配对与本机签名都需要开发者模式。";
 "Step 2: Pair Your Device" = "第二步：配对你的设备";
@@ -1631,7 +1634,7 @@
 "Pairing Status" = "配对状态";
 "Pairing file imported. Starting the connection…" = "配对文件已导入，正在建立连接……";
 "Paired successfully. You can install and refresh apps now." = "配对成功，现在可以安装与续签应用了。";
-"Pairing file imported. If installs still fail, restart oPenSSAI and try again." = "配对文件已导入。如果安装仍然失败，请重启 oPenSSAI 后再试。";
+"Pairing file imported. If installs still fail, restart oPenSSAI and try again." = "配对文件已导入。如果安装仍然失败，请重启 openSSS 后再试。";
 "Failed to import pairing file: %@" = "导入配对文件失败：%@";
 "View Pairing Tutorial" = "查看配对教程";
 // oPenSSAI 0708 install progress popup (pipeline stage labels + popup text)
