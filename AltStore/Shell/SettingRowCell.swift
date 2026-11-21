@@ -104,6 +104,7 @@ final class SettingRowCell: ShellCardCell
         super.prepareForReuse()
         onToggleChanged = nil
         valueLabel.text = nil
+        valueLabel.textColor = ShellTheme.secondaryText
         valueLabel.isHidden = false
         chevronImageView.isHidden = false
         toggleSwitch.isHidden = true
@@ -158,13 +159,15 @@ final class SettingRowCell: ShellCardCell
         iconSystemName: String,
         iconTint: UIColor,
         title: String,
-        value: String?
+        value: String?,
+        valueColor: UIColor? = nil
     )
     {
         iconImageView.image = UIImage(systemName: iconSystemName)
         iconImageView.tintColor = iconTint
         titleLabel.text = title
         valueLabel.text = value
+        valueLabel.textColor = valueColor ?? ShellTheme.secondaryText
         valueLabel.isHidden = value == nil
         chevronImageView.isHidden = true
         toggleSwitch.isHidden = true

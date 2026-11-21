@@ -1547,3 +1547,15 @@
 "Tokyo" = "东京";
 "Virtual Location" = "虚拟定位";
 "Yantai" = "烟台";
+
+// oPenSSAI 0707 connection settings (Local VPN / remote direct)
+"Add a 10.7.0.1/32 route in Shadowrocket (via the WireGuard configuration) to sideload without turning on LocalDev." = "在 Shadowrocket 里添加一条 10.7.0.1/32 的路由（走 WireGuard 配置），即可不用开启 LocalDev 直接侧载。";
+"Connection Settings" = "连接设置";
+"Local VPN" = "本机 VPN";
+"No" = "否";
+"Reachable" = "是否可达";
+"Remote Direct" = "远程直连";
+"Remote Server IP" = "远程服务器 IP";
+"Remote server IP is required in Remote Direct mode." = "远程直连模式下必须填写远程服务器 IP。";
+"The status reflects the saved connection settings and updates automatically." = "状态反映已保存的连接设置，会自动更新。";
+"Yes" = "是";

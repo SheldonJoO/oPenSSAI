@@ -44,7 +44,7 @@ final class ProfileViewController: UIViewController
         }
     }
 
-    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette }
+    private enum SigningRow: Int, CaseIterable { case device, appleID, certificate, anisette, connection }
     private enum LocationRow: Int, CaseIterable { case virtualLocation }
     private enum ReminderRow: Int, CaseIterable { case toggle, nextReminder }
     private enum ManageRow: Int, CaseIterable { case appearance, storage }
@@ -406,6 +406,13 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                 cell.configure(
                     iconSystemName: "server.rack", iconTint: accent,
                     title: NSLocalizedString("Anisette Settings", comment: ""))
+            case .connection:
+                cell.configure(
+                    iconSystemName: "network", iconTint: accent,
+                    title: NSLocalizedString("Connection Settings", comment: ""),
+                    value: ConnectionConfig.shared.useLocalVPN
+                        ? NSLocalizedString("Local VPN", comment: "")
+                        : NSLocalizedString("Remote Direct", comment: ""))
             case .none:
                 break
             }
@@ -511,6 +518,8 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
                     title: NSLocalizedString("Signing Certificate", comment: ""))
             case .anisette:
                 navigationController?.pushViewController(AnisetteSettingsViewController(), animated: true)
+            case .connection:
+                navigationController?.pushViewController(ConnectionSettingsViewController(), animated: true)
             case .none:
                 break
             }
