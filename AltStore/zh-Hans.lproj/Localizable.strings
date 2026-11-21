@@ -323,6 +323,7 @@
 "Could not refresh source “%@”." = "无法刷新来源 “%@”。";
 "Could not refresh store." = "无法刷新商店。";
 "Could not restore “%@”." = "无法恢复 “%@”。";
+"Couldn't show the pairing code in the Dynamic Island." = "无法在灵动岛显示配对码。";
 "Create" = "创建";
 "Create Backup" = "创建备份";
 "Create Certificate" = "创建证书";
@@ -695,6 +696,7 @@
 "Load Only" = "仅加载";
 "Loaded fetched data into overrides!" = "已将拉取的数据载入覆盖配置！";
 "Loading Cache..." = "正在加载缓存...";
+"Live Activities are turned off for openSSS. Turn them on in Settings to see the pairing code in the Dynamic Island." = "openSSS 的实时活动已关闭，请在「设置」中开启，才能在灵动岛查看配对码。";
 "Loading apps…" = "正在加载应用…";
 "Loading directory contents..." = "正在加载目录内容...";
 "Loading..." = "加载中...";
@@ -1292,6 +1294,7 @@
 "You will need to log back into Apple ID in oPenSSAI." = "你需要重新登录 Apple ID 才能继续使用 openSSS。";
 "You're All Set!" = "一切就绪！";
 "Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later in Settings." = "你的设备尚未注册到该开发者团队下。完成注册前无法安装或刷新应用，你可以稍后在“设置”中完成。";
+"Your pairing code is %@." = "你的配对码是 %@。";
 "Your saved preference is **%@**, but the provided pairing file is **%@**.\n\nDo you want to switch and accept **%@** as your current protocol?" = "你保存的偏好为 **%@**，但所提供的配对文件为 **%@**。\n\n是否切换并将 **%@** 接受为当前协议？";
 "Your saved preference is **%@**, but the provided pairing file is **%@**.\n\nDo you want to switch and accept **%@** as your preferred protocol, or load it without changing your preference?" = "你保存的偏好为 **%@**，但所提供的配对文件为 **%@**。\n\n是否切换并将 **%@** 设为首选协议，还是在不更改偏好的情况下直接加载？";
 "^[%@ app](inflect: true)" = "^[%@ 个应用](inflect: true)";

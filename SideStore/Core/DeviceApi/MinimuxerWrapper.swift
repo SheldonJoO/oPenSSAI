@@ -572,6 +572,15 @@ public final class WirelessPairWrapper {
         #if !targetEnvironment(simulator)
         minimuxer.wirelessPair.start(outPath: outPath, resolveFileName: resolveFileName) { result in
             debugLog("[WirelessPairWrapper] start callback received: result=\(result)")
+            // The server-mode pairing session is over (success, failure, or
+            // cancel): end the pairing-code Live Activity even if the
+            // pairing screen's view model is already gone — its own end
+            // call only fires while the screen is alive.
+            if #available(iOS 16.2, *) {
+                Task { @MainActor in
+                    PairingCodeLiveActivityManager.shared.end()
+                }
+            }
             switch result {
             case .success(let device):
                 completion(.success(MinimuxerPairedDevice(

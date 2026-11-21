@@ -174,14 +174,14 @@ struct WirelessPairView: View {
         )) {
             if let pin = viewModel.pinCode {
                 if #available(iOS 16.0, tvOS 16.0, *) {
-                    WirelessPairPinDialog(pin: pin) {
+                    WirelessPairPinDialog(pin: pin, hint: viewModel.liveActivityHint) {
                         viewModel.pinCode = nil
                     }
                     .presentationDetents([.fraction(0.45), .medium])
                     .presentationDragIndicator(.hidden)
                     .interactiveDismissDisabled(true)
                 } else {
-                    WirelessPairPinDialog(pin: pin) {
+                    WirelessPairPinDialog(pin: pin, hint: viewModel.liveActivityHint) {
                         viewModel.pinCode = nil
                     }
                     .interactiveDismissDisabled(true)
@@ -217,6 +217,8 @@ struct WirelessPairView: View {
 
 struct WirelessPairPinDialog: View {
     let pin: String
+    /// Why the code may not be showing in the Dynamic Island, if known.
+    let hint: String?
     let onClose: () -> Void
     
     var body: some View {
@@ -260,7 +262,15 @@ struct WirelessPairPinDialog: View {
                     }
                 }
                 .padding(.vertical, 8)
-                
+
+                if let hint {
+                    Text(hint)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
+
                 Spacer()
             }
             .frame(maxWidth: .infinity)
