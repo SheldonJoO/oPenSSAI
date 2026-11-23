@@ -72,7 +72,7 @@ private func resolveDiscoveredRemotePairingPort() async -> UInt16? {
             res.interfaces.contains { $0.name == "lo0" || $0.name.hasPrefix("lo") }
         }
     ) {
-        debugLog("[oPenSSAI] Discovered RemotePairing port via Bonjour: \(resolved.port)")
+        debugLog("[openSSS] Discovered RemotePairing port via Bonjour: \(resolved.port)")
         UserDefaults.standard.lastDiscoveredRemotePairingPort = Int(resolved.port)
         return resolved.port
     }
@@ -140,7 +140,7 @@ private func withRemotePairingRetry<T>(_ operation: () async throws -> T) async 
         }
 
         if let newPort = await resolveDiscoveredRemotePairingPortThrottled(), newPort != remotePairingPortCache {
-            debugLog("[oPenSSAI] Operation failed with retriable error (\(error)), updating RemotePairing port from \(remotePairingPortCache) -> \(newPort) and retrying...")
+            debugLog("[openSSS] Operation failed with retriable error (\(error)), updating RemotePairing port from \(remotePairingPortCache) -> \(newPort) and retrying...")
             remotePairingPortCache = newPort
             minimuxer.set(MinimuxerParams(remotePairingPort: newPort))
             return try await operation()
@@ -158,9 +158,9 @@ public var minimuxerStatusPublisher: AnyPublisher<Result<Bool, Error>, Never> {
 }
 
 func bindConnectionConfig() async {
-    defer { debugLog("[oPenSSAI] bindTunnelConfig() completed") }
+    defer { debugLog("[openSSS] bindTunnelConfig() completed") }
 
-    debugLog("[oPenSSAI] bindTunnelConfig() invoked")
+    debugLog("[openSSS] bindTunnelConfig() invoked")
     let config = ConnectionConfig.shared
     let configBinding = ConnectionConfigBinding(
         setTunnelIfaceIp: { value in Task { @MainActor in config.tunnelIfaceIp = value } },
@@ -222,7 +222,7 @@ public func ensureMinimuxerReady() async throws {
     let mode = await getDeviceConnectionMode()
     let config = ConnectionConfig.shared
     let reachableText = config.effectiveEndpointReachable.map { String(describing: $0) } ?? "unknown"
-    debugLog("[oPenSSAI] ensureMinimuxerReady: mode=.\(mode) endpoint=\(config.effectiveEndpointIp ?? "none") reachable=\(reachableText)")
+    debugLog("[openSSS] ensureMinimuxerReady: mode=.\(mode) endpoint=\(config.effectiveEndpointIp ?? "none") reachable=\(reachableText)")
     if !CellularRefreshManager.shared.isEnabled {
         try await withRemotePairingRetry {
             if case .failure(let error) = await isMinimuxerReady() {
@@ -250,11 +250,11 @@ extension MinimuxerError {
 }
 
 func reinitializePairingData(pairingFile: String) async throws {
-    defer { debugLog("[oPenSSAI] reinitializePairingData(pairingFile) completed") }
+    defer { debugLog("[openSSS] reinitializePairingData(pairingFile) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] reinitializePairingData(pairingFile) is no-op on simulator")
+    debugLog("[openSSS] reinitializePairingData(pairingFile) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] reinitializePairingData(pairingFile) invoked")
+    debugLog("[openSSS] reinitializePairingData(pairingFile) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.reinitializePairingData(pairingFile: pairingFile)
     }
@@ -262,14 +262,14 @@ func reinitializePairingData(pairingFile: String) async throws {
 }
 
 func minimuxerStart(_ pairingFile: String, preferred: PairingProtocol? = nil) async throws {
-    defer { debugLog("[oPenSSAI] minimuxerStart(pairingFile) completed") }
+    defer { debugLog("[openSSS] minimuxerStart(pairingFile) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] minimuxerStart(pairingFile) is no-op on simulator")
+    debugLog("[openSSS] minimuxerStart(pairingFile) is no-op on simulator")
     await bindConnectionConfig()
     await minimuxer.network.start()
     #else
     await bindConnectionConfig()
-    debugLog("[oPenSSAI] minimuxerStart(pairingFile) invoked")
+    debugLog("[openSSS] minimuxerStart(pairingFile) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.start(pairingFile: pairingFile, mountPath: ddiMountPath, preferred: preferred)
     }
@@ -277,21 +277,21 @@ func minimuxerStart(_ pairingFile: String, preferred: PairingProtocol? = nil) as
 }
 
 func minimuxerStop() async throws {
-    defer { debugLog("[oPenSSAI] minimuxerStop() completed") }
+    defer { debugLog("[openSSS] minimuxerStop() completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] minimuxerStop() is no-op on simulator")
+    debugLog("[openSSS] minimuxerStop() is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] minimuxerStop() invoked")
+    debugLog("[openSSS] minimuxerStop() invoked")
     try await minimuxer.core.stop()
     #endif
 }
 
 func installProvisioningProfiles(_ profileData: Data) async throws {
-    defer { debugLog("[oPenSSAI] installProvisioningProfiles(profileData) completed") }
+    defer { debugLog("[openSSS] installProvisioningProfiles(profileData) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] installProvisioningProfiles(profileData) is no-op on simulator")
+    debugLog("[openSSS] installProvisioningProfiles(profileData) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] installProvisioningProfiles(profileData) invoked")
+    debugLog("[openSSS] installProvisioningProfiles(profileData) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.installProvisioningProfile(profile: profileData)
     }
@@ -299,11 +299,11 @@ func installProvisioningProfiles(_ profileData: Data) async throws {
 }
 
 func removeProvisioningProfile(_ id: String) async throws {
-    defer { debugLog("[oPenSSAI] removeProvisioningProfile(id) completed") }
+    defer { debugLog("[openSSS] removeProvisioningProfile(id) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] removeProvisioningProfile(id) is no-op on simulator")
+    debugLog("[openSSS] removeProvisioningProfile(id) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] removeProvisioningProfile(id) invoked")
+    debugLog("[openSSS] removeProvisioningProfile(id) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.removeProvisioningProfile(id: id)
     }
@@ -311,11 +311,11 @@ func removeProvisioningProfile(_ id: String) async throws {
 }
 
 func removeApp(_ bundleId: String) async throws {
-    defer { debugLog("[oPenSSAI] removeApp(bundleId) completed") }
+    defer { debugLog("[openSSS] removeApp(bundleId) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] removeApp(bundleId) is no-op on simulator")
+    debugLog("[openSSS] removeApp(bundleId) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] removeApp(bundleId) invoked")
+    debugLog("[openSSS] removeApp(bundleId) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.removeApp(bundleId: bundleId)
     }
@@ -323,11 +323,11 @@ func removeApp(_ bundleId: String) async throws {
 }
 
 func sendIpaAfc(_ bundleId: String, _ rawBytes: Data) async throws {
-    defer { debugLog("[oPenSSAI] sendIpaAfc(bundleId, rawBytes) completed") }
+    defer { debugLog("[openSSS] sendIpaAfc(bundleId, rawBytes) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] sendIpaAfc(bundleId, rawBytes) is no-op on simulator")
+    debugLog("[openSSS] sendIpaAfc(bundleId, rawBytes) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] sendIpaAfc(bundleId, rawBytes) invoked")
+    debugLog("[openSSS] sendIpaAfc(bundleId, rawBytes) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.sendIpaAfc(bundleId: bundleId, ipaBytes: rawBytes)
     }
@@ -335,11 +335,11 @@ func sendIpaAfc(_ bundleId: String, _ rawBytes: Data) async throws {
 }
 
 func sendAppBundleAfc(_ bundleId: String, at appURL: URL) async throws {
-    defer { debugLog("[oPenSSAI] sendAppBundleAfc(bundleId, appURL) completed") }
+    defer { debugLog("[openSSS] sendAppBundleAfc(bundleId, appURL) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] sendAppBundleAfc(bundleId, appURL) is no-op on simulator")
+    debugLog("[openSSS] sendAppBundleAfc(bundleId, appURL) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] sendAppBundleAfc(bundleId, appURL) invoked")
+    debugLog("[openSSS] sendAppBundleAfc(bundleId, appURL) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.sendAppBundleAfc(bundleId: bundleId, appURL: appURL)
     }
@@ -347,11 +347,11 @@ func sendAppBundleAfc(_ bundleId: String, at appURL: URL) async throws {
 }
 
 func installIPA(_ bundleId: String) async throws {
-    defer { debugLog("[oPenSSAI] installIPA(bundleId) completed") }
+    defer { debugLog("[openSSS] installIPA(bundleId) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] installIPA(bundleId) is no-op on simulator")
+    debugLog("[openSSS] installIPA(bundleId) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] installIPA(bundleId) invoked")
+    debugLog("[openSSS] installIPA(bundleId) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.installIpa(bundleId: bundleId)
     }
@@ -359,11 +359,11 @@ func installIPA(_ bundleId: String) async throws {
 }
 
 func installAppBundle(_ bundleId: String, appName: String) async throws {
-    defer { debugLog("[oPenSSAI] installAppBundle(bundleId, appName) completed") }
+    defer { debugLog("[openSSS] installAppBundle(bundleId, appName) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] installAppBundle(bundleId, appName) is no-op on simulator")
+    debugLog("[openSSS] installAppBundle(bundleId, appName) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] installAppBundle(bundleId, appName) invoked")
+    debugLog("[openSSS] installAppBundle(bundleId, appName) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.installAppBundle(bundleId: bundleId, appName: appName)
     }
@@ -372,17 +372,17 @@ func installAppBundle(_ bundleId: String, appName: String) async throws {
 
 @discardableResult
 func fetchUDID(forceLive: Bool = false) async throws -> String {
-    defer { debugLog("[oPenSSAI] fetchUDID() completed") }
+    defer { debugLog("[openSSS] fetchUDID() completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] fetchUDID() is no-op on simulator")
+    debugLog("[openSSS] fetchUDID() is no-op on simulator")
     return "00008030-001234567890ABCD"
     
     #else
     if !forceLive, let cachedUDID = Keychain.shared.deviceUDID, !cachedUDID.isEmpty {
-        debugLog("[oPenSSAI] fetchUDID() returning cached UDID from Keychain: \(cachedUDID)")
+        debugLog("[openSSS] fetchUDID() returning cached UDID from Keychain: \(cachedUDID)")
         return cachedUDID
     }
-    debugLog("[oPenSSAI] fetchUDID() invoked (forceLive: \(forceLive))")
+    debugLog("[openSSS] fetchUDID() invoked (forceLive: \(forceLive))")
     return try await withRemotePairingRetry {
         let udid = try await minimuxer.core.fetchUDID()
         guard !udid.isEmpty else {
@@ -401,11 +401,11 @@ func safeFetchUDID(forceLive: Bool = false) async throws -> String {
 }
 
 func debugApp(_ appId: String) async throws {
-    defer { debugLog("[oPenSSAI] debugApp(appId) completed") }
+    defer { debugLog("[openSSS] debugApp(appId) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] debugApp(appId) is no-op on simulator")
+    debugLog("[openSSS] debugApp(appId) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] debugApp(appId) invoked")
+    debugLog("[openSSS] debugApp(appId) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.debugApp(appId: appId)
     }
@@ -418,11 +418,11 @@ func safeDebugApp(_ appId: String) async throws {
 }
 
 func attachDebugger(_ pid: UInt32) async throws {
-    defer { debugLog("[oPenSSAI] attachDebugger(pid) completed") }
+    defer { debugLog("[openSSS] attachDebugger(pid) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] attachDebugger(pid) is no-op on simulator")
+    debugLog("[openSSS] attachDebugger(pid) is no-op on simulator")
     #else
-    debugLog("[oPenSSAI] attachDebugger(pid) invoked")
+    debugLog("[openSSS] attachDebugger(pid) invoked")
     try await withRemotePairingRetry {
         try await minimuxer.core.attachDebugger(pid: pid)
     }
@@ -435,12 +435,12 @@ func safeAttachDebugger(_ pid: UInt32) async throws {
 }
 
 func dumpProfiles(_ docsPath: String, mode: ProfileDumpMode = .zip) async throws -> String {
-    defer { debugLog("[oPenSSAI] dumpProfiles(docsPath) completed") }
+    defer { debugLog("[openSSS] dumpProfiles(docsPath) completed") }
     #if targetEnvironment(simulator)
-    debugLog("[oPenSSAI] dumpProfiles(docsPath) is no-op on simulator")
+    debugLog("[openSSS] dumpProfiles(docsPath) is no-op on simulator")
     return ""
     #else
-    debugLog("[oPenSSAI] dumpProfiles(docsPath) invoked")
+    debugLog("[openSSS] dumpProfiles(docsPath) invoked")
     return try await withRemotePairingRetry {
         try await minimuxer.core.dumpProfiles(docsPath: docsPath, mode: mode)
     }
@@ -453,8 +453,8 @@ func safeDumpProfiles(_ docsPath: String, mode: ProfileDumpMode = .zip) async th
 }
 
 func minimuxerSetLogging(_ enabled: Bool) {
-    defer { debugLog("[oPenSSAI] minimuxerSetLogging(enabled) completed") }
-    debugLog("[oPenSSAI] minimuxerSetLogging(enabled) invoked")
+    defer { debugLog("[openSSS] minimuxerSetLogging(enabled) completed") }
+    debugLog("[openSSS] minimuxerSetLogging(enabled) invoked")
     #if !targetEnvironment(simulator)
     minimuxer.core.setLogging(enabled)
     #endif
@@ -469,8 +469,8 @@ public func minimuxerGetDeviceProbeTimeout() -> Int {
 }
 
 public func minimuxerSetDeviceProbeTimeout(_ timeoutMs: Int) {
-    defer { debugLog("[oPenSSAI] minimuxerSetDeviceProbeTimeout(\(timeoutMs)) completed") }
-    debugLog("[oPenSSAI] minimuxerSetDeviceProbeTimeout(\(timeoutMs)) invoked")
+    defer { debugLog("[openSSS] minimuxerSetDeviceProbeTimeout(\(timeoutMs)) completed") }
+    debugLog("[openSSS] minimuxerSetDeviceProbeTimeout(\(timeoutMs)) invoked")
     deviceProbeTimeoutCache = timeoutMs
     UserDefaults.standard.deviceProbeTimeoutOverride = (timeoutMs == AppConstants.Minimuxer.defaultTCPProbeTimeoutMs) ? 0 : timeoutMs
     #if !targetEnvironment(simulator)
@@ -486,12 +486,12 @@ extension Result {
 }
 
 func minimuxerSwitchPairingProtocol(to proto: PairingProtocol) async throws {
-    defer { debugLog("[oPenSSAI] minimuxerSwitchPairingProtocol(.\(proto)) completed") }
-    debugLog("[oPenSSAI] minimuxerSwitchPairingProtocol(.\(proto)) invoked")
+    defer { debugLog("[openSSS] minimuxerSwitchPairingProtocol(.\(proto)) completed") }
+    debugLog("[openSSS] minimuxerSwitchPairingProtocol(.\(proto)) invoked")
     PairingFileManager.shared.persistedActiveProtocol = proto
     #if !targetEnvironment(simulator)
     try await withRemotePairingRetry {
-        debugLog("[oPenSSAI] switchPairingProtocol(to: \(proto.rawValue)) entered")
+        debugLog("[openSSS] switchPairingProtocol(to: \(proto.rawValue)) entered")
         guard let pf = PairingFileManager.shared.fetchPairingFile(for: proto) else {
             throw MinimuxerError.pairingNotLoaded("Missing pairing file for \(proto.rawValue)")
         }

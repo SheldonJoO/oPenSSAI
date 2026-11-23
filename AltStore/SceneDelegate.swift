@@ -89,7 +89,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
             }
             catch
             {
-                debugLog("[oPenSSAI] Failed to purge logged errors before \(midnightOneMonthAgo). \(error)")
+                debugLog("[openSSS] Failed to purge logged errors before \(midnightOneMonthAgo). \(error)")
             }
         }
         

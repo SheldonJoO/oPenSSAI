@@ -1,16 +1,16 @@
 #if os(iOS)
 //
 //  ProfileViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The Me tab: Signing (device pairing, Apple ID, certificates), Expiry
 //  Reminder (24-hour toggle + next reminder), Manage (appearance & theme,
 //  storage & cleanup), Help & Support (guide, community, support),
-//  Diagnostics (diagnostic log), About (about oPenSSAI + version).
+//  Diagnostics (diagnostic log), About (about openSSS + version).
 //  Engine-backed rows push the existing SideStore screens (re-skinned by the
 //  shell's navigation appearance); Seal-only rows open new shell screens.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -215,7 +215,7 @@ final class ProfileViewController: UIViewController
     static func rescheduleExpiryReminderIfNeeded()
     {
         let center = UNUserNotificationCenter.current()
-        let identifier = "oPenSSAI.expiryReminder"
+        let identifier = "openSSS.expiryReminder"
 
         guard ShellTheme.isExpiryReminderEnabled,
               let date = nextReminderDate() else {
@@ -229,7 +229,7 @@ final class ProfileViewController: UIViewController
 
             let content = UNMutableNotificationContent()
             content.title = "openSSS"
-            content.body = NSLocalizedString("An app expires in 24 hours. Open oPenSSAI to renew it.", comment: "")
+            content.body = NSLocalizedString("An app expires in 24 hours. Open openSSS to renew it.", comment: "")
             content.sound = .default
 
             let components = Calendar.current.dateComponents(
@@ -413,7 +413,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
             case .support:
                 cell.configure(
                     iconSystemName: "heart", iconTint: ShellTheme.supportRed,
-                    title: NSLocalizedString("Support oPenSSAI", comment: ""))
+                    title: NSLocalizedString("Support openSSS", comment: ""))
             case .none:
                 break
             }
@@ -426,7 +426,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate
         case .about:
             cell.configure(
                 iconSystemName: "info.circle", iconTint: accent,
-                title: NSLocalizedString("About oPenSSAI", comment: ""),
+                title: NSLocalizedString("About openSSS", comment: ""),
                 value: appVersionText)
 
         case .none:

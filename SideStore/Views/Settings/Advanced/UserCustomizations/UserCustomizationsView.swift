@@ -302,7 +302,7 @@ struct UserCustomizationsView: View {
                                     .foregroundColor(.white)
                                     .multilineTextAlignment(.leading)
                                     .fixedSize(horizontal: false, vertical: true)
-                                Text("Exports oPenSSAI.conf to import into WireGuard VPN app")
+                                Text("Exports openSSS.conf to import into WireGuard VPN app")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color.white.opacity(0.6))
                                     .multilineTextAlignment(.leading)
@@ -1036,9 +1036,9 @@ struct UserCustomizationsView: View {
     }
 
     private func exportWireGuardConfig() {
-        guard let url = Bundle.main.url(forResource: "oPenSSAI", withExtension: "conf") else {
+        guard let url = Bundle.main.url(forResource: "openSSS", withExtension: "conf") else {
             if let top = UIApplication.shared.topViewController() {
-                let toastView = ToastView(text: NSLocalizedString("oPenSSAI.conf missing!", comment: ""), detailText: NSLocalizedString("Unable to locate oPenSSAI.conf in bundle resources.", comment: ""))
+                let toastView = ToastView(text: NSLocalizedString("openSSS.conf missing!", comment: ""), detailText: NSLocalizedString("Unable to locate openSSS.conf in bundle resources.", comment: ""))
                 toastView.show(in: top)
             }
             return

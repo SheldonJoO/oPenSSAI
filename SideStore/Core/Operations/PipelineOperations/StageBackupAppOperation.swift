@@ -78,7 +78,7 @@ final class StageBackupAppOperation: BasePipelineOperation<InstallAppOperationCo
 
         let installedAppUTI: [String: any Sendable] = [
             "UTTypeConformsTo": [],
-            "UTTypeDescription": "oPenSSAI Backup App",
+            "UTTypeDescription": "openSSS Backup App",
             "UTTypeIconFiles": [],
             "UTTypeIdentifier": targetApp.installedBackupAppUTI,
             "UTTypeTagSpecification": [:]

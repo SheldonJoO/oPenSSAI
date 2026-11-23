@@ -1,12 +1,12 @@
 #if os(iOS)
 //
 //  AboutViewController.swift
-//  oPenSSAI
+//  openSSS
 //
-//  About oPenSSAI: icon, name, version, and links to the components &
+//  About openSSS: icon, name, version, and links to the components &
 //  licenses screen and the GitHub repository, with fork attribution.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -35,7 +35,7 @@ final class AboutViewController: UIViewController
     {
         super.viewDidLoad()
         view.backgroundColor = ShellTheme.background
-        title = NSLocalizedString("About oPenSSAI", comment: "")
+        title = NSLocalizedString("About openSSS", comment: "")
 
         tableView.tableHeaderView = makeHeaderView()
         tableView.tableFooterView = makeFooterView()
@@ -117,7 +117,7 @@ final class AboutViewController: UIViewController
         label.textColor = ShellTheme.secondaryText
         label.textAlignment = .center
         label.numberOfLines = 0
-        label.text = NSLocalizedString("oPenSSAI is free and open-source software (AGPLv3). It is a fork of SideStore, built on AltStore by Riley Testut and the SideStore contributors.", comment: "")
+        label.text = NSLocalizedString("openSSS is free and open-source software (AGPLv3). It is a fork of SideStore, built on AltStore by Riley Testut and the SideStore contributors.", comment: "")
         label.translatesAutoresizingMaskIntoConstraints = false
 
         footer.addSubview(label)

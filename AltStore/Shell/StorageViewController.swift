@@ -1,13 +1,13 @@
 #if os(iOS)
 //
 //  StorageViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Storage & Cleanup: a breakdown of what the app stores in its private
 //  sandbox, with actions to clear caches and delete pending .ipa files.
 //  All sizes are computed live from the file system.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

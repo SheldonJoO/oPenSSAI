@@ -1,4 +1,4 @@
-// oPenSSAI location helper — device session actor.
+// openSSS location helper — device session actor.
 //
 // Owns the whole DVT connection chain (provider -> CoreDeviceProxy ->
 // software tunnel -> RSD handshake -> RemoteServerClient ->

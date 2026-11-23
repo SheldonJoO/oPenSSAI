@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  LocationSimulationService.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Virtual location: transport-agnostic service interface plus two
 //  implementations. The shell UI talks only to LocationSimulationManager;
@@ -13,7 +13,7 @@
 //  position is system-wide (Maps and every app read it from locationd).
 //  See docs/location-simulation-design.md.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import DeviceGatewayAPI

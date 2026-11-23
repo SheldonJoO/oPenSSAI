@@ -1,13 +1,13 @@
 #if os(iOS)
 //
 //  AppRowCell.swift
-//  oPenSSAI
+//  openSSS
 //
 //  One app row in the Apps tab: 60pt rounded icon, bold name + gray version,
 //  monospaced bundle ID, and a right-side status (days left / "Pending").
 //  Matches the reference layout pixel for pixel.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

@@ -7,7 +7,7 @@
 
 虚拟定位走苹果官方开发者机制：**DVT LocationSimulation 服务**（Xcode「模拟定位」用的就是这套），坐标直接注入系统 `locationd`，全系统生效（地图及所有 App 读到的都是模拟位置，户外 GPS 不会覆盖它）。iOS 26 上不需要挂开发者磁盘镜像，不需要越狱；需要**开发者模式 + 一次配对关系**。
 
-oPenSSAI 已经具备本功能所需的全部关键部件（见 §5），所以分两个阶段：
+openSSS 已经具备本功能所需的全部关键部件（见 §5），所以分两个阶段：
 
 - **第一阶段（本轮）**：App 界面 + Mac helper。App 把坐标发给局域网内的 Mac helper，helper 用 MIT 的 `idevice` 库经 USB（或 TCP）驱动手机的 DVT 位置模拟服务。helper 是验证载体：USB + Mac 是这条路被验证得最多的形态。
 - **第二阶段（目标）**：本机直连。App 直接用已 vendored 的 `idevice` FFI（`IDevice.xcframework`）经现有 em_proxy/minimuxer 回环隧道 + 已存的 RPPairing 文件驱动本机的 DVT 服务，运行时不再需要 Mac。App 界面按 `LocationSimulationService` 协议抽象，第二阶段只换传输实现，不动界面。
@@ -58,7 +58,7 @@ set(latitude, longitude) / clear()
 
 1. **开发者模式**：设置 → 隐私与安全性 → 开发者模式，必须开启。DVT 服务是开发者服务，未开开发者模式时设备不提供。
 2. **配对关系**：Host 与设备之间必须有配对记录。iOS 18–26 用 **RPPairing 文件**（见 §4）；iOS 27 起支持本机配对（设置里「与本 iPhone 配对」，6 位码）。
-3. **隧道可达**：helper 形态走 USB（usbmuxd）或局域网 TCP；本机形态走回环隧道（LocalDevVPN 10.7.0.1，或 oPenSSAI 已有的 em_proxy/minimuxer 回环）。
+3. **隧道可达**：helper 形态走 USB（usbmuxd）或局域网 TCP；本机形态走回环隧道（LocalDevVPN 10.7.0.1，或 openSSS 已有的 em_proxy/minimuxer 回环）。
 
 ---
 
@@ -102,7 +102,7 @@ DVT 模拟接口接收的是 WGS-84 经纬度。中国境内的苹果地图显�
 
 ```
 ┌─────────────────┐  HTTP/JSON   ┌──────────────────────┐  usbmuxd/USB   ┌─────────────────┐
-│  oPenSSAI App   │  局域网      │  location-helper     │  或 TCP/Wi-Fi  │  iPhone (本机)  │
+│  openSSS App   │  局域网      │  location-helper     │  或 TCP/Wi-Fi  │  iPhone (本机)  │
 │  虚拟定位界面    │ ───────────► │  (Mac, Rust)         │ ─────────────► │  DVT Location   │
 │  坐标/预设/启停  │  :17878      │  idevice 0.1.68      │  CoreDeviceProxy│  Simulation     │
 └─────────────────┘              │  会话常驻 + 5s 重发   │  → RSD → DVT   │  → locationd    │
@@ -143,12 +143,12 @@ Rust CLI，依赖 `idevice`（`full` feature，与官方 tools 一致）+ `tokio
 
 - **生成**：电脑上用 idevice 工具 `idevice_pair`，手机 USB 连接、解锁并信任后生成 **RPPairing 文件**。注意不是 lockdown 的 `.mobiledevicepairing` 文件，两者格式不同。
 - **导入**：AirDrop / 分享 / 文件选择器 / 剪贴板粘贴进 App，一次即可；记录应存钥匙串。
-- **oPenSSAI 的现状**：无线配对流程已产生 RPPairing 文件（0702 修好识别后，管理页可看到），第二阶段本机实现可直接复用已存的配对文件，**可能不需要用户再导一次**——需在真机上验证已存文件的类型与可用性。
+- **openSSS 的现状**：无线配对流程已产生 RPPairing 文件（0702 修好识别后，管理页可看到），第二阶段本机实现可直接复用已存的配对文件，**可能不需要用户再导一次**——需在真机上验证已存文件的类型与可用性。
 - iOS 27 起可本机配对（无需电脑），本项目目标机 iOS 26 暂不依赖该路径。
 
 ---
 
-## 5. oPenSSAI 已有的部件（第二阶段直接复用）
+## 5. openSSS 已有的部件（第二阶段直接复用）
 
 以下均已实测确认（2026-11-21）：
 
@@ -196,7 +196,7 @@ Rust CLI，依赖 `idevice`（`full` feature，与官方 tools 一致）+ `tokio
 
 ```
 ┌──────────────────────┐  DVT（本机回环隧道）  ┌─────────────────┐
-│  oPenSSAI App        │  RP tunnel → RSD    │  iPhone (本机)  │
+│  openSSS App        │  RP tunnel → RSD    │  iPhone (本机)  │
 │  虚拟定位界面         │ ──────────────────► │  DVT Location   │
 │  IdeviceGateway 常驻  │  LocationSimulation │  Simulation     │
 │  会话 + 5s 重发       │  set / clear        │  → locationd    │

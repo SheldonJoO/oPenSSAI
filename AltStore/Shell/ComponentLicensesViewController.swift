@@ -1,21 +1,21 @@
 #if os(iOS)
 //
 //  ComponentLicensesViewController.swift
-//  oPenSSAI
+//  openSSS
 //
-//  Components & Licenses: the open-source projects oPenSSAI is built from,
-//  grouped by license type (as in the reference screen), listing oPenSSAI's
+//  Components & Licenses: the open-source projects openSSS is built from,
+//  grouped by license type (as in the reference screen), listing openSSS's
 //  OWN components and their real licenses — verified against this repo's
 //  Package.resolved, vendored LICENSE files, and the upstream repos.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
 
 // MARK: - Catalog
 
-/// One open-source component used by oPenSSAI.
+/// One open-source component used by openSSS.
 struct LicenseComponent
 {
     let name: String
@@ -58,7 +58,7 @@ enum LicenseCatalog
         LicenseComponent(
             name: "SideStore", version: "0.7.0", license: .agpl3,
             url: URL(string: "https://github.com/SideStore/SideStore")!,
-            summary: NSLocalizedString("The sideloading app oPenSSAI is forked from.", comment: "")),
+            summary: NSLocalizedString("The sideloading app openSSS is forked from.", comment: "")),
         LicenseComponent(
             name: "AltStore", version: "2.3.3", license: .agpl3,
             url: URL(string: "https://github.com/rileytestut/AltStore")!,
@@ -354,7 +354,7 @@ final class LicenseDetailViewController: UIViewController
         }
         else
         {
-            versionLabel.text = NSLocalizedString("Bundled with oPenSSAI", comment: "")
+            versionLabel.text = NSLocalizedString("Bundled with openSSS", comment: "")
         }
 
         let licenseTitleLabel = UILabel()

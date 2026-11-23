@@ -51,7 +51,7 @@ public enum OperationError: LocalizedError, CustomNSError, Sendable, Equatable {
         case .noInstalledApps:
             return "There are no active sideloaded apps to refresh."
         case .noSources:
-            return "There are no oPenSSAI sources."
+            return "There are no openSSS sources."
         case .notAuthenticated:
             return "You are not signed in."
         case .timedOut:
@@ -134,7 +134,7 @@ public enum OperationError: LocalizedError, CustomNSError, Sendable, Equatable {
         case .noInstalledApps:
             return NSLocalizedString("There are no active sideloaded apps to refresh.", comment: "")
         case .noSources:
-            return NSLocalizedString("There are no oPenSSAI sources.", comment: "")
+            return NSLocalizedString("There are no openSSS sources.", comment: "")
         case .notAuthenticated:
             return NSLocalizedString("You are not signed in.", comment: "")
         case .timedOut:

@@ -73,7 +73,7 @@ struct PairingFileManagementView: View {
             case .resetConfirmation:
                 return Alert(
                     title: Text("Reset Pairing Files?"),
-                    message: Text(LocalizedStringKey("This will delete all stored pairing files (both **Lockdown** and **Remote Pairing**). You will need to re-pair or re-import a pairing file and restart oPenSSAI.")),
+                    message: Text(LocalizedStringKey("This will delete all stored pairing files (both **Lockdown** and **Remote Pairing**). You will need to re-pair or re-import a pairing file and restart openSSS.")),
                     primaryButton: .destructive(Text("Delete and Reset")) {
                         viewModel.resetAllPairingFiles()
                     },
@@ -82,7 +82,7 @@ struct PairingFileManagementView: View {
             case .resetCompleted:
                 return Alert(
                     title: Text("Pairing Files Reset"),
-                    message: Text("All pairing files have been reset. Please restart oPenSSAI."),
+                    message: Text("All pairing files have been reset. Please restart openSSS."),
                     dismissButton: .default(Text("OK"))
                 )
             case .importError(let msg):
@@ -549,7 +549,7 @@ struct PairingFileManagementView: View {
             .background(Color.settingsRowBackground)
             .cornerRadius(ShellSwiftUI.cardCornerRadius)
 
-            Text("Resetting pairing files removes stored Lockdown and Remote Pairing credentials. You will need to re-pair or re-import a pairing file and restart oPenSSAI.")
+            Text("Resetting pairing files removes stored Lockdown and Remote Pairing credentials. You will need to re-pair or re-import a pairing file and restart openSSS.")
                 .font(.system(size: 12))
                 .foregroundColor(Color.shellSecondaryText)
                 .padding(.horizontal, 4)

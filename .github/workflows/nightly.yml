@@ -1,4 +1,4 @@
-name: Nightly oPenSSAI Build
+name: Nightly openSSS Build
 
 on:
   push:
@@ -208,15 +208,15 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: steps.build_gate.outputs.should_skip != 'true'
         with:
-          name: oPenSSAI-${{ env.MARKETING_VERSION }}.ipa
-          path: oPenSSAI.ipa
+          name: openSSS-${{ env.MARKETING_VERSION }}.ipa
+          path: openSSS.ipa
       - uses: actions/upload-artifact@v4
         if: steps.build_gate.outputs.should_skip != 'true'
         with:
-          name: oPenSSAI-${{ env.MARKETING_VERSION }}-dSYMs.zip
-          path: oPenSSAI.dSYMs.zip
+          name: openSSS-${{ env.MARKETING_VERSION }}-dSYMs.zip
+          path: openSSS.dSYMs.zip
 
-      # oPenSSAI: publishing to an apps source repo is not set up yet.
+      # openSSS: publishing to an apps source repo is not set up yet.
       # (Upstream published into SideStore/apps-v2.json; do not re-enable
       # against SideStore's repo.)
 

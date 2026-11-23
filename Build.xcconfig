@@ -4,7 +4,7 @@
 MARKETING_VERSION = 0.7.714
 CURRENT_PROJECT_VERSION = 0714
 
-// Unsigned by default: oPenSSAI is distributed as an unsigned IPA for
+// Unsigned by default: openSSS is distributed as an unsigned IPA for
 // sideloading (the Makefile's `fakesign` step ad-hoc signs it afterwards,
 // and it passes these same flags to xcodebuild). Keeping them here makes
 // plain Xcode GUI builds work without a signing identity too. A developer
@@ -14,7 +14,7 @@ CODE_SIGNING_REQUIRED = NO
 AD_HOC_CODE_SIGNING_ALLOWED = YES
 
 // Vars to be overwritten by `CodeSigning.xcconfig` if exists
-// TODO(oPenSSAI): set DEVELOPMENT_TEAM to your own Apple Team ID (or in CodeSigning.xcconfig)
+// TODO(openSSS): set DEVELOPMENT_TEAM to your own Apple Team ID (or in CodeSigning.xcconfig)
 DEVELOPMENT_TEAM = XYZ0123456
 ORG_IDENTIFIER = com.openssai
 
@@ -24,9 +24,9 @@ CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
 // Codesigning settings defined optionally, see `CodeSigning.xcconfig.example`
 #include? "CodeSigning.xcconfig"
 
-PRODUCT_NAME = oPenSSAI
+PRODUCT_NAME = openSSS
 
-// oPenSSAI is Chinese-first: the development region is Simplified Chinese.
+// openSSS is Chinese-first: the development region is Simplified Chinese.
 DEVELOPMENT_LANGUAGE = zh-Hans
 
 BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).app

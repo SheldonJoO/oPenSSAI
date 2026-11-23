@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  ConnectionSettingsViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The Connection screen, reachable from Me → Signing. It exposes the
 //  connection mode the engine already supports: the LocalDev VPN loopback
@@ -18,7 +18,7 @@
 //  current effective mode + endpoint IP and its reachability, pushed live
 //  by minimuxer via the binding callbacks.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

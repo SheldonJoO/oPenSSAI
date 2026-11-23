@@ -1,7 +1,7 @@
 /* Localizable.strings
-   oPenSSAI - 简体中文 (zh-Hans)
+   openSSS - 简体中文 (zh-Hans)
    翻译基础：SideStore zh-Hans 汉化（東't-Move），基于 SideStore 0.7.0-alpha；
-   oPenSSAI 适配与补译：基于 SideStore 0.7.0 (4f3d18d)，品牌名已改为 oPenSSAI。
+   openSSS 适配与补译：基于 SideStore 0.7.0 (4f3d18d)，品牌名已改为 openSSS。
 */
 
 "#%lld" = "#%lld";
@@ -475,7 +475,7 @@
 "Error" = "错误";
 "Error Description" = "错误描述";
 "Error Details" = "错误详情";
-"Error launching oPenSSAI" = "启动 openSSS 时出错";
+"Error launching openSSS" = "启动 openSSS 时出错";
 "Errors that occur when sideloading or refreshing apps will appear here." = "侧载或刷新应用时发生的错误会显示在这里。";
 "Executable" = "可执行文件";
 "Experimental Features" = "实验性功能";
@@ -507,7 +507,7 @@
 "Export WireGuard Config" = "导出 WireGuard 配置";
 "Export/Share" = "导出/分享";
 "Exported Resigned Apps" = "已导出的重签应用";
-"Exports oPenSSAI.conf to import into WireGuard VPN app" = "导出 oPenSSAI.conf 以导入 WireGuard VPN 应用";
+"Exports openSSS.conf to import into WireGuard VPN app" = "导出 openSSS.conf 以导入 WireGuard VPN 应用";
 "Exposes Documents directory via Finder/iTunes" = "通过 Finder / iTunes 显示“文档”目录";
 "Extension Metadata" = "扩展元数据";
 "Extension bundle identifier is managed relative to the main application." = "扩展的 bundle identifier 根据主应用统一管理。";
@@ -1158,7 +1158,7 @@
 "The source “%@” is not supported by this version of SideStore." = "当前版本的 openSSS 不支持来源 “%@”。";
 "Theme Manager" = "主题管理";
 "There are no active sideloaded apps to refresh." = "没有需要刷新的已侧载应用。";
-"There are no oPenSSAI sources." = "没有 openSSS 源。";
+"There are no openSSS sources." = "没有 openSSS 源。";
 "These are permissions required by “%@” that SideStore does not recognize. Make sure you understand them before continuing." = "以下是 “%@” 所需但 openSSS 无法识别的权限。继续之前请确保你已了解它们的作用。";
 "These permissions must be declared by the source in order for SideStore to install this app:" = "openSSS 安装此应用前，来源必须声明以下权限：";
 "These updates don't support iOS %@. Please update your device to the latest iOS version to install them." = "这些更新不支持 iOS %@，请将你的设备更新到最新的 iOS 版本后再安装。";
@@ -1214,7 +1214,7 @@
 "Unable to create backup directory." = "无法创建备份目录。";
 "Unable to encode JSON as UTF-8." = "无法将 JSON 编码为 UTF-8。";
 "Unable to find a valid migration path for the database." = "找不到有效的数据库迁移路径。";
-"Unable to locate oPenSSAI.conf in bundle resources." = "无法在应用资源中找到 oPenSSAI.conf。";
+"Unable to locate openSSS.conf in bundle resources." = "无法在应用资源中找到 openSSS.conf。";
 "Unable to read app group backup." = "无法读取 App Group 备份。";
 "Undefined" = "未定义";
 "Underlying Error" = "底层错误";
@@ -1292,7 +1292,7 @@
 "You can enter SideStore, but a pairing file is required before you can install or refresh apps." = "你可以进入 openSSS，但在安装或刷新应用之前需要先提供配对文件。";
 "You cannot use special characters such as @, &, *, ', \", -, ." = "不能使用特殊字符，例如 @、&、*、'、\"、-、.";
 "You must also delete it from the home screen to fully uninstall the app." = "你还需要从主屏幕删除该应用，才能将其完全卸载。";
-"You will need to log back into Apple ID in oPenSSAI." = "你需要重新登录 Apple ID 才能继续使用 openSSS。";
+"You will need to log back into Apple ID in openSSS." = "你需要重新登录 Apple ID 才能继续使用 openSSS。";
 "You're All Set!" = "一切就绪！";
 "Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later in Settings." = "你的设备尚未注册到该开发者团队下。完成注册前无法安装或刷新应用，你可以稍后在“设置”中完成。";
 "Your saved preference is **%@**, but the provided pairing file is **%@**.\n\nDo you want to switch and accept **%@** as your current protocol?" = "你保存的偏好为 **%@**，但所提供的配对文件为 **%@**。\n\n是否切换并将 **%@** 接受为当前协议？";
@@ -1313,16 +1313,16 @@
 "iPad" = "iPad";
 "iPhone" = "iPhone";
 "ms" = "毫秒";
-"oPenSSAI" = "openSSS";
-"oPenSSAI Expired" = "openSSS 已过期";
-"oPenSSAI Expiring Extremely Soon" = "openSSS 即将过期";
-"oPenSSAI Expiring Soon" = "openSSS 快要过期了";
-"oPenSSAI Ready" = "openSSS 已就绪";
-"oPenSSAI has expired. Please refresh or reinstall the app." = "openSSS 已过期。请刷新或重新安装该应用。";
-"oPenSSAI should be fully operational!" = "openSSS 应该可以完全正常工作了！";
-"oPenSSAI will expire in 24 hours. Open the app and refresh it to prevent it from expiring." = "openSSS 将在 24 小时后过期。请打开应用并刷新，以防过期。";
-"oPenSSAI will expire in 6 hours! Refresh now to prevent expiration." = "openSSS 将在 6 小时后过期！请立即刷新以防过期。";
-"oPenSSAI.conf missing!" = "找不到 oPenSSAI.conf！";
+"openSSS" = "openSSS";
+"openSSS Expired" = "openSSS 已过期";
+"openSSS Expiring Extremely Soon" = "openSSS 即将过期";
+"openSSS Expiring Soon" = "openSSS 快要过期了";
+"openSSS Ready" = "openSSS 已就绪";
+"openSSS has expired. Please refresh or reinstall the app." = "openSSS 已过期。请刷新或重新安装该应用。";
+"openSSS should be fully operational!" = "openSSS 应该可以完全正常工作了！";
+"openSSS will expire in 24 hours. Open the app and refresh it to prevent it from expiring." = "openSSS 将在 24 小时后过期。请打开应用并刷新，以防过期。";
+"openSSS will expire in 6 hours! Refresh now to prevent expiration." = "openSSS 将在 6 小时后过期！请立即刷新以防过期。";
+"openSSS.conf missing!" = "找不到 openSSS.conf！";
 "offset: %@  size: %@" = "偏移：%@  大小：%@";
 "one or more apps" = "一个或多个应用";
 "public + private" = "公钥 + 私钥";

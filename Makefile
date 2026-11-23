@@ -192,7 +192,7 @@ endif
 build:
 	@echo ">>>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building for $(BUILD_CONFIG) mode! <<<<<<<<<<"
 	@echo ""
-	@xcodebuild archive -archivePath ./oPenSSAI \
+	@xcodebuild archive -archivePath ./openSSS \
 		$(COMMON_BUILD_SETTINGS)
 
 build-and-test:
@@ -250,30 +250,30 @@ clean-build:
 	@xcodebuild clean -project AltStore.xcodeproj -scheme SideStore
 
 fakesign-apps:
-	ldid -SAltStore/Resources/ReleaseEntitlements.plist oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/oPenSSAI
-	ldid -SAltWidget/Resources/ReleaseEntitlements.plist oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/PlugIns/AltWidgetExtension.appex/AltWidgetExtension
+	ldid -SAltStore/Resources/ReleaseEntitlements.plist openSSS.xcarchive/Products/Applications/openSSS.app/openSSS
+	ldid -SAltWidget/Resources/ReleaseEntitlements.plist openSSS.xcarchive/Products/Applications/openSSS.app/PlugIns/AltWidgetExtension.appex/AltWidgetExtension
 
 fakesign-sidebackup:	
 	@echo ''
 	@echo "fake-signing sidebackup even though it will get resigned, only to retain its entitlements (appGroups)"
-	unzip -q -o oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/SideBackup.ipa -d oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/
-	ldid -SSideBackup/SideBackup.entitlements oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/Payload/SideBackup.app/SideBackup
-	pushd "oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/"  > /dev/null; \
+	unzip -q -o openSSS.xcarchive/Products/Applications/openSSS.app/SideBackup.ipa -d openSSS.xcarchive/Products/Applications/openSSS.app/
+	ldid -SSideBackup/SideBackup.entitlements openSSS.xcarchive/Products/Applications/openSSS.app/Payload/SideBackup.app/SideBackup
+	pushd "openSSS.xcarchive/Products/Applications/openSSS.app/"  > /dev/null; \
 	rm -f     SideBackup.ipa; \
 	zip -r SideBackup.ipa Payload; \
 	popd  > /dev/null
-	@rm -rf oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/Payload
+	@rm -rf openSSS.xcarchive/Products/Applications/openSSS.app/Payload
 
 fakesign: fakesign-apps fakesign-sidebackup				
 
 
 ipa:
 	@echo ''
-	@echo "fake-signing oPenSSAI"
-	mkdir -p Payload/oPenSSAI.app
-	cp -R oPenSSAI.xcarchive/Products/Applications/oPenSSAI.app/ Payload/oPenSSAI.app/
-	rm -f     oPenSSAI.ipa
-	zip -r oPenSSAI.ipa Payload
+	@echo "fake-signing openSSS"
+	mkdir -p Payload/openSSS.app
+	cp -R openSSS.xcarchive/Products/Applications/openSSS.app/ Payload/openSSS.app/
+	rm -f     openSSS.ipa
+	zip -r openSSS.ipa Payload
 	rm -rf Payload*/
 
 # Global Variables
@@ -383,5 +383,5 @@ clean-sidebackup:
     #@rm -f AltStore/Resources/SideBackup.ipa
 
 clean: clean-sidebackup
-	@rm -rf oPenSSAI.ipa
+	@rm -rf openSSS.ipa
 	@rm -rf build/

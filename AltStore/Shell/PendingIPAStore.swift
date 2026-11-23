@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  PendingIPAStore.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The "Pending" queue behind the Apps tab's 待安装 list: .ipa files the user
 //  imports (from Files, a URL, or another app's "Open in") wait here until
@@ -12,7 +12,7 @@
 //  App Group container), so the queue works even when the App Group container
 //  is unavailable.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -46,7 +46,7 @@ enum PendingIPAError: LocalizedError
         case .invalidIPA:
             return NSLocalizedString("This file is not a valid .ipa package.", comment: "")
         case .copyFailed:
-            return NSLocalizedString("Could not copy the .ipa file into oPenSSAI.", comment: "")
+            return NSLocalizedString("Could not copy the .ipa file into openSSS.", comment: "")
         }
     }
 }
@@ -58,7 +58,7 @@ final class PendingIPAStore
 {
     static let shared = PendingIPAStore()
 
-    static let didChangeNotification = Notification.Name("oPenSSAI.PendingIPAStore.didChange")
+    static let didChangeNotification = Notification.Name("openSSS.PendingIPAStore.didChange")
 
     private(set) var items: [PendingIPA] = []
 

@@ -1,12 +1,12 @@
 #if os(iOS)
 //
 //  GuideViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  User Guide: short how-to sections for importing, renewing, pairing,
-//  and signing in. Static text, written for oPenSSAI.
+//  and signing in. Static text, written for openSSS.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -24,10 +24,10 @@ final class GuideViewController: UIViewController
         [
             GuideSection(
                 title: NSLocalizedString("Import & Install", comment: ""),
-                body: NSLocalizedString("Tap + on the Apps tab to import an .ipa from Files, or open an .ipa in another app and choose oPenSSAI. Imported apps wait under Pending — tap one to sign and install it.", comment: "")),
+                body: NSLocalizedString("Tap + on the Apps tab to import an .ipa from Files, or open an .ipa in another app and choose openSSS. Imported apps wait under Pending — tap one to sign and install it.", comment: "")),
             GuideSection(
                 title: NSLocalizedString("Renew Apps", comment: ""),
-                body: NSLocalizedString("Apps signed with a free Apple ID expire after 7 days. Tap Renew All to re-sign every installed app at once, or tap a single app to renew just that one. oPenSSAI also refreshes apps in the background when possible.", comment: "")),
+                body: NSLocalizedString("Apps signed with a free Apple ID expire after 7 days. Tap Renew All to re-sign every installed app at once, or tap a single app to renew just that one. openSSS also refreshes apps in the background when possible.", comment: "")),
             GuideSection(
                 title: NSLocalizedString("Pair Your Device", comment: ""),
                 body: NSLocalizedString("On-device signing needs a pairing file from your computer. Generate one with iloader on your computer, then import it from Device on the Me tab. Without a pairing file, installs and refreshes cannot reach the device.", comment: "")),
@@ -36,7 +36,7 @@ final class GuideViewController: UIViewController
                 body: NSLocalizedString("Sign in with your Apple ID on the Me tab. A free account can keep up to 3 apps active at a time. Manage your signing certificates under Signing Certificate.", comment: "")),
             GuideSection(
                 title: NSLocalizedString("Expiry Reminders", comment: ""),
-                body: NSLocalizedString("Turn on the 24-hour reminder on the Me tab and oPenSSAI will notify you a day before an app expires, so you can renew it in time.", comment: "")),
+                body: NSLocalizedString("Turn on the 24-hour reminder on the Me tab and openSSS will notify you a day before an app expires, so you can renew it in time.", comment: "")),
         ]
     }
 

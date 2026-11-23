@@ -148,7 +148,7 @@ def build():
     )
     run("make fakesign | tee -a build/logs/build.log")
     run("make ipa | tee -a build/logs/build.log")
-    run("zip -r -9 ./oPenSSAI.dSYMs.zip ./oPenSSAI.xcarchive/dSYMs")
+    run("zip -r -9 ./openSSS.dSYMs.zip ./openSSS.xcarchive/dSYMs")
 
 # ----------------------------------------------------------
 # TESTS BUILD
@@ -443,7 +443,7 @@ def upload_release(release_name, release_tag, commit_sha, repo, upstream_tag_rec
 
     run(
         f'gh release upload "{release_tag}" '
-        f'oPenSSAI.ipa oPenSSAI.dSYMs.zip build-logs.zip '
+        f'openSSS.ipa openSSS.dSYMs.zip build-logs.zip '
         f'--clobber'
     )
 

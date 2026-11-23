@@ -391,7 +391,7 @@ private struct CreateCertificateSheetView: View {
     var presentingViewController: UIViewController?
     @Binding var isPresented: Bool
 
-    @State private var machineName: String = "oPenSSAI - \(UIDevice.current.name)"
+    @State private var machineName: String = "openSSS - \(UIDevice.current.name)"
     @State private var selectedCertificateType: CertificateType = .development
 
     private var isPaidWarningVisible: Bool {

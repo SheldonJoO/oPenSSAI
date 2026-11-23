@@ -1,6 +1,6 @@
 //
 //  ShellSwiftUI.swift
-//  oPenSSAI
+//  openSSS
 //
 //  SwiftUI-side shell tokens for the upstream SwiftUI screens reachable
 //  from the Me tab (pairing, certificates, anisette): the same colors the
@@ -9,7 +9,7 @@
 //  ShellTheme is iOS-only. (Promotes the private tokens that used to live
 //  in OnboardingView.swift so every SwiftUI screen shares one definition.)
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import SwiftUI

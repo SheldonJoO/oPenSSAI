@@ -96,7 +96,7 @@ struct PairingTutorialView: View {
 
     private var introSection: some View {
         section(title: "What Is Pairing?") {
-            Text("oPenSSAI signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer.")
+            Text("openSSS signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer.")
                 .font(.system(size: 16, weight: .regular))
                 .foregroundColor(Color(uiColor: ShellTheme.secondaryText))
         }
@@ -250,14 +250,14 @@ struct PairingTutorialView: View {
     }
 
     /// Starts minimuxer with the freshly imported file so the user does
-    /// not have to restart oPenSSAI. If it fails, the file is still saved
+    /// not have to restart openSSS. If it fails, the file is still saved
     /// and a restart picks it up at boot. Needs proper testing on device.
     @MainActor
     private func startConnectionAfterImport() async {
         isStartingConnection = true
         defer { isStartingConnection = false }
         guard let pairingString = PairingFileManager.shared.fetchPairingFile() else {
-            importStatus = NSLocalizedString("Pairing file imported. If installs still fail, restart oPenSSAI and try again.", comment: "")
+            importStatus = NSLocalizedString("Pairing file imported. If installs still fail, restart openSSS and try again.", comment: "")
             return
         }
         do {
@@ -265,7 +265,7 @@ struct PairingTutorialView: View {
             importStatus = NSLocalizedString("Paired successfully. You can install and refresh apps now.", comment: "")
         } catch {
             debugLog("[PairingTutorial] startMinimuxer after import failed: \(error)")
-            importStatus = NSLocalizedString("Pairing file imported. If installs still fail, restart oPenSSAI and try again.", comment: "")
+            importStatus = NSLocalizedString("Pairing file imported. If installs still fail, restart openSSS and try again.", comment: "")
         }
     }
 }

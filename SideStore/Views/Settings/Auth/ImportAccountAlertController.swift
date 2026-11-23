@@ -76,7 +76,7 @@ class ImportAccountAlertController: UIAlertController {
                     UserDefaults.standard.acctFileChecksum = checksum
                     let toastView = ToastView(
                         text: String(format: NSLocalizedString("Successfully imported '%@'!", comment: ""), account.email),
-                        detailText: NSLocalizedString("oPenSSAI should be fully operational!", comment: "")
+                        detailText: NSLocalizedString("openSSS should be fully operational!", comment: "")
                     )
                     toastView.show(in: presentingVC)
                 } catch {

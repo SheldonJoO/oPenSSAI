@@ -212,7 +212,7 @@ extension MergePolicy{
                    let secondaryAppVersion = conflictingAppVersions.first(where: { $0 != primaryAppVersion })
                 {
                     secondaryAppVersion.managedObjectContext?.delete(secondaryAppVersion)
-                    debugLog("[oPenSSAI] Resolving AppVersion context-level conflict. Most likely due to migrating from pre-AppVersion model version. \(primaryAppVersion)")
+                    debugLog("[openSSS] Resolving AppVersion context-level conflict. Most likely due to migrating from pre-AppVersion model version. \(primaryAppVersion)")
                 }
                 
             default:

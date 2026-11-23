@@ -2,7 +2,7 @@
 //  BackgroundRefreshTaskScheduler.swift
 //  AltStore
 //
-//  Created by oPenSSAI Contributors on 11/21/26.
+//  Created by openSSS Contributors on 11/21/26.
 //  Copyright © 2026 AltStore. All rights reserved.
 //
 

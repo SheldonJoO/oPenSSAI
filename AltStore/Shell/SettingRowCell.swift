@@ -1,12 +1,12 @@
 #if os(iOS)
 //
 //  SettingRowCell.swift
-//  oPenSSAI
+//  openSSS
 //
 //  One settings row in the Me tab: a tinted SF Symbol, a bold title, an
 //  optional gray value, and either a chevron or a toggle switch.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

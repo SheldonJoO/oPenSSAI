@@ -25,7 +25,7 @@ final class LaunchViewController: UIViewController {
         super.viewDidLoad()
         debugLog("[LaunchViewController] viewDidLoad()")
         #if !os(tvOS)
-        // oPenSSAI shell: the two-tab (Apps / Me) interface, built in code.
+        // openSSS shell: the two-tab (Apps / Me) interface, built in code.
         destinationViewController = ShellTabBarController()
         #else
         destinationViewController = storyboard!.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
@@ -100,8 +100,8 @@ final class LaunchViewController: UIViewController {
 
     @MainActor
     func displayError(_ msg: String) {
-        debugLog("[oPenSSAI] \(msg)")
-        let alert = UIAlertController(title: NSLocalizedString("Error launching oPenSSAI", comment: ""), message: msg, preferredStyle: .alert)
+        debugLog("[openSSS] \(msg)")
+        let alert = UIAlertController(title: NSLocalizedString("Error launching openSSS", comment: ""), message: msg, preferredStyle: .alert)
         self.present(alert, animated: true)
     }
     
@@ -279,7 +279,7 @@ final class LaunchViewController: UIViewController {
     func updateKnownSources() {
         AppManager.shared.updateKnownSources { result in
             switch result {
-            case .failure(let error): debugLog("[oPenSSAI] Failed to update known sources: \(error)")
+            case .failure(let error): debugLog("[openSSS] Failed to update known sources: \(error)")
             case .success((_, let blockedSources)):
                 DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
                     let blockedSourceIDs = Set(blockedSources.lazy.map { $0.identifier })

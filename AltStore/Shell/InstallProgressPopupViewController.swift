@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  InstallProgressPopupViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Modal popup for install/refresh progress: app icon + name, overall
 //  progress bar + percentage, a five-phase checklist (Download → Unpack
@@ -25,7 +25,7 @@
 //  Failures surface as a translated ToastView from AppsViewController's
 //  completion handlers (MinimuxerErrorTranslator), not here.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

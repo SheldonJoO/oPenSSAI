@@ -1,17 +1,17 @@
-# Agent Guidelines for oPenSSAI
+# Agent Guidelines for openSSS
 
 A file for [guiding AI coding agents](https://agents.md/).
 
 ## Project Overview
 
-oPenSSAI is an iOS app that sideloads and refreshes apps on-device with a
+openSSS is an iOS app that sideloads and refreshes apps on-device with a
 personal Apple ID, using a local VPN loopback (`em_proxy` and `minimuxer`)
 instead of a computer. It is a fork of SideStore (AGPLv3), with a
 Chinese-first UI: the development language is Simplified Chinese
 (`DEVELOPMENT_LANGUAGE = zh-Hans`), and all user-visible strings ship in
 Chinese.
 
-oPenSSAI is written in pure Swift and built with Xcode. Dependencies
+openSSS is written in pure Swift and built with Xcode. Dependencies
 (`minimuxer`, `SideSign`) are vendored as plain directories under
 `Dependencies/` and integrated as local Swift Packages. `minimuxer` is pure
 Swift, and `em_proxy` is bundled as an XCFramework via SPM. We use Makefiles
@@ -31,7 +31,7 @@ device UDIDs.
 - **License: AGPLv3.** Keep all license and attribution notices and copyright
   headers (Riley Testut, SideStore Contributors). The AGPLv3 §13 network
   clause applies: users of the app over a network are entitled to the source.
-- **Upstream credit:** oPenSSAI builds on SideStore's open-source code. Keep
+- **Upstream credit:** openSSS builds on SideStore's open-source code. Keep
   the fork provenance (fork point commit + submodule hashes) in README.md and
   the upstream attribution in the app's About/Licenses screens.
 - **No Seal content.** Seal is a closed-source SideStore fork and is a
@@ -44,10 +44,10 @@ device UDIDs.
   keys stay in English (lookup keys); their values in `zh-Hans.lproj/` are
   Chinese. SwiftUI `Text("...")` literals auto-localize via
   `Localizable.strings` — add the key there, do not hardcode Chinese in code.
-- **WireGuard config:** `oPenSSAI.conf` intentionally keeps SideStore's
+- **WireGuard config:** `openSSS.conf` intentionally keeps SideStore's
   official keypair — the keys are coupled to the server side baked into the
   `em_proxy` XCFramework. Do not regenerate them without also forking em_proxy
-  (see the comment at the top of `oPenSSAI.conf` and `docs/ARCHITECTURE.md`).
+  (see the comment at the top of `openSSS.conf` and `docs/ARCHITECTURE.md`).
 - **App Group fallback:** the Core Data store must never refuse to launch when
   the App Group container is unavailable (the common case for sideloaded
   installs, where the signer never registered `group.com.openssai.app`).
@@ -55,7 +55,7 @@ device UDIDs.
   Application Support directory and `loadPersistentStores()` only logs a
   warning. Do not reintroduce a fatal error on the nil-container path.
 - **Display name:** the home-screen name comes from the target-level
-  `PRODUCT_NAME = oPenSSAI` (the xcconfig value alone is overridden by the
+  `PRODUCT_NAME = openSSS` (the xcconfig value alone is overridden by the
   target setting) plus `CFBundleDisplayName` in `Info.plist`. Do not set
   `PRODUCT_NAME` back to `$(TARGET_NAME)` — v1 shipped showing "SideStore".
   The Swift module deliberately stays `SideStore`
@@ -82,7 +82,7 @@ device UDIDs.
 
 - `AltStore/` - Main iOS app target: UI, tab bar navigation (Browse, My Apps,
   Settings, News), App IDs, permissions, and app management.
-- `AltStore/Shell/` - oPenSSAI's own UI shell (programmatic UIKit, no
+- `AltStore/Shell/` - openSSS's own UI shell (programmatic UIKit, no
   storyboards): the three-tab interface — Apps (pending/installed
   lists, per-app validity, Renew All), Location (virtual location
   simulation), and Me (signing, expiry reminders,
@@ -122,7 +122,7 @@ Clone with submodules (the vendored directories are plain copies in this
 repo, but upstream updates come from the SideStore repo):
 
 ```sh
-git clone https://github.com/SheldonJoO/oPenSSAI.git --recurse-submodules
+git clone https://github.com/SheldonJoO/openSSS.git --recurse-submodules
 ```
 
 Xcode resolves dependencies automatically through local Swift Packages in `Dependencies/` (`SideSign`, `minimuxer`, and `EMProxy.xcframework`).
@@ -173,7 +173,7 @@ export BUNDLE_ID_SUFFIX=XYZ0123456
 make build fakesign ipa
 ```
 
-This produces `oPenSSAI.ipa` in the repo root.
+This produces `openSSS.ipa` in the repo root.
 
 ### Formatting
 

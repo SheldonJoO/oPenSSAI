@@ -1,7 +1,7 @@
-/* Settings.strings — oPenSSAI 简体中文 (zh-Hans)
-   翻译基础：SideStore zh-Hans 汉化（東't-Move）；oPenSSAI 适配与补译。 */
+/* Settings.strings — openSSS 简体中文 (zh-Hans)
+   翻译基础：SideStore zh-Hans 汉化（東't-Move）；openSSS 适配与补译。 */
 
-"0uP-Cd-tNX.text" = "github.com/SheldonJoO/oPenSSAI";
+"0uP-Cd-tNX.text" = "github.com/SheldonJoO/openSSS";
 "1B5-BJ-Rkb.text" = "启用测试版更新";
 "1cD-4y-vTJ.title" = "控制台日志";
 "1df-ri-hKN.text" = "错误描述";

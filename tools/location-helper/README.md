@@ -1,6 +1,6 @@
 # location-helper（Mac 端）
 
-oPenSSAI 虚拟定位的 Mac 助手：收 App 发来的坐标，经 USB（或 Wi-Fi）驱动手机的
+openSSS 虚拟定位的 Mac 助手：收 App 发来的坐标，经 USB（或 Wi-Fi）驱动手机的
 DVT 位置模拟服务（苹果开发者机制，Xcode「模拟定位」同款）。完整原理见
 `docs/location-simulation-design.md`。
 

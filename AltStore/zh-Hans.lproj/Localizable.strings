@@ -1,7 +1,7 @@
 /* Localizable.strings
-   oPenSSAI - 简体中文 (zh-Hans)
+   openSSS - 简体中文 (zh-Hans)
    翻译基础：SideStore zh-Hans 汉化（東't-Move），基于 SideStore 0.7.0-alpha；
-   oPenSSAI 适配与补译：基于 SideStore 0.7.0 (4f3d18d)，品牌名已改为 oPenSSAI。
+   openSSS 适配与补译：基于 SideStore 0.7.0 (4f3d18d)，品牌名已改为 openSSS。
 */
 
 
@@ -508,7 +508,7 @@
 "Error Description" = "错误描述";
 "Error Details" = "错误详情";
 "Error Log" = "错误日志";
-"Error launching oPenSSAI" = "启动 openSSS 时出错";
+"Error launching openSSS" = "启动 openSSS 时出错";
 "Errors that occur when sideloading or refreshing apps will appear here." = "侧载或刷新应用时发生的错误会显示在这里。";
 "Executable" = "可执行文件";
 "Experimental Features" = "实验性功能";
@@ -540,7 +540,7 @@
 "Export WireGuard Config" = "导出 WireGuard 配置";
 "Export/Share" = "导出/分享";
 "Exported Resigned Apps" = "已导出的重签应用";
-"Exports oPenSSAI.conf to import into WireGuard VPN app" = "导出 oPenSSAI.conf 以导入 WireGuard VPN 应用";
+"Exports openSSS.conf to import into WireGuard VPN app" = "导出 openSSS.conf 以导入 WireGuard VPN 应用";
 "Exposes Documents directory via Finder/iTunes" = "通过 Finder / iTunes 显示“文档”目录";
 "Extension Metadata" = "扩展元数据";
 "Extension bundle identifier is managed relative to the main application." = "扩展的 bundle identifier 根据主应用统一管理。";
@@ -1234,7 +1234,7 @@
 "The source “%@” is not supported by this version of SideStore." = "当前版本的 openSSS 不支持来源 “%@”。";
 "Theme Manager" = "主题管理";
 "There are no active sideloaded apps to refresh." = "没有需要刷新的已侧载应用。";
-"There are no oPenSSAI sources." = "没有 openSSS 源。";
+"There are no openSSS sources." = "没有 openSSS 源。";
 "These are permissions required by “%@” that SideStore does not recognize. Make sure you understand them before continuing." = "以下是 “%@” 所需但 openSSS 无法识别的权限。继续之前请确保你已了解它们的作用。";
 "These permissions must be declared by the source in order for SideStore to install this app:" = "openSSS 安装此应用前，来源必须声明以下权限：";
 "These updates don't support iOS %@. Please update your device to the latest iOS version to install them." = "这些更新不支持 iOS %@，请将你的设备更新到最新的 iOS 版本后再安装。";
@@ -1292,7 +1292,7 @@
 "Unable to create backup directory." = "无法创建备份目录。";
 "Unable to encode JSON as UTF-8." = "无法将 JSON 编码为 UTF-8。";
 "Unable to find a valid migration path for the database." = "找不到有效的数据库迁移路径。";
-"Unable to locate oPenSSAI.conf in bundle resources." = "无法在应用资源中找到 oPenSSAI.conf。";
+"Unable to locate openSSS.conf in bundle resources." = "无法在应用资源中找到 openSSS.conf。";
 "Unable to read app group backup." = "无法读取 App Group 备份。";
 "Unavailable" = "不可用";
 "Undefined" = "未定义";
@@ -1372,7 +1372,7 @@
 "You can enter openSSS, but a pairing file is required before you can install or refresh apps." = "你可以进入 openSSS，但在安装或刷新应用之前需要先提供配对文件。";
 "You cannot use special characters such as @, &, *, ', \", -, ." = "不能使用特殊字符，例如 @、&、*、'、\"、-、.";
 "You must also delete it from the home screen to fully uninstall the app." = "你还需要从主屏幕删除该应用，才能将其完全卸载。";
-"You will need to log back into Apple ID in oPenSSAI." = "你需要重新登录 Apple ID 才能继续使用 openSSS。";
+"You will need to log back into Apple ID in openSSS." = "你需要重新登录 Apple ID 才能继续使用 openSSS。";
 "You're All Set!" = "一切就绪！";
 "Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later from Me → Apple IDs: tap your Apple ID, then Complete Pending Actions." = "你的设备尚未在此开发团队下注册。完成注册前无法安装或刷新应用。稍后可在「我的」→「Apple ID」里完成：点你的 Apple ID，再点「完成待办事项」。";
 "Your device is not yet registered under this developer team. Apps cannot be installed or refreshed until registration is completed. You can complete this later in Settings." = "你的设备尚未注册到该开发者团队下。完成注册前无法安装或刷新应用，你可以稍后在“设置”中完成。";
@@ -1395,16 +1395,16 @@
 "iPad" = "iPad";
 "iPhone" = "iPhone";
 "ms" = "毫秒";
-"oPenSSAI" = "openSSS";
-"oPenSSAI Expired" = "openSSS 已过期";
-"oPenSSAI Expiring Extremely Soon" = "openSSS 即将过期";
-"oPenSSAI Expiring Soon" = "openSSS 快要过期了";
-"oPenSSAI Ready" = "openSSS 已就绪";
-"oPenSSAI has expired. Please refresh or reinstall the app." = "openSSS 已过期。请刷新或重新安装该应用。";
-"oPenSSAI should be fully operational!" = "openSSS 应该可以完全正常工作了！";
-"oPenSSAI will expire in 24 hours. Open the app and refresh it to prevent it from expiring." = "openSSS 将在 24 小时后过期。请打开应用并刷新，以防过期。";
-"oPenSSAI will expire in 6 hours! Refresh now to prevent expiration." = "openSSS 将在 6 小时后过期！请立即刷新以防过期。";
-"oPenSSAI.conf missing!" = "找不到 oPenSSAI.conf！";
+"openSSS" = "openSSS";
+"openSSS Expired" = "openSSS 已过期";
+"openSSS Expiring Extremely Soon" = "openSSS 即将过期";
+"openSSS Expiring Soon" = "openSSS 快要过期了";
+"openSSS Ready" = "openSSS 已就绪";
+"openSSS has expired. Please refresh or reinstall the app." = "openSSS 已过期。请刷新或重新安装该应用。";
+"openSSS should be fully operational!" = "openSSS 应该可以完全正常工作了！";
+"openSSS will expire in 24 hours. Open the app and refresh it to prevent it from expiring." = "openSSS 将在 24 小时后过期。请打开应用并刷新，以防过期。";
+"openSSS will expire in 6 hours! Refresh now to prevent expiration." = "openSSS 将在 6 小时后过期！请立即刷新以防过期。";
+"openSSS.conf missing!" = "找不到 openSSS.conf！";
 "offset: %@  size: %@" = "偏移：%@  大小：%@";
 "one or more apps" = "一个或多个应用";
 "openSSS communicates with on-device services over a local loopback VPN. Enable LocalDevVPN before verifying." = "openSSS 通过本地回环 VPN 与设备端服务通信。验证前请先启用 LocalDevVPN。";
@@ -1434,22 +1434,22 @@
 "A permissive license with an express patent grant. Modified files must carry prominent notices of the changes." = "宽松许可证，附带明确的专利授权；修改过的文件必须附有醒目的修改声明。";
 "A permissive license: use, copy, modify, and distribute freely, keeping the copyright notice." = "宽松许可证：可自由使用、复制、修改和分发，需保留版权声明。";
 "ASN.1 parsing." = "ASN.1 解析。";
-"About oPenSSAI" = "关于 openSSS";
-"An app expires in 24 hours. Open oPenSSAI to renew it." = "有应用将在 24 小时后过期，打开 openSSS 续签。";
+"About openSSS" = "关于 openSSS";
+"An app expires in 24 hours. Open openSSS to renew it." = "有应用将在 24 小时后过期，打开 openSSS 续签。";
 "Anisette provisioning data for Apple ID sign-in." = "用于 Apple ID 登录的 Anisette 预配数据。";
 "App signing library (baseline: AltSign by Riley Testut)." = "应用签名库（基于 Riley Testut 的 AltSign）。";
 "Appearance" = "外观";
 "Appearance & Theme" = "外观与主题";
 "Apple ID & Certificates" = "Apple ID 与证书";
 "Apps" = "应用";
-"Apps signed with a free Apple ID expire after 7 days. Tap Renew All to re-sign every installed app at once, or tap a single app to renew just that one. oPenSSAI also refreshes apps in the background when possible." = "使用免费 Apple ID 签名的应用会在 7 天后过期。点「续签全部」可一次为所有已安装应用重新签名，也可以点单个应用只续签它。openSSS 还会在条件允许时于后台自动续签。";
+"Apps signed with a free Apple ID expire after 7 days. Tap Renew All to re-sign every installed app at once, or tap a single app to renew just that one. openSSS also refreshes apps in the background when possible." = "使用免费 Apple ID 签名的应用会在 7 天后过期。点「续签全部」可一次为所有已安装应用重新签名，也可以点单个应用只续签它。openSSS 还会在条件允许时于后台自动续签。";
 "Blue" = "蓝色";
-"Bundled with oPenSSAI" = "随 openSSS 附带";
+"Bundled with openSSS" = "随 openSSS 附带";
 "Cache Cleared" = "缓存已清理";
 "Cleanup" = "清理";
 "Code signing primitives." = "代码签名基础组件。";
 "Components & Licenses" = "组件与许可";
-"Could not copy the .ipa file into oPenSSAI." = "无法将 .ipa 文件复制到 openSSS。";
+"Could not copy the .ipa file into openSSS." = "无法将 .ipa 文件复制到 openSSS。";
 "Cryptographic primitives." = "加密基础组件。";
 "Cryptography for Apple's Grand Slam authentication." = "用于 Apple Grand Slam 认证的加密组件。";
 "Dark" = "深色";
@@ -1506,27 +1506,27 @@
 "Signing Certificate" = "签名证书";
 "Storage & Cleanup" = "存储与清理";
 "Storage Breakdown" = "存储明细";
-"Support oPenSSAI" = "支持 openSSS";
-"Tap + on the Apps tab to import an .ipa from Files, or open an .ipa in another app and choose oPenSSAI. Imported apps wait under Pending — tap one to sign and install it." = "点「应用」里的 + 可以从文件导入 .ipa，也可以在其他应用里打开 .ipa 并选择 openSSS。导入的应用会先进入「待安装」，点它即可签名安装。";
+"Support openSSS" = "支持 openSSS";
+"Tap + on the Apps tab to import an .ipa from Files, or open an .ipa in another app and choose openSSS. Imported apps wait under Pending — tap one to sign and install it." = "点「应用」里的 + 可以从文件导入 .ipa，也可以在其他应用里打开 .ipa 并选择 openSSS。导入的应用会先进入「待安装」，点它即可签名安装。";
 "Temporary Files" = "临时文件";
 "The original alternative app store by Riley Testut." = "Riley Testut 开发的初代第三方应用商店。";
-"The sideloading app oPenSSAI is forked from." = "openSSS 复刻自这款侧载应用。";
+"The sideloading app openSSS is forked from." = "openSSS 复刻自这款侧载应用。";
 "Theme Color" = "主题色";
 "This deletes all .ipa files waiting to be installed. Installed apps are not affected." = "这会删除所有等待安装的 .ipa 文件，已安装的应用不受影响。";
 "This file is not a valid .ipa package." = "这不是有效的 .ipa 安装包。";
-"This will remove “%@” from oPenSSAI and erase any backup data for this app." = "这会将“%@”从 openSSS 中移除，并抹除该应用的备份数据。";
+"This will remove “%@” from openSSS and erase any backup data for this app." = "这会将“%@”从 openSSS 中移除，并抹除该应用的备份数据。";
 "Total Storage Used" = "已用总存储";
-"Turn on the 24-hour reminder on the Me tab and oPenSSAI will notify you a day before an app expires, so you can renew it in time." = "在「我的」里开启 24 小时提醒，应用过期前一天 openSSS 会通知你，及时续签。";
+"Turn on the 24-hour reminder on the Me tab and openSSS will notify you a day before an app expires, so you can renew it in time." = "在「我的」里开启 24 小时提醒，应用过期前一天 openSSS 会通知你，及时续签。";
 "User Guide" = "使用指南";
 "View on GitHub" = "在 GitHub 上查看";
 "Violet" = "紫罗兰";
 "WebSocket client." = "WebSocket 客户端。";
 "ZIP archive handling." = "ZIP 归档处理。";
-"oPenSSAI is free and open-source software (AGPLv3). It is a fork of SideStore, built on AltStore by Riley Testut and the SideStore contributors." = "openSSS 是免费开源软件（AGPLv3），复刻自 SideStore，基于 Riley Testut 的 AltStore 及 SideStore 贡献者的工作。";
+"openSSS is free and open-source software (AGPLv3). It is a fork of SideStore, built on AltStore by Riley Testut and the SideStore contributors." = "openSSS 是免费开源软件（AGPLv3），复刻自 SideStore，基于 Riley Testut 的 AltStore 及 SideStore 贡献者的工作。";
 "%d bytes" = "%d 字节";
 "APPLE ID" = "APPLE ID";
 "Advertising server..." = "正在广播服务器…";
-"All pairing files have been reset. Please restart oPenSSAI." = "所有配对文件已重置。请重启 openSSS。";
+"All pairing files have been reset. Please restart openSSS." = "所有配对文件已重置。请重启 openSSS。";
 "An error occurred during pairing." = "配对过程中出错。";
 "An error occurred during pairing: %@" = "配对过程中出错：%@";
 "Anisette Servers" = "Anisette 服务器";
@@ -1568,7 +1568,7 @@
 "Ready to pair" = "准备配对";
 "Remote Pairing" = "远程配对";
 "Remote Pairing File" = "远程配对文件";
-"Resetting pairing files removes stored Lockdown and Remote Pairing credentials. You will need to re-pair or re-import a pairing file and restart oPenSSAI." = "重置配对文件会删除已保存的 Lockdown 和远程配对凭据。之后需要重新配对或重新导入配对文件，并重启 openSSS。";
+"Resetting pairing files removes stored Lockdown and Remote Pairing credentials. You will need to re-pair or re-import a pairing file and restart openSSS." = "重置配对文件会删除已保存的 Lockdown 和远程配对凭据。之后需要重新配对或重新导入配对文件，并重启 openSSS。";
 "Resetting signs you out of Apple ID and clears the provisioned adi.pb data from your Keychain. Your active signing certificate will be preserved." = "重置会退出 Apple ID 登录，并清除钥匙串中已配置的 adi.pb 数据。已激活的签名证书会保留。";
 "Select Device To Pair" = "选择要配对的设备";
 "Select Server Interface" = "选择服务器网卡";
@@ -1579,10 +1579,10 @@
 "SystemBUID" = "SystemBUID";
 "Tap Start to advertise this device on the local network." = "点「开始」在本局域网内广播此设备。";
 "The property list contains syntax errors: %@" = "属性列表包含语法错误：%@";
-"This will delete all stored pairing files (both **Lockdown** and **Remote Pairing**). You will need to re-pair or re-import a pairing file and restart oPenSSAI." = "这将删除所有已保存的配对文件（Lockdown 和远程配对）。之后需要重新配对或重新导入配对文件，并重启 openSSS。";
-"This will sign you out of Apple ID in oPenSSAI and clear the provisioned adi.pb data from your Keychain. Your active signing certificate will be preserved." = "这将退出 Apple ID 登录，并清除钥匙串中已配置的 adi.pb 数据。已激活的签名证书会保留。";
+"This will delete all stored pairing files (both **Lockdown** and **Remote Pairing**). You will need to re-pair or re-import a pairing file and restart openSSS." = "这将删除所有已保存的配对文件（Lockdown 和远程配对）。之后需要重新配对或重新导入配对文件，并重启 openSSS。";
+"This will sign you out of Apple ID in openSSS and clear the provisioned adi.pb data from your Keychain. Your active signing certificate will be preserved." = "这将退出 Apple ID 登录，并清除钥匙串中已配置的 adi.pb 数据。已激活的签名证书会保留。";
 "Waiting for connection..." = "等待连接…";
-"Welcome to oPenSSAI." = "欢迎使用 openSSS。";
+"Welcome to openSSS." = "欢迎使用 openSSS。";
 "Why do we need this?" = "为什么需要这个？";
 "WiFi MAC" = "WiFi MAC";
 "Your Apple ID is used to configure apps so they can be installed on this device. Your credentials will be stored securely in this device's Keychain and sent only to Apple for authentication." = "您的 Apple ID 用于配置 App，以便它们能安装到此设备上。您的凭据会安全地存储在设备的钥匙串中，仅发送给 Apple 用于身份验证。";
@@ -1682,7 +1682,7 @@
 "This removes the Apple ID and its team records from this device. Installed apps are not affected, and the signing certificate is not revoked." = "这会从本设备移除该 Apple ID 及其团队记录。已安装的应用不受影响，签名证书不会被吊销。";
 "Pairing Tutorial" = "配对教程";
 "What Is Pairing?" = "什么是配对？";
-"oPenSSAI signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer." = "openSSS 在本机上签名应用，而 iOS 只允许通过受信任的配对连接完成这一步。配对一次之后，安装与续签无需电脑即可直达本机。";
+"openSSS signs apps on your device, and iOS only allows that over a trusted pairing connection. Pair once, and installs and refreshes can reach your device without a computer." = "openSSS 在本机上签名应用，而 iOS 只允许通过受信任的配对连接完成这一步。配对一次之后，安装与续签无需电脑即可直达本机。";
 "Step 1: Turn On Developer Mode" = "第一步：开启开发者模式";
 "Open Settings → Privacy & Security → Developer Mode, turn it on, and restart your device when asked. Wireless pairing and on-device signing need Developer Mode." = "打开「设置 → 隐私与安全性 → 开发者模式」，开启后按提示重启设备。无线配对与本机签名都需要开发者模式。";
 "Step 2: Pair Your Device" = "第二步：配对你的设备";
@@ -1695,7 +1695,7 @@
 "Pairing Status" = "配对状态";
 "Pairing file imported. Starting the connection…" = "配对文件已导入，正在建立连接……";
 "Paired successfully. You can install and refresh apps now." = "配对成功，现在可以安装与续签应用了。";
-"Pairing file imported. If installs still fail, restart oPenSSAI and try again." = "配对文件已导入。如果安装仍然失败，请重启 openSSS 后再试。";
+"Pairing file imported. If installs still fail, restart openSSS and try again." = "配对文件已导入。如果安装仍然失败，请重启 openSSS 后再试。";
 "Failed to import pairing file: %@" = "导入配对文件失败：%@";
 "View Pairing Tutorial" = "查看配对教程";
 "Backing up app data…" = "正在备份应用数据…";

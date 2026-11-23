@@ -1,17 +1,17 @@
-# Contributing to oPenSSAI
+# Contributing to openSSS
 
-Thank you for your interest in contributing to oPenSSAI! oPenSSAI is a community driven project, and it's made possible by people like you.
+Thank you for your interest in contributing to openSSS! openSSS is a community driven project, and it's made possible by people like you.
 
-By contributing to this Project (oPenSSAI), you agree to the Developer's Certificate of Origin found in [CERTIFICATE-OF-ORIGIN.md](CERTIFICATE-OF-ORIGIN.md). Any contributions to this project after the addition of the Developer's Certificate of Origin are subject to its policy.
+By contributing to this Project (openSSS), you agree to the Developer's Certificate of Origin found in [CERTIFICATE-OF-ORIGIN.md](CERTIFICATE-OF-ORIGIN.md). Any contributions to this project after the addition of the Developer's Certificate of Origin are subject to its policy.
 
-There are many ways to contribute to oPenSSAI, so if you aren't a developer, there are still many other ways you can help out:
+There are many ways to contribute to openSSS, so if you aren't a developer, there are still many other ways you can help out:
 
--   [Writing documentation](https://github.com/SheldonJoO/oPenSSAI/tree/main/docs)
--   [Submitting detailed bug reports and suggesting new features](https://github.com/SheldonJoO/oPenSSAI/issues/new/choose)
+-   [Writing documentation](https://github.com/SheldonJoO/openSSS/tree/main/docs)
+-   [Submitting detailed bug reports and suggesting new features](https://github.com/SheldonJoO/openSSS/issues/new/choose)
 -   Helping out with support
-    -   [GitHub Discussions](https://github.com/SheldonJoO/oPenSSAI/discussions)
+    -   [GitHub Discussions](https://github.com/SheldonJoO/openSSS/discussions)
 
-However, this guide will focus on the development side of things. For now, we will only have setup information here, but you can ask in [GitHub Discussions](https://github.com/SheldonJoO/oPenSSAI/discussions) if you need help
+However, this guide will focus on the development side of things. For now, we will only have setup information here, but you can ask in [GitHub Discussions](https://github.com/SheldonJoO/openSSS/discussions) if you need help
 after setup.
 
 ## Requirements
@@ -26,8 +26,8 @@ This guide assumes you:
 
 ## Setup
 
-1. Fork the oPenSSAI repo on GitHub.
-2. Clone the fork: `git clone https://github.com/<your github username>/oPenSSAI.git --recurse-submodules`
+1. Fork the openSSS repo on GitHub.
+2. Clone the fork: `git clone https://github.com/<your github username>/openSSS.git --recurse-submodules`
 
     If you are using GitHub Desktop, refer to
     [this guide](https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop).
@@ -39,7 +39,7 @@ Next, make and test your changes. Then, commit and push your changes using git a
 
 ## Prebuilt binary information
 
-minimuxer and em_proxy use prebuilt static library binaries built by GitHub Actions to speed up builds and remove the need for Rust to be installed when working on oPenSSAI.
+minimuxer and em_proxy use prebuilt static library binaries built by GitHub Actions to speed up builds and remove the need for Rust to be installed when working on openSSS.
 [`SideStore/fetch-prebuilt.sh`](./SideStore/fetch-prebuilt.sh) will be run before each build by Xcode, and it will check if the downloaded binaries are up-to-date once every 6 hours. If you want
 to force it to check for new binaries, run `bash ./SideStore/fetch-prebuilt.sh force`.
 
@@ -58,7 +58,7 @@ You can then use the Makefile command: `make build fakesign ipa` in the root dir
 By default the config for build is: `Release`  
 For debug builds: `export BUILD_CONFIG=Debug;make build fakesign ipa` in the root directory.  
 For alpha/beta builds: `export IS_ALPHA=1;` or `export IS_BETA=1;` before invoking the build command.  
-This will create oPenSSAI.ipa.
+This will create openSSS.ipa.
 
 ```sh
 Examples: 
@@ -83,7 +83,7 @@ Examples:
     # stable debug build
     export BUILD_CONFIG=Debug;make build fakesign ipa
 ```
-By default oPenSSAI will build for its default bundleIdentifier `com.openssai.app` but if you need to set a custom bundleID for commandline builds, once can do so by exporting `BUNDLE_ID_SUFFIX` env var  
+By default openSSS will build for its default bundleIdentifier `com.openssai.app` but if you need to set a custom bundleID for commandline builds, once can do so by exporting `BUNDLE_ID_SUFFIX` env var  
 ```sh
     # stable release build
     export BUNDLE_ID_SUFFIX=XYZ0123456;make build fakesign ipa
@@ -102,6 +102,6 @@ This can be customized by setting/removing the BUNDLE_ID_SUFFIX in overriding Co
 > username private, you might want to get GitHub Actions to build the IPA instead.
 > 
 
-## Developing minimuxer alongside oPenSSAI
+## Developing minimuxer alongside openSSS
 
 Please see [minimuxer's README](https://github.com/SideStore/minimuxer) for development instructions.

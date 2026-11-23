@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   triage:
-    if: github.repository == 'SheldonJoO/oPenSSAI'
+    if: github.repository == 'SheldonJoO/openSSS'
     runs-on: ubuntu-latest
     steps:
     - name: Label PR based on changed files
@@ -39,9 +39,9 @@ jobs:
 
           A maintainer will review your issue shortly. Please make sure you've filled out all relevant information in the issue template.
         pr_message: |-
-          ## Thank you for submitting a contribution to oPenSSAI!
+          ## Thank you for submitting a contribution to openSSS!
 
-          As this is your first pull request, [please be aware of our contributing guidelines](https://github.com/SheldonJoO/oPenSSAI/blob/main/CONTRIBUTING.md).
+          As this is your first pull request, [please be aware of our contributing guidelines](https://github.com/SheldonJoO/openSSS/blob/main/CONTRIBUTING.md).
 
           Additionally, your pull request will need to be approved by a maintainer before GitHub Actions can run against it. [You can find more information here.](https://github.blog/2021-04-22-github-actions-update-helping-maintainers-combat-bad-actors/)
 

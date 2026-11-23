@@ -29,7 +29,7 @@ public extension Bundle
             let info = activeBundle.infoDictionary
             let version = (info?["CFBundleShortVersionString"] as? String) ?? "?.?.?"
             let build = (info?["CFBundleVersion"] as? String).map { " (\($0))" } ?? "(????)"
-            return String(format: NSLocalizedString("Version %@%@", comment: "oPenSSAI Version"), version, build)
+            return String(format: NSLocalizedString("Version %@%@", comment: "openSSS Version"), version, build)
         }()
         public static let activeBundleIdentifier: String = activeBundle.bundleIdentifier!
         public static let storeAppBundleIdentifier = Bundle.storeAppBundleIdentifier

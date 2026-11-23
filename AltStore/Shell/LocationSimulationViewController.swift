@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  LocationSimulationViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The Virtual Location tab. The simulated position is system-wide (Maps
 //  and every app read it from locationd). It is delivered by the on-device
@@ -14,7 +14,7 @@
 //  Needs proper testing on a real device: on-device simulation and the
 //  helper fallback, tap-to-pin, and the pin surviving cell reuse.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import MapKit

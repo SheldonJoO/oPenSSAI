@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  ShellAuthenticationViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The Apple ID sign-in screen, rebuilt in code in the shell's Seal style
 //  (black background, dark cards, magenta accent). It replaces the
@@ -11,7 +11,7 @@
 //  background. Same contract as the original — `authenticationHandler` /
 //  `completionHandler` — so SignInFlowHandler drives it identically.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 @preconcurrency import UIKit
@@ -138,7 +138,7 @@ private extension ShellAuthenticationViewController
         ])
 
         let titleLabel = UILabel()
-        titleLabel.text = NSLocalizedString("Welcome to oPenSSAI.", comment: "")
+        titleLabel.text = NSLocalizedString("Welcome to openSSS.", comment: "")
         titleLabel.font = .systemFont(ofSize: 32, weight: .bold)
         titleLabel.textColor = ShellTheme.primaryText
         titleLabel.numberOfLines = 0

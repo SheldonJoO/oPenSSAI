@@ -1,13 +1,13 @@
 #if os(iOS)
 //
 //  DonationViewController.swift
-//  oPenSSAI
+//  openSSS
 //
-//  Support oPenSSAI: shows the developer's WeChat donation QR code with a
+//  Support openSSS: shows the developer's WeChat donation QR code with a
 //  hint to screenshot it and scan it in WeChat. Reached from the Support
 //  row on the Me tab.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -18,7 +18,7 @@ final class DonationViewController: UIViewController
     {
         super.viewDidLoad()
         view.backgroundColor = ShellTheme.background
-        title = NSLocalizedString("Support oPenSSAI", comment: "")
+        title = NSLocalizedString("Support openSSS", comment: "")
 
         // White card so the QR code stays scannable on the dark shell
         // background.

@@ -2,7 +2,7 @@
 
 PRODUCT_BUNDLE_IDENTIFIER = $(MAIN_BUNDLE_IDENTIFIER)
 
-// The Swift module stays "SideStore" even though the product is oPenSSAI:
+// The Swift module stays "SideStore" even though the product is openSSS:
 // engine code qualifies helpers as SideStore.debugLog, storyboards reference
 // customModule="SideStore", and the ObjC generated header is SideStore-Swift.h.
 // Only the product binary and display name change (PRODUCT_NAME in the target).

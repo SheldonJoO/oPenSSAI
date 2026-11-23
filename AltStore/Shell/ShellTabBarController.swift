@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  ShellTabBarController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The shell's root container: three navigation stacks (Apps / Location /
 //  Me) under a standard iOS tab bar, which stays visible on pushed screens
@@ -10,7 +10,7 @@
 //  add-source links present the Sources UI modally, error-log requests open
 //  the diagnostic log from the Me tab.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

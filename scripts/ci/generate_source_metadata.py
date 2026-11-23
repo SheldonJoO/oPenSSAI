@@ -151,7 +151,7 @@ def main():
         "sha256": sha256(ipa_path),
         "download_url": (
             "https://github.com/SideStore/SideStore/releases/download/"
-            f"{args.release_tag}/oPenSSAI.ipa"
+            f"{args.release_tag}/openSSS.ipa"
         ),
         "localized_description": localized_description,
     }

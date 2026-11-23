@@ -1,16 +1,16 @@
 #if os(iOS)
 //
 //  AppsViewController.swift
-//  oPenSSAI
+//  openSSS
 //
-//  The Apps tab: large "oPenSSAI" title, a + button, segmented
+//  The Apps tab: large "openSSS" title, a + button, segmented
 //  Pending / Installed tabs, a heading row with a Renew All pill, and the
 //  card list of apps (icon, name + version, bundle ID, days left).
 //  Installed apps come from Core Data; pending apps from PendingIPAStore.
 //  Install / refresh / re-sign / reinstall / delete all go through the
 //  existing AppManager engine, mirroring MyAppsViewController's flows.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -693,7 +693,7 @@ final class AppsViewController: UIViewController
 
         let appName = installedApp.name
         let title = String(format: NSLocalizedString("Delete “%@”?", comment: ""), appName)
-        let message = String(format: NSLocalizedString("This will remove “%@” from oPenSSAI and erase any backup data for this app.", comment: ""), appName)
+        let message = String(format: NSLocalizedString("This will remove “%@” from openSSS and erase any backup data for this app.", comment: ""), appName)
 
         let contentVC = DeleteAppAlertViewController()
 

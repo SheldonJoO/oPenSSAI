@@ -1,4 +1,4 @@
-name: Pull Request oPenSSAI build
+name: Pull Request openSSS build
 
 on:
   pull_request:
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build and upload oPenSSAI
+    name: Build and upload openSSS
     if: ${{ github.event.pull_request.draft == false }}
     runs-on: xcode-27
 
@@ -69,7 +69,7 @@ jobs:
         run: |
           python3 scripts/ci/workflow.py build; STATUS=$?
           python3 scripts/ci/workflow.py encrypt-build
-          mv oPenSSAI.ipa oPenSSAI-${{ env.MARKETING_VERSION }}.ipa
+          mv openSSS.ipa openSSS-${{ env.MARKETING_VERSION }}.ipa
           exit $STATUS
 
       - name: Save Cache
@@ -88,10 +88,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: oPenSSAI-${{ env.MARKETING_VERSION }}.ipa
-          path: oPenSSAI-${{ env.MARKETING_VERSION }}.ipa
+          name: openSSS-${{ env.MARKETING_VERSION }}.ipa
+          path: openSSS-${{ env.MARKETING_VERSION }}.ipa
 
       - uses: actions/upload-artifact@v4
         with:
-          name: oPenSSAI-${{ env.MARKETING_VERSION }}-dSYMs.zip
-          path: oPenSSAI.dSYMs.zip
+          name: openSSS-${{ env.MARKETING_VERSION }}-dSYMs.zip
+          path: openSSS.dSYMs.zip

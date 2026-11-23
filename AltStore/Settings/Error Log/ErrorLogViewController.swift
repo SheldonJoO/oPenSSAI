@@ -352,7 +352,7 @@ extension ErrorLogViewController
                 }
                 catch
                 {
-                    debugLog("[oPenSSAI] Failed to delete LoggedError \(loggedError.objectID): \(error)")
+                    debugLog("[openSSS] Failed to delete LoggedError \(loggedError.objectID): \(error)")
                     DispatchQueue.main.async {
                         completion(false)
                     }

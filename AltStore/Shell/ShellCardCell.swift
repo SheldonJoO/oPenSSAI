@@ -1,14 +1,14 @@
 #if os(iOS)
 //
 //  ShellCardCell.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Base table cell for the shell's card lists. Each section renders as one
 //  rounded card (16pt corners, per ShellTheme.cardCornerRadius); the cell
 //  draws its slice of the card background depending on its position in the
 //  section.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

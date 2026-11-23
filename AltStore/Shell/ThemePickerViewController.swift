@@ -1,13 +1,13 @@
 #if os(iOS)
 //
 //  ThemePickerViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Appearance & Theme: three appearance modes (follow system / light /
 //  dark) and the accent color (Violet is the default, matching the
 //  reference design).
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

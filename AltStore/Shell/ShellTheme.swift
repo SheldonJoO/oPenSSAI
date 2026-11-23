@@ -1,12 +1,12 @@
 #if os(iOS)
 //
 //  ShellTheme.swift
-//  oPenSSAI
+//  openSSS
 //
-//  Design system for the oPenSSAI shell: the two-tab (Apps / Me) interface
+//  Design system for the openSSS shell: the two-tab (Apps / Me) interface
 //  (near-black background, dark gray cards, magenta/violet accent).
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -70,8 +70,8 @@ enum ShellAppearance: String, CaseIterable, Sendable
 /// adapted equivalents so "Follow System" is honest in light mode.
 enum ShellTheme
 {
-    static let accentDidChangeNotification = Notification.Name("oPenSSAI.ShellTheme.accentDidChange")
-    static let appearanceDidChangeNotification = Notification.Name("oPenSSAI.ShellTheme.appearanceDidChange")
+    static let accentDidChangeNotification = Notification.Name("openSSS.ShellTheme.accentDidChange")
+    static let appearanceDidChangeNotification = Notification.Name("openSSS.ShellTheme.appearanceDidChange")
 
     private static let accentDefaultsKey = "shell.accent"
     private static let appearanceDefaultsKey = "shell.appearance"
@@ -222,7 +222,7 @@ enum ShellTheme
     /// Orange accent used only for the expiry-reminder rows.
     static let reminderOrange = UIColor(hex: 0xF59E0B)
 
-    /// Pink-red used only for the "Support oPenSSAI" heart.
+    /// Pink-red used only for the "Support openSSS" heart.
     static let supportRed = UIColor(hex: 0xF43F5E)
 
     /// Red used for expired / expiring-soon validity labels.
@@ -230,7 +230,7 @@ enum ShellTheme
 
     // MARK: - Fonts
 
-    /// Navigation large title (the "oPenSSAI" / "Me" headings).
+    /// Navigation large title (the "openSSS" / "Me" headings).
     static let largeTitleFont = UIFont.systemFont(ofSize: 34, weight: .bold)
 
     /// In-content section headings ("Installed Apps", "Pending Apps").

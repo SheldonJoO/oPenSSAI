@@ -1,4 +1,4 @@
-# oPenSSAI
+# openSSS
 
 中文优先的开源 iOS 侧载应用：不用电脑，在手机上用自己的 Apple ID 签名、安装、续签应用。
 
@@ -16,13 +16,13 @@
 
 ## 安装（首次）
 
-首次安装用官方版 [iloader](https://iloader.app)（https://github.com/nab138/iloader）：手机连电脑，登录 Apple ID，选择“导入任意 IPA”装入 oPenSSAI 的 IPA。
+首次安装用官方版 [iloader](https://iloader.app)（https://github.com/nab138/iloader）：手机连电脑，登录 Apple ID，选择“导入任意 IPA”装入 openSSS 的 IPA。
 
-> 注意：官方版 iloader 的“导入 IPA”只安装，不自动放置配对文件（pairing file）。配对文件是手机端签名/续签的前提——没有它，oPenSSAI 装上后无法在手机上自己续签。当前做法：用 iloader 导出配对文件后手动放进 oPenSSAI（或用 oPenSSAI 自身的文件导入）；一键安装 + 自动放配对文件的体验需要一个小幅 fork 的安装器（见下）。
+> 注意：官方版 iloader 的“导入 IPA”只安装，不自动放置配对文件（pairing file）。配对文件是手机端签名/续签的前提——没有它，openSSS 装上后无法在手机上自己续签。当前做法：用 iloader 导出配对文件后手动放进 openSSS（或用 openSSS 自身的文件导入）；一键安装 + 自动放配对文件的体验需要一个小幅 fork 的安装器（见下）。
 
-**安装器 fork（计划中）**：基于 iloader v2.4.2 做一个小幅 fork（改名、换图标、换 bundle id；默认安装地址指向 oPenSSAI 的 release；配对文件表加入 oPenSSAI；更新密钥与地址换成自己的）。改动点很少，见 [docs/SCAFFOLD-PLAN.md](docs/SCAFFOLD-PLAN.md)。在 fork 完成之前，先用官方版 iloader + 手动放配对文件验证链路。
+**安装器 fork（计划中）**：基于 iloader v2.4.2 做一个小幅 fork（改名、换图标、换 bundle id；默认安装地址指向 openSSS 的 release；配对文件表加入 openSSS；更新密钥与地址换成自己的）。改动点很少，见 [docs/SCAFFOLD-PLAN.md](docs/SCAFFOLD-PLAN.md)。在 fork 完成之前，先用官方版 iloader + 手动放配对文件验证链路。
 
-iloader 本身已有完整的简体中文界面（fork 后中文现成，只需补几条 oPenSSAI 相关文案）。
+iloader 本身已有完整的简体中文界面（fork 后中文现成，只需补几条 openSSS 相关文案）。
 
 ## 开源血缘与许可证
 
@@ -41,8 +41,8 @@ Fork 点：SideStore `4f3d18d98c5fbee72c80f787ceb2e8e09ded60a6`（2026-11-20 克
 要求：macOS + Xcode 15+，Rustup（`brew install rustup`）。
 
 ```sh
-git clone --recurse-submodules https://github.com/SheldonJoO/oPenSSAI.git
-cd oPenSSAI
+git clone --recurse-submodules https://github.com/SheldonJoO/openSSS.git
+cd openSSS
 cp CodeSigning.xcconfig.sample CodeSigning.xcconfig
 # 填入你的 DEVELOPMENT_TEAM
 open AltStore.xcodeproj

@@ -2,7 +2,7 @@
 name = "openssai-location-helper"
 version = "0.1.0"
 edition = "2024"
-description = "Mac helper for oPenSSAI virtual location: receives coordinates over HTTP and drives the iPhone's DVT location simulation service via the idevice library."
+description = "Mac helper for openSSS virtual location: receives coordinates over HTTP and drives the iPhone's DVT location simulation service via the idevice library."
 license = "AGPL-3.0-or-later"
 
 [[bin]]

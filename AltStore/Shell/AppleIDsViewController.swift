@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  AppleIDsViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Manage the stored Apple IDs (teams): list every signed-in Apple ID with
 //  its team and certificate status, switch the active team used for signing
@@ -34,7 +34,7 @@
 //  supported by the engine — refresh always signs with the active team —
 //  so active-team switching is the whole feature.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit

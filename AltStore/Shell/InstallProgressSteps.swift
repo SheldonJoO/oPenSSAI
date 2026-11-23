@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  InstallProgressSteps.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Maps the engine's pipeline stages onto the five user-facing install
 //  phases (Download → Unpack → Sign → Install → Done) shown by
@@ -30,7 +30,7 @@
 //  only slices that same fraction into phase bands, so the total bar
 //  never jumps back to 0 at a phase boundary.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import Foundation

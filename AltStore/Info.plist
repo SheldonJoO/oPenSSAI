@@ -59,7 +59,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>oPenSSAI General</string>
+			<string>openSSS General</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>openssai</string>
@@ -69,7 +69,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>oPenSSAI Backup</string>
+			<string>openSSS Backup</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>openssai-$(PRODUCT_BUNDLE_IDENTIFIER)</string>

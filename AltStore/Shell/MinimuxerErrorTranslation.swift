@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  MinimuxerErrorTranslation.swift
-//  oPenSSAI
+//  openSSS
 //
 //  Display-time Chinese translations for the common minimuxer readiness
 //  errors. The engine (Dependencies/minimuxer) reports English reasons;
@@ -15,7 +15,7 @@
 //  paths (whose description is "NoDevice: <reason>", etc.). Unknown errors
 //  return nil and keep the existing English display.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import Foundation

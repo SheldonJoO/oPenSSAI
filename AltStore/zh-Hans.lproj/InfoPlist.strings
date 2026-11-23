@@ -1,4 +1,4 @@
-/* InfoPlist.strings — oPenSSAI 简体中文 (zh-Hans)
+/* InfoPlist.strings — openSSS 简体中文 (zh-Hans)
    与 AltStore/Info.plist 中的中文描述一致；Info.plist 本身已是中文，
    此文件保证 zh-Hans 语言下系统权限弹窗始终显示中文。
 */

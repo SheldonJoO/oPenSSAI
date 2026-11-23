@@ -12,7 +12,7 @@ public enum DatabaseError: LocalizedError, CustomNSError, Sendable, Equatable {
     case databaseDowngradeDetected(reason: String)
     case migrationFailed(reason: String)
     /// Retained for compatibility; `loadPersistentStores()` no longer throws
-    /// this — when the App Group container is unavailable, oPenSSAI falls
+    /// this — when the App Group container is unavailable, openSSS falls
     /// back to a private sandbox database instead of refusing to launch.
     case missingAppGroup(reason: String)
     
@@ -76,7 +76,7 @@ open class PersistentContainer: NSPersistentContainer, @unchecked Sendable {
         #if os(tvOS)
         return FileManager.default.cachesDirectory
         #else
-        // oPenSSAI: prefer the shared App Group container, but fall back to
+        // openSSS: prefer the shared App Group container, but fall back to
         // the private sandbox when the group is unavailable — e.g. the app
         // was re-signed by a team that never registered group.com.openssai.app
         // (the common case for sideloaded installs). The widget cannot see a
@@ -142,7 +142,7 @@ open class PersistentContainer: NSPersistentContainer, @unchecked Sendable {
     
     open func loadPersistentStores() async throws {
         #if !os(tvOS)
-        // oPenSSAI: a missing App Group container is NOT fatal. The store
+        // openSSS: a missing App Group container is NOT fatal. The store
         // URL already falls back to the private sandbox (see
         // defaultDirectoryURL()), so just note it and continue launching.
         // Needs proper testing: verify on a device signed by a team that

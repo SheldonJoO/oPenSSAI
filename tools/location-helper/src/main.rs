@@ -1,7 +1,7 @@
-// oPenSSAI location helper (Mac side).
+// openSSS location helper (Mac side).
 //
 // HTTP front-end for the DVT location simulation session (see session.rs).
-// The oPenSSAI app posts coordinates here; the helper forwards them to the
+// The openSSS app posts coordinates here; the helper forwards them to the
 // iPhone over USB (usbmuxd) or TCP (Wi-Fi + pairing file).
 //
 // Endpoints:
@@ -27,7 +27,7 @@ use session::{Command, ProviderArgs, SessionStatus, run_actor};
 use tokio::sync::{mpsc, oneshot};
 
 #[derive(Parser, Debug)]
-#[command(version, about = "oPenSSAI virtual-location helper for Mac")]
+#[command(version, about = "openSSS virtual-location helper for Mac")]
 struct Args {
     /// HTTP listen port (the app connects to http://<mac-lan-ip>:<port>).
     #[arg(long, default_value_t = 17878)]

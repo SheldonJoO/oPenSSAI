@@ -639,7 +639,7 @@ private extension MyAppsViewController
         }
         catch
         {
-            debugLog("[oPenSSAI] Failed to fetch updates: \(error)")
+            debugLog("[openSSS] Failed to fetch updates: \(error)")
         }
     }
 }
@@ -1871,7 +1871,7 @@ private extension MyAppsViewController
                         }
                         catch
                         {
-                            debugLog("[oPenSSAI] Failed to assign error \(sanitizedError.localizedErrorCode) to source \(sourceID). \(error)")
+                            debugLog("[openSSS] Failed to assign error \(sanitizedError.localizedErrorCode) to source \(sourceID). \(error)")
                         }
                     }
                     

@@ -8,9 +8,9 @@ body:
     attributes:
       value: |
         ## Please note that the issue tracker is not for support
-        Thanks for taking the time to fill out this bug report! Before you continue filling out the report, please **[search in GitHub Issues](https://github.com/SheldonJoO/oPenSSAI/issues?q=is%3Aissue+is%3Aopen) for the bug you are experiencing** in case it has already been reported.
+        Thanks for taking the time to fill out this bug report! Before you continue filling out the report, please **[search in GitHub Issues](https://github.com/SheldonJoO/openSSS/issues?q=is%3Aissue+is%3Aopen) for the bug you are experiencing** in case it has already been reported.
         
-        **Please use [GitHub Discussions](https://github.com/SheldonJoO/oPenSSAI/discussions) for support.**
+        **Please use [GitHub Discussions](https://github.com/SheldonJoO/openSSS/discussions) for support.**
   - type: textarea
     id: description
     attributes:

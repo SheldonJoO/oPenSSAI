@@ -1178,7 +1178,7 @@ extension SettingsViewController
             switch row
             {
             case .sendFeedback:
-                // oPenSSAI: feedback goes straight to GitHub Issues (no Discord, no mail).
+                // openSSS: feedback goes straight to GitHub Issues (no Discord, no mail).
                 self.openWebURL(AppConstants.URLs.sideStoreIssues, preferredTintColor: .altPrimary)
                 
             case .refreshSideJITServer:
@@ -1210,7 +1210,7 @@ extension SettingsViewController
                     selected: UserDefaults.standard.menuAnisetteURL,
                     onResetAdiPb: { [weak self] in
                         guard let self = self else { return }
-                        ToastView(text: NSLocalizedString("Cleared adi.pb!", comment: ""), detailText: NSLocalizedString("You will need to log back into Apple ID in oPenSSAI.", comment: ""))
+                        ToastView(text: NSLocalizedString("Cleared adi.pb!", comment: ""), detailText: NSLocalizedString("You will need to log back into Apple ID in openSSS.", comment: ""))
                             .show(in: self)
                     }
                 )

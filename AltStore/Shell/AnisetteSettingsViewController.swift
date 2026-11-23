@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  AnisetteSettingsViewController.swift
-//  oPenSSAI
+//  openSSS
 //
 //  The Anisette screen, reachable from Me → Signing. It exposes the levers
 //  that decide whether Apple ID sign-in works: the on-device anisette
@@ -12,7 +12,7 @@
 //  UserCustomizationsView (sign out + restart for the toggle, sign out +
 //  Keychain clear for the reset); this screen only re-homes them in the shell.
 //
-//  Copyright © 2026 oPenSSAI Contributors. All rights reserved.
+//  Copyright © 2026 openSSS Contributors. All rights reserved.
 //
 
 import UIKit
@@ -139,7 +139,7 @@ final class AnisetteSettingsViewController: UIViewController
                 guard let self = self else { return }
                 let toastView = ToastView(
                     text: NSLocalizedString("Cleared adi.pb!", comment: ""),
-                    detailText: NSLocalizedString("You will need to log back into Apple ID in oPenSSAI.", comment: ""))
+                    detailText: NSLocalizedString("You will need to log back into Apple ID in openSSS.", comment: ""))
                 toastView.show(in: self)
             })
         let hostingController = ShellHostingController(rootView: serversView)
@@ -166,7 +166,7 @@ final class AnisetteSettingsViewController: UIViewController
         // Same flow as UserCustomizationsView.presentResetAdiDialog.
         let alertController = UIAlertController(
             title: NSLocalizedString("Reset adi.pb", comment: ""),
-            message: NSLocalizedString("This will sign you out of Apple ID in oPenSSAI and clear the provisioned adi.pb data from your Keychain. Your active signing certificate will be preserved.", comment: ""),
+            message: NSLocalizedString("This will sign you out of Apple ID in openSSS and clear the provisioned adi.pb data from your Keychain. Your active signing certificate will be preserved.", comment: ""),
             preferredStyle: .alert
         )
         let contentVC = ResetAdiAlertViewController()

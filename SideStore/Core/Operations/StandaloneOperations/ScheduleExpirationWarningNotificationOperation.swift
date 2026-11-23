@@ -44,7 +44,7 @@ final class ScheduleExpirationWarningNotificationOperation: BaseStandaloneOperat
         // the copy reads exactly as before.
         if bundleIdentifier == StoreApp.altstoreAppID
         {
-            appName = NSLocalizedString("oPenSSAI", comment: "")
+            appName = NSLocalizedString("openSSS", comment: "")
         }
 
         let milestones: [(id: String, timeBeforeExp: TimeInterval, titleFormat: String, bodyFormat: String)] = [
